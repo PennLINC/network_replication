@@ -1,0 +1,84 @@
+---
+title: "Compute GBC: PNC"
+author: "Valerie Jill Sydnor"
+output:
+  html_document:
+    code_folding: show
+    highlight: haddock
+    theme: lumen
+    toc: yes
+    toc_depth: 5
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ciftiTools)
+ciftiTools.setOption('wb_path', '/Users/valeriesydnor/Software/workbench/')
+library(gifti)
+library(cifti)
+library(ggseg)
+library(ggsegExtra)
+library(ggsegGlasser)
+library(ggsegSchaefer)
+library(viridis)
+require(ggplot2)
+library(dplyr)
+```
+
+region lists
+```{r}
+schaefer.parcel.labels <- read.csv("/cbica/projects/spatiotemp_dev_plasticity/atlases/schaefer400_regionlist.csv", header = T)
+glasser.parcel.labels <- read.csv("/cbica/projects/spatiotemp_dev_plasticity/atlases/glasser360_regionlist.csv", header = T)
+```
+
+participant list
+```{r}
+#list of RBC-PNC ids with processed rest-task_acq-singleband data to compute GBC on
+participants <- read.csv("/cbica/projects/spatiotemp_dev_plasticity/RBC_timeseries/PNC/PNC_timeseries_processed.txt", header=F)
+colnames(participants) <- c("rbcid") 
+```
+
+# Compute Global Brain Connectivity (GBC)
+
+```{r}
+computeGBC <- function(rbcid, atlas){
+  
+  #read in connectivity matrix
+  if(atlas == "schaefer"){
+    connect.matrix <- read_cifti(sprintf("/cbica/projects/spatiotemp_dev_plasticity/Inhibition/PNC/GBC/%1$s/%1$s_ses-PNC1_task-rest_acq-singleband_space-fsLR_atlas-Schaefer417_den-91k_den-91k_bold.pconn.nii",rbcid))} #400 x 400 matrix
+  if(atlas == "glasser"){
+    connect.matrix <- read_cifti(sprintf("/cbica/projects/spatiotemp_dev_plasticity/Inhibition/PNC/GBC/%1$s/%1$s_ses-PNC1_task-rest_acq-singleband_space-fsLR_atlas-Glasser_den-91k_den-91k_bold.pconn.nii",rbcid))} #360 x 360 matrix
+
+  #compute average connectivity 
+    GBC <- as.array(rowMeans(connect.matrix$data))
+  return(GBC)
+  }
+```
+
+```{r, echo=T, eval=F, warning=F, message=F}
+GBC.subxparcel.matrix.schaefer <- matrix(data = NA, nrow = nrow(participants), ncol = 401)
+regionheaders <- schaefer.parcel.labels$label
+demoheaders <- c("rbcid")
+colheaders <- as.matrix(c(demoheaders,regionheaders))
+colnames(GBC.subxparcel.matrix.schaefer) <- colheaders
+
+GBC.subxparcel.matrix.glasser <- matrix(data = NA, nrow = nrow(participants), ncol = 361)
+regionheaders <- glasser.parcel.labels$orig_parcelname
+demoheaders <- c("rbcid")
+colheaders <- as.matrix(c(demoheaders,regionheaders))
+colnames(GBC.subxparcel.matrix.glasser) <- colheaders
+
+for(sub in c(1:nrow(participants))){
+  rbcid=participants[sub,1]
+  
+  rbcid.data.schaefer <- computeGBC(rbcid, "schaefer")
+  GBC.subxparcel.matrix.schaefer[sub,] <- cbind(rbcid, t(rbcid.data.schaefer))
+  
+  rbcid.data.glasser <- computeGBC(rbcid, "glasser")
+  GBC.subxparcel.matrix.glasser[sub,] <- cbind(rbcid, t(rbcid.data.glasser))
+}
+
+write.csv(GBC.subxparcel.matrix.schaefer, "/cbica/projects/spatiotemp_dev_plasticity/Inhibition/PNC/GBC/GBC_subxparcel_matrix_schaefer.csv", row.names=F, quote=F)
+write.csv(GBC.subxparcel.matrix.glasser, "/cbica/projects/spatiotemp_dev_plasticity/Inhibition/PNC/GBC/GBC_subxparcel_matrix_glasser.csv", row.names=F, quote=F)
+```
