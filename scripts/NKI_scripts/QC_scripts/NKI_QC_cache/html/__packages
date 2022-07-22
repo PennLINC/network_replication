@@ -1,0 +1,16 @@
+dplyr
+tidyverse
+ggplot2
+tibble
+tidyr
+readr
+purrr
+stringr
+forcats
+magrittr
+reshape
+reshape2
+MASS
+stargazer
+knitr
+kableExtra

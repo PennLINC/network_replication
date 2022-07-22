@@ -1,0 +1,144 @@
+---
+title: "Schaefer 17 to 7 ordering"
+author: "Audrey Luo"
+output:
+  html_document:
+    code_folding: show
+    highlight: haddock
+    theme: lumen
+    toc: yes
+    toc_depth: 5
+    toc_float: yes
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ciftiTools)
+ciftiTools.setOption('wb_path', '/Applications/workbench/')
+library(gifti)
+library(cifti)
+Sys.setenv(RGL_USE_NULL=TRUE)
+library(ggseg)
+library(ggsegExtra)  
+library(ggsegGlasser) 
+library(ggsegSchaefer)  
+library(viridis)
+require(ggplot2)
+library(dplyr)
+
+library(freesurferformats)
+```
+
+ 
+load region list
+```{r}
+
+x <- read_cifti("/cbica/projects/network_replication/pconn/sub-997818717/sub-997818717_ses-PNC1_task-rest_acq-singleband_space-fsLR_atlas-Schaefer217_den-91k_den-91k_bold.pconn.nii")
+
+
+lh_schaefer200x7_annot <- read.fs.annot("/Users/audluo/Downloads/lh.Schaefer2018_200Parcels_17Networks_order.annot")
+rh_schaefer200x7_annot <- read.fs.annot("/Users/audluo/Downloads/rh.Schaefer2018_200Parcels_17Networks_order.annot")
+str(rh_schaefer200x7_annot)
+
+class(lh_schaefer200x7_annot$label_names)
+
+rh_schaefer200x7_annot$label_names
+
+schaefer200.parcel.labels
+schaefer200.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x17_regionlist.csv", header = T)
+schaefer200.communityAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Schaefer_17Network/schaefer200x17CommunityAffiliation.1D.csv", header=F)
+schaefer200.parcel.labels <- as.data.frame(cbind(schaefer200.parcel.labels$x, schaefer200.communityAffil$V1))
+names(schaefer200.parcel.labels) <- c("label", "network")
+#  make dataframe where rownames are the commAffil number, and then need to transpose V1 to be rows 
+schaefer200x17_rows <- as.data.frame(t(schaefer200.parcel.labels$network))
+schaefer200x17_commAffil_mat <- as.data.frame(schaefer200x17_rows[rep(seq_len(nrow(schaefer200x17_rows)), each = 200), ])
+rownames(schaefer200x17_commAffil_mat) <- NULL
+ 
+ 
+index_schaefer200x7to17<- read.csv("/Users/audluo/Desktop/index_schaefer200x7to17.csv", header=F)
+
+schaefer200x7 <- read.csv("/Users/audluo/cbica/projects/network_replication/atlases/parcellations/schaefer200_7Network_regionlist.csv", header=F)
+schaefer200x17 <- read.csv("/Users/audluo/cbica/projects/network_replication/atlases/parcellations/schaefer200x17_regionlist.csv", header=T)
+
+cbind(schaefer200x17$x, schaefer200x7[order(index_schaefer200x7to17),])
+
+```
+
+# Compute between-Network Connectivty (BNC) function 
+
+```{r}
+
+
+SNRmask_schaefer200x17 <- read.csv('/cbica/projects/network_replication/atlases/Masks/SNRmask_schaefer200x17.csv')
+  
+# computeBNC(rbcid, "schaefer200", schaefer200x17_commAffil_mat, schaefer200.parcel.labels$network)
+
+computeBNC <- function(rbcid, atlas, community_affiliation_mat, network_assignment){
+  #read in connectivity matrix
+  if(atlas == "schaefer200"){
+    connect.matrix <- read_cifti(sprintf("/cbica/projects/network_replication/pconn/%1$s/%1$s_ses-PNC1_task-rest_acq-singleband_space-fsLR_atlas-Schaefer217_den-91k_den-91k_bold.pconn.nii",rbcid))
+    mask <- SNRmask_schaefer200x17} #200 x 200 matrix 
+ 
+  # set rows and columns corresponding to parcel # in mask to NA
+  connect.matrix$data[which(mask == 0), ] <- NA 
+  connect.matrix$data[,which(mask == 0)] <- NA
+  
+  #compute average between-network connectivity 
+  BNC <- c()
+  for (i in 1:nrow(connect.matrix$data)) {  
+    between_network_values <- c() 
+    BNC_per_node <- c()
+    for (j in 1:length(connect.matrix$data[i,])) {  # entire  row
+      if(is.na(connect.matrix$data[i,j]) || connect.matrix$data[i,j] == 1) { # add NA if excluded by mask or identity
+        between_network_values <- append(between_network_values, NA);
+        } else if (schaefer200.parcel.labels$network[i] != schaefer200x17_commAffil_mat[i,j]) { 
+          between_network_values <- append(between_network_values, connect.matrix$data[i,j])
+          } else if (schaefer200.parcel.labels$network[i] == schaefer200x17_commAffil_mat[i,j]) {  
+            between_network_values <- append(between_network_values, NA)
+          } 
+      }
+    #print(between_network_values)  
+    BNC_per_node <- append(BNC_per_node, mean(between_network_values, na.rm=TRUE))  
+    #print(BNC_per_node) # 1 value
+    BNC <- append(BNC, BNC_per_node)  
+    } 
+  return(BNC)
+}
+  
+  
+```
+
+
+# Compute BNC for each subject  
+```{r, echo=T, eval=F, warning=F, message=F}
+
+participants <- read.csv('/cbica/projects/network_replication/adapted_Rscripts/participants_allIDs.csv')
+subs_no_files <- read.csv('/cbica/projects/network_replication/adapted_Rscripts/subs_no_files.csv', row.names=NULL)
+subs_no_files <- subs_no_files[,2]
+
+BNC.subxparcel.matrix.schaefer200 <- matrix(data = NA, nrow = nrow(participants), ncol = 201)
+regionheaders <- as.character(schaefer200.parcel.labels$label)
+demoheaders <- c("rbcid")
+colheaders <- as.matrix(c(demoheaders,regionheaders))
+colnames(BNC.subxparcel.matrix.schaefer200) <- colheaders
+ 
+#compute BNC for each subject  
+for(sub in c(1:nrow(participants))){
+  rbcid=as.character(participants[sub,4])
+  if(rbcid %in% subs_no_files){
+    next
+  }
+  else {
+  rbcid.data.schaefer200 <- computeBNC(rbcid, "schaefer200", schaefer200x17_commAffil_mat, schaefer200.parcel.labels$network)
+  BNC.subxparcel.matrix.schaefer200[sub,] <- cbind(rbcid, t(rbcid.data.schaefer200))
+  print(paste(sub, rbcid, "schaefer200"))
+  }
+}
+ 
+as.data.frame(BNC.subxparcel.matrix.schaefer200)
+#write.csv(BNC.subxparcel.matrix.schaefer200, "/cbica/projects/network_replication/BNC/BNC_subxparcel_matrix_schaefer200x17.csv", row.names=F, quote=F)
+ 
+  
+#BNC.subxparcel.matrix.schaefer200_test <- read.csv("/cbica/projects/network_replication/BNC/BNC_subxparcel_matrix_schaefer200x17.csv") 
+#GBC.subxparcel.matrix.schaefer200_test <- read.csv('/cbica/projects/network_replication/GBC/GBC_subxparcel_matrix_schaefer200x17.csv') 
+  
+```

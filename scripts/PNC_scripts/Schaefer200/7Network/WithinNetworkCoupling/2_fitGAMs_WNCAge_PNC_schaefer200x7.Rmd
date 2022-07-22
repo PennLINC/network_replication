@@ -1,0 +1,185 @@
+---
+title: "WNC GAMs: PNC (Schaefer200x7)"
+author: "Valerie Jill Sydnor" adapted by Audrey
+output:
+  html_document:
+    code_folding: show
+    highlight: haddock
+    theme: lumen
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(magrittr)
+library(tidyr)
+library(gratia)
+library(mgcv)
+
+library(ciftiTools)
+ciftiTools.setOption('wb_path', '/Applications/workbench/')
+library(gifti)
+library(cifti)
+source("/cbica/projects/network_replication/adapted_Rscripts/GAM_functions.R")
+```
+
+
+**Prepare WNC + Demographics data frame for GAMs**
+
+```{r}
+participants <- read.csv("/cbica/projects/network_replication/adapted_Rscripts/PNC_scripts/participants_allIDs.csv") #final study sample pnc IDs (bblid/scanid) from Adam Pines's multiscale paper
+demographics <- read.csv("/cbica/projects/network_replication/PNC/n1601_demographics_go1_20161212.csv") #PNC demographics information
+demographics <- demographics %>% mutate(age = (ageAtScan1/12)) #format age variable
+demographics$sex <- as.factor(demographics$sex) #format sex variable
+
+demographics <- merge(participants, demographics, by="scanid") #get demographics for final study sample only via ID matching
+relRMS <- read.csv("/cbica/projects/network_replication/PNC/qc_files/RBC_PNC_relMeans.csv") 
+demographics <- merge(demographics, relRMS, by="rbcid") #add motion information to demographics df
+```
+
+# make WNC-demographics .csv's
+```{r} 
+WNC_subxparcel_matrix_schaefer200 <- read.csv("/cbica/projects/network_replication/WNC/WNC_subxparcel_matrix_schaefer200x7.csv") #participant x schaefer region WNC spreadsheet
+WNC_subxparcel_matrix_schaefer200 <- WNC_subxparcel_matrix_schaefer200[-c(1:7, 24, 690, 691),] # the subjects that should've been removed earlier 
+col_rm <- as.numeric(levels(as.factor(as.data.frame(which(is.na(WNC_subxparcel_matrix_schaefer200), arr.ind=TRUE))$col)))
+WNC_subxparcel_matrix_schaefer200 <- WNC_subxparcel_matrix_schaefer200[, -col_rm]
+WNC.schaefer200.pnc <- merge(WNC_subxparcel_matrix_schaefer200, demographics, by="rbcid") #get schaefer WNC data and demographics for final study sample via ID matching
+names(WNC.schaefer200.pnc) <- gsub('X7Networks_', "", names(WNC.schaefer200.pnc))
+#write.csv(WNC.schaefer200.pnc, "/cbica/projects/network_replication/WNC/WNCschaefer200x7_demographics_finalsample.csv")
+ 
+wide_df <- WNC.schaefer200.pnc[, c(2:190, 194, 205, 206)]
+ 
+#write.csv(wide_df, "/cbica/projects/network_replication/WNC/WNCschaefer200x7_wideDf.csv") 
+
+```
+
+# load WNC-demographics df's
+```{r}
+WNC.schaefer200.pnc <- read.csv('/cbica/projects/network_replication/WNC/WNCschaefer200x7_demographics_finalsample.csv')
+
+ 
+```
+
+
+# edit parcel labels to reflect SNR mask
+```{r}
+schaefer200.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_ggseg_reordered.csv", header = T) #schaefer parcel names in order of surface data
+names(schaefer200.parcel.labels)[2] <- "orig_parcelname"
+# remove parcels using SNR mask
+SNR.mask.schaefer200 <- read.csv('/cbica/projects/network_replication/atlases/Masks/SNRmask_schaefer200x7_reordered.csv') 
+rm <- which(SNR.mask.schaefer200$SNR.mask == 0)
+schaefer200.parcel.labels <- schaefer200.parcel.labels[-rm,]
+
+# load parcellated SA axis
+schaefer200_SAaxis_cifti <- read_cifti("/cbica/projects/network_replication/SAaxis/SensorimotorAssociation_Axis_parcellated/SensorimotorAssociation.Axis.Schaefer200.7Networks.pscalar.nii")  
+
+schaefer200_SAaxis <- as.data.frame(cbind(rank(schaefer200_SAaxis_cifti$data), names(schaefer200_SAaxis_cifti$Parcel)))
+colnames(schaefer200_SAaxis) <- c("SA.axis_rank","label")
+
+# reorder SA axis (7 to 17)
+index_schaefer200x7to17 <- read.csv("/cbica/projects/network_replication/software/schaefer7to17_reordering/index_schaefer200x7to17.csv", header=F)
+ 
+index_schaefer200x7to17$V1 <- as.numeric(index_schaefer200x7to17$V1)
+schaefer200_SAaxis <-schaefer200_SAaxis[index_schaefer200x7to17$V1,]
+#as.matrix(cbind(schaefer200_SAaxis, schaefer200.parcel.labels))
+
+
+# apply SNR mask
+schaefer200_SAaxis[which(SNR.mask.schaefer200 == 0),] <- NA
+schaefer200_SAaxis <- na.omit(schaefer200_SAaxis) 
+schaefer200_SAaxis$SA.axis_rank <- as.numeric(schaefer200_SAaxis$SA.axis_rank)
+```
+
+
+**Fit GAMs**
+
+Fit GAM (WNC ~ s(age) + sex + RMSmotion)) per each region in atlas and save out statistics and derivative-based characteristics
+
+GAMs for Schaefer200
+```{r}
+gam.WNC.age.schaefer200 <- matrix(data=NA, nrow=dim(schaefer200.parcel.labels)[1], ncol=9) #empty matrix to save gam.fit output to
+ 
+# schaefer200 parcel labels and the labels from WNC.schaefer200.pnc don't currently match. And I don't think parcelnames can begin with a number. following 2 lines fixes this
+schaefer200.parcel.labels$orig_parcelname <- gsub('7Networks_', "", schaefer200.parcel.labels$orig_parcelname)
+
+
+# get GAMs for WNC.schaefer200.pnc - which includes schaefer200 WNC data and demographics
+for(row in c(1:nrow(schaefer200.parcel.labels))){ #for each schaefer200 region
+  region <- schaefer200.parcel.labels$orig_parcelname[row] 
+  GAM.RESULTS <- gam.fit(measure = "WNC", atlas = "schaefer200", dataset = "pnc", region = region, smooth_var = "age", covariates = "sex + RMSmotion") #run the gam.fit function
+  gam.WNC.age.schaefer200[row,] <- GAM.RESULTS}
+
+
+ 
+gam.WNC.age.schaefer200 <- as.data.frame(gam.WNC.age.schaefer200)
+colnames(gam.WNC.age.schaefer200) <- c("label","GAM.age.Fvalue","GAM.age.pvalue","GAM.age.AdjRsq","Anova.age.pvalue","age.onsetchange","age.peakchange","maxage.WNC.increase","age.maturation")
+cols = c(2:9)    
+gam.WNC.age.schaefer200[,cols] = apply(gam.WNC.age.schaefer200[,cols], 2, function(x) as.numeric(as.character(x)))
+gam.WNC.age.schaefer200 <- gam.WNC.age.schaefer200 %>% mutate(significant = (Anova.age.pvalue < 0.05))
+#write.csv(gam.WNC.age.schaefer200, "/cbica/projects/network_replication/WNC/GAM/GAMresults.WNC.age.schaefer200x7.csv", row.names = F, quote = F)
+```
+ 
+# load GAMs output
+```{r} 
+gam.WNC.age.schaefer200 <- read.csv("/cbica/projects/network_replication/WNC/GAM/GAMresults.WNC.age.schaefer200x7.csv")
+```
+
+
+
+**Estimate GAM smooths based on model-predicted data and save out predicted y data**
+Estimate GAM smooths - Schaefer200
+```{r}
+gam.smooths.schaefer200 <- matrix(data=NA, ncol=7) #empty matrix to save gam.predsmooth fits to
+colnames(gam.smooths.schaefer200) <- c("age","fit","se.fit","selo","sehi","index","label")
+
+gam.peaks.schaefer200 <- matrix(data=NA, ncol=2) #empty matrix to save measure peaks to (value of x when y is predicted to be maximal)
+colnames(gam.peaks.schaefer200) <- c("label","age.peak")
+
+
+for(row in c(1:nrow(schaefer200.parcel.labels))){ #for each schaefer200 region
+  
+  region <- schaefer200.parcel.labels$orig_parcelname[row] #get the region name
+  GAM.SMOOTH <- gam.predsmooth(measure = "WNC", atlas = "schaefer200", dataset = "pnc", region = region, smooth_var = "age", covariates = "sex + RMSmotion") #run the gam.predsmooth function
+  
+  preddata <- as.data.frame(GAM.SMOOTH[3]) #get predicted.smooth df from function output
+  preddata$index <- rep(x=row, 1000) #region index
+  preddata$label <- rep(x=GAM.SMOOTH[1], 1000) #label
+  gam.smooths.schaefer200 <- rbind(gam.smooths.schaefer200, preddata)
+  
+  datapeak <- as.data.frame(cbind(GAM.SMOOTH[1], GAM.SMOOTH[2]))
+  colnames(datapeak) <- c("label","age.peak")
+  gam.peaks.schaefer200 <- rbind(gam.peaks.schaefer200, datapeak)
+}
+gam.smooths.schaefer200 <- gam.smooths.schaefer200[-1,] #remove empty initilization row
+gam.smooths.schaefer200$label <- as.character(gam.smooths.schaefer200$label)
+gam.peaks.schaefer200 <- gam.peaks.schaefer200[-1,] #remove empty initilization row
+gam.peaks.schaefer200$label <- as.character(gam.peaks.schaefer200$label)
+gam.peaks.schaefer200$age.peak <- as.numeric(gam.peaks.schaefer200$age.peak)
+ 
+#write.csv(gam.smooths.schaefer200,"/cbica/projects/network_replication/WNC/GAM/GAMsmoothfits.WNC.age.schaefer200x7.csv", row.names = F, quote = F)
+#write.csv(gam.peaks.schaefer200, "/cbica/projects/network_replication/WNC/GAM/GAMpeaks.WNC.age.schaefer200x7.csv", row.names = F, quote = F)
+ 
+```
+
+
+
+# Smooth fits long format
+```{r}
+long_df<- wide_df %>% pivot_longer(cols = !contains(c("age","sex", "RMSmotion")),names_to = "parcel",values_to = "WNC")
+smooth_fits <- long_df %>% group_by(parcel) %>% do(fit = smooth_estimates(gam(WNC ~ s(age,k=3,fx=F),data=.))) %>% unnest(fit)
+  
+smooth_fits$label <- smooth_fits$parcel
+schaefer200_SAaxis$label <- gsub("7Networks_", "", schaefer200_SAaxis$label)
+smooth_fits <- left_join(smooth_fits, schaefer200_SAaxis, by = "label")
+  
+smooth_fits$SA.axis_rank <- as.integer(smooth_fits$SA.axis_rank)
+  
+smooth_fits <- smooth_fits %>% mutate(SA.axis_percentile_bin = ntile(smooth_fits$SA.axis_rank, 10))
+
+write.csv(smooth_fits, "/cbica/projects/network_replication/WNC/schaefer200x7_smoothfits_longDf.csv")
+ 
+```
+

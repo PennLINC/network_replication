@@ -1,0 +1,119 @@
+---
+title: "Schaefer Atlas - adjust 17 and 7 Network parcel names"
+author: "Audrey Luo"
+date: "3/28/2022"
+output: html_document
+---
+
+# Adjust Schaefer 7Network region lists to match ggseg atlas regions
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ciftiTools)
+ciftiTools.setOption('wb_path', '/Applications/workbench/')
+library(gifti)
+library(cifti)
+Sys.setenv(RGL_USE_NULL=TRUE)
+library(ggseg)
+library(ggsegExtra)  
+library(ggsegGlasser) 
+library(ggsegSchaefer)  
+library(viridis)
+require(ggplot2)
+library(dplyr)
+```
+
+
+# schaefer400
+```{r}
+schaefer400_communityaffil <- read.csv('/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer400x7CommunityAffiliation.1D.csv', header=F)
+schaefer400_nodenames <- read.csv('/cbica/projects/network_replication/atlases/parcellations/schaefer400_7Network_regionlist.csv', header=F)
+communitynames <- read.csv('/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer7CommunityNames.csv', header=F)
+ 
+
+
+ 
+schaefer400 <- as.data.frame(cbind(schaefer400_nodenames, schaefer400_communityaffil))
+names(schaefer400) <- c("region", "network")
+schaefer400$region <- gsub("LH_", "7Networks_LH_", schaefer400$region)
+schaefer400$region <- gsub("RH_", "7Networks_RH_", schaefer400$region)
+schaefer400$region <- gsub("FrOper", "FrOperIns", schaefer400$region)
+schaefer400$region[grep("RH_Default", schaefer400$region)]
+
+ 
+schaefer400$region[grep("LH_Default_Temp", schaefer400$region)] <- gsub("Temp", "Par", schaefer400$region[grep("LH_Default_Temp", schaefer400$region)])
+schaefer400$region[grep("LH_Default_Temp", schaefer400$region)] <- gsub("_1", "_", schaefer400$region[grep("LH_Default_Temp", schaefer400$region)])
+schaefer400$region[grep("LH_Default_PCC", schaefer400$region)] <- gsub("PCC", "pCunPCC", schaefer400$region[grep("LH_Default_PCC", schaefer400$region)])
+
+schaefer400$region[grep("RH_Default_PFCm", schaefer400$region)] <- gsub("PFCm", "PFCdPFCm", schaefer400$region[grep("RH_Default_PFCm", schaefer400$region)])
+schaefer400$region[grep("RH_Default_PCC", schaefer400$region)] <- gsub("PCC", "pCunPCC", schaefer400$region[grep("RH_Default_PCC", schaefer400$region)])
+
+(fixed <- ggplot() + geom_brain(data=schaefer400, 
+                      atlas=schaefer7_400, 
+                      mapping=aes(fill=network), 
+                      show.legend=TRUE, 
+                      position = position_brain(hemi ~ side)) + 
+  scale_fill_gradientn(colors = viridis_pal(option="B")(10)) + theme_void())
+
+#write.csv(schaefer400, "/cbica/projects/network_replication/atlases/parcellations/schaefer400_7Network_ggseg_regionlist.csv")
+
+schaefer7atlas<- plot(schaefer7_400) +
+  theme(legend.position = "bottom",
+        legend.text = element_text(size = 6)) +
+  guides(fill = guide_legend(ncol = 10))
+ 
+#ggsave(schaefer7atlas, file="schaefer7atlas.pdf", width = 25, height=14, dpi=150)
+```
+
+
+# schaefer200
+```{r}
+schaefer200_communityaffil <- read.csv('/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer200x7CommunityAffiliation.1D.csv', header=F)
+schaefer200_nodenames <- read.csv('/cbica/projects/network_replication/atlases/parcellations/schaefer200_7Network_regionlist.csv', header=F)
+communitynames <- read.csv('/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer7CommunityNames.csv', header=F)
+ 
+
+schaefer200 <- as.data.frame(cbind(schaefer200_nodenames, schaefer200_communityaffil))
+names(schaefer200) <- c("region", "network")
+schaefer200$region <- gsub("LH_", "7Networks_LH_", schaefer200$region)
+schaefer200$region <- gsub("RH_", "7Networks_RH_", schaefer200$region)
+schaefer200$region <- gsub("FrOper", "FrOperIns", schaefer200$region)
+schaefer200$region[grep("LH_Default_PCC", schaefer200$region)] <- gsub("PCC", "pCunPCC", schaefer200$region[grep("LH_Default_PCC", schaefer200$region)])
+ 
+schaefer200$region[grep("RH_Cont", schaefer200$region)]
+schaefer200$region[79:82] <- gsub("Temp", "Par", schaefer200$region[79:82])
+schaefer200$region[79] <- gsub("6", "1", schaefer200$region[79])
+schaefer200$region[80] <- gsub("_7", "_2", schaefer200$region[80])
+schaefer200$region[81] <- gsub("8", "3", schaefer200$region[81])
+schaefer200$region[82] <- gsub("9", "4", schaefer200$region[82])
+
+ 
+
+schaefer200$region[grep("RH_Default_PFCm", schaefer200$region)] <- gsub("PFCm", "PFCdPFCm", schaefer200$region[grep("RH_Default_PFCm", schaefer200$region)])
+schaefer200$region[grep("RH_Default_PCC", schaefer200$region)] <- gsub("PCC", "pCunPCC", schaefer200$region[grep("RH_Default_PCC", schaefer200$region)])
+
+schaefer200$region[grep("7Networks_RH_Cont_PFCmp_1", schaefer200$region)] <- gsub("PFCmp", "Cing", schaefer200$region[grep("7Networks_RH_Cont_PFCmp_1", schaefer200$region)])
+schaefer200$region[grep("7Networks_RH_Cont_PFCmp_2", schaefer200$region)] <- gsub("PFCmp", "Cing", schaefer200$region[grep("7Networks_RH_Cont_PFCmp_2", schaefer200$region)])
+schaefer200$region[grep("7Networks_RH_Cont_PFCmp_3", schaefer200$region)] <- gsub("_3", "_1", schaefer200$region[grep("7Networks_RH_Cont_PFCmp_3", schaefer200$region)])
+schaefer200$region[grep("7Networks_RH_Cont_PFCmp_4", schaefer200$region)] <- gsub("_4", "_2", schaefer200$region[grep("7Networks_RH_Cont_PFCmp_4", schaefer200$region)])
+  
+schaefer200$region[65:70] <- c("7Networks_LH_Cont_OFC_1", "7Networks_LH_Cont_PFCl_1","7Networks_LH_Cont_PFCl_2", "7Networks_LH_Cont_PFCl_3", "7Networks_LH_Cont_PFCl_4", "7Networks_LH_Cont_PFCl_5") 
+
+ 
+
+(fixed <- ggplot() + geom_brain(data=schaefer200, 
+                      atlas=schaefer7_200, 
+                      mapping=aes(fill=network), 
+                      show.legend=TRUE, 
+                      position = position_brain(hemi ~ side)) + 
+  scale_fill_gradientn(colors = viridis_pal(option="B")(10)) + theme_void())
+
+#write.csv(schaefer200, "/cbica/projects/network_replication/atlases/parcellations/schaefer200_7Network_ggseg_regionlist.csv")
+
+(schaefer7atlas<- plot(schaefer7_200) +
+  theme(legend.position = "bottom",
+        legend.text = element_text(size = 6)) +
+  guides(fill = guide_legend(ncol = 10)))
+ 
+#ggsave(schaefer7atlas, file="schaefer7_200atlas.pdf", width = 25, height=14, dpi=150)
+```
+

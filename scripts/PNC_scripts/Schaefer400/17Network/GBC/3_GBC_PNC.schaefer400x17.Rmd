@@ -1,0 +1,316 @@
+---
+title: "GBC Developmental Trajectories: PNC (Schaefer400x17)"
+author: "Valerie Jill Sydnor, adapted by Audrey Luo"
+output:
+  html_document:
+    code_folding: show
+    highlight: haddock
+    theme: lumen
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+require(ggplot2)
+library(cowplot)
+library(cifti)
+library(ggseg)
+Sys.setenv(RGL_USE_NULL=TRUE)
+library(ggsegExtra)
+library(ggsegSchaefer)
+library(ggcorrplot)
+library(viridis)
+library(scales)
+library(stringr)
+library(tidyr)
+
+
+```
+  
+# load schaefer400 parcellated S-A axis
+```{r}
+# load SNR mask 
+SNRmask_schaefer400 <- read.csv('/cbica/projects/network_replication/atlases/Masks/SNRmask_schaefer400x17.csv')
+
+# load region list
+schaefer400.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer400x17_regionlist.csv", header = T) 
+names(schaefer400.parcel.labels) <- c("orig_parcelname", "label")
+schaefer400.parcel.labels[which(SNRmask_schaefer400 == 0),] <- NA # apply SNR mask to parcel names
+schaefer400.parcel.labels <- na.omit(schaefer400.parcel.labels)
+
+# load parcellated SA axis
+schaefer400_SAaxis_cifti <- read_cifti("/cbica/projects/network_replication/SAaxis/SensorimotorAssociation_Axis_parcellated/SensorimotorAssociation.Axis.Schaefer400.17Networks.pscalar.nii")  
+
+schaefer400_SAaxis <- as.data.frame(cbind(rank(schaefer400_SAaxis_cifti$data), names(schaefer400_SAaxis_cifti$Parcel)))
+colnames(schaefer400_SAaxis) <- c("SA.axis_rank","label")
+
+
+# apply SNR mask
+schaefer400_SAaxis[which(SNRmask_schaefer400 == 0),] <- NA
+schaefer400_SAaxis <- na.omit(schaefer400_SAaxis)
+```
+
+
+```{r include=FALSE}
+## GAM Results
+
+gam.gbc.age.schaefer400 <- read.csv("/Users/audluo/cbica/projects/network_replication/GBC/GAM/GAMresults.GBC.age.schaefer400x17.csv")
+
+gam.gbc.age.schaefer400 <- gam.gbc.age.schaefer400 %>% select(-label)
+gam.gbc.age.schaefer400$label <- schaefer400_SAaxis$label
+ 
+
+gam.smooths.schaefer400 <- read.csv("/Users/audluo/cbica/projects/network_replication/GBC/GAM/GAMsmoothfits.GBC.age.schaefer400x17.csv")
+gam.smooths.schaefer400$orig_parcelname <- gam.smooths.schaefer400$label
+ 
+
+gam.agepeaks.schaefer400 <- read.csv("/Users/audluo/cbica/projects/network_replication/GBC/GAM/GAMpeaks.GBC.age.schaefer400x17.csv")
+gam.agepeaks.schaefer400 <- gam.agepeaks.schaefer400 %>% select(-label)
+gam.agepeaks.schaefer400$label <- schaefer400.parcel.labels$label
+
+
+```
+
+ 
+# schaefer400 final Dfs
+```{r include=FALSE}
+# Combine into Final Dfs
+
+df.list <- list(schaefer400_SAaxis,gam.gbc.age.schaefer400)
+  
+gbc.axis <- Reduce(function(x,y) merge(x,y, all=TRUE, sort=F), df.list) 
+gbc.axis$SA.axis_rank <- as.numeric(gbc.axis$SA.axis_rank)
+ 
+```
+
+ 
+```{r include=FALSE}
+  
+a <- merge(schaefer400.parcel.labels, schaefer400_SAaxis, by="label", sort=F)
+a$label <- gsub("17Networks", "Networks", a$label)
+gam.smooths.schaefer400 <- left_join(gam.smooths.schaefer400, a, by = "label")
+gam.smooths.schaefer400$SA.axis_rank <-as.numeric(gam.smooths.schaefer400$SA.axis_rank) 
+
+gam.agepeaks.schaefer400 <- left_join(gam.agepeaks.schaefer400, schaefer400_SAaxis, by="label")
+gam.agepeaks.schaefer400$SA.axis_rank <-as.numeric(gam.agepeaks.schaefer400$SA.axis_rank) 
+```
+ 
+ 
+#Spin Test Parcel Rotation Matrix
+```{r eval=FALSE, include=TRUE}
+source("/cbica/projects/network_replication/software/rotate.parcellation.R")
+source("/cbica/projects/network_replication/software/perm.sphere.p.R")
+
+schaefer400.coords <- read.csv("/cbica/projects/network_replication/software/rotate_parcellation/Schaefer2018_400Parcels_17Networks_order_FSLMNI152_1mm.Centroid_RAS.csv") #coordinates of schaefer400.coords parcel centroids on the freesurfer sphere
+
+perm.id.full <- rotate.parcellation(coord.l = as.matrix(schaefer400.coords[1:200,3:5]), coord.r = as.matrix(schaefer400.coords[201:400,3:5]), nrot = 10000) #rotate the schaefer400.coords parcellation 10,000 times on the freesurfer sphere to generate spatial nulls for spin-based permutation significance testing 
+
+ 
+## saveRDS(perm.id.full, "/cbica/projects/network_replication/software/rotate_parcellation/schaefer400x17.coords_sphericalrotations_N10k.rds")
+
+#perm.id.full <- read.csv("/Users/audluo/cbica/projects/network_replication/software/rotate_parcellation/Schaefer400_perm.csv") # jake's permutations
+
+perm.id.full <- readRDS("/cbica/projects/network_replication/software/rotate_parcellation/schaefer400x17.coords_sphericalrotations_N10k.rds")
+
+ 
+```
+
+#create df.dev.spin formatted for spatial permutation testing
+```{r}
+# need to reintroduced the parcels removed by SNRmask as NA's
+
+schaefer400.parcel.labels_noMask <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer400x17_regionlist.csv", header = T) 
+names(schaefer400.parcel.labels_noMask) <- c("orig_parcelname", "label")
+ 
+
+schaefer400.parcel.labels_noMask$label[which(!schaefer400.parcel.labels_noMask$label %in% gbc.axis$label)] # names of removed parcels
+ 
+
+# need to go through parcel.labels and see which are in gbc.axis label
+# then for the ones that aren't in gbc.axis$label, insert parcel.labels[row_of_missing_label] into gbc.axis, and have the rest of the row be NA
+# r = the row index -- indices of SNR removed parcels
+# newrow = content of inserted row -- c('name of parcel', NA, NA, NA etc)
+# existingDF = gbc.axis
+insertRow <- function(r, existingDF, orig.parcel.labels) {
+  newrow <- c(paste0(orig.parcel.labels[r]), rep(NA, 10)) # format data for spin tests by assigning NA to low SNR parcels, treating them like the medial wall
+  existingDF[seq(r+1,nrow(existingDF)+1),] <- existingDF[seq(r,nrow(existingDF)),]
+  existingDF[r,] <- newrow
+  existingDF
+}
+
+r <- which(!schaefer400.parcel.labels_noMask$label %in% gbc.axis$label) # indices of removed parcels
+existingDF <- gbc.axis  
+ 
+for(i in c(1:length(r))){
+   existingDF <- insertRow(r[i], existingDF, schaefer400.parcel.labels_noMask$label)
+}
+ 
+ 
+df.dev.spin <- rbind(existingDF[1:200,], existingDF[201:400,]) #format df as left hemisphere -> right hemisphere for spin tests
+df.dev.spin <- cbind(df.dev.spin, SNRmask_schaefer400)
+ 
+```
+
+
+# GBC Developmental Effects
+
+## Number of significant parcels (FDR corrected)
+
+```{r echo=FALSE}
+gbc.axis$Anova.age.pvalue.fdr <- p.adjust(gbc.axis$Anova.age.pvalue, method=c("fdr"))
+cat(sprintf("There are %s/%s significant parcels", sum(gbc.axis$Anova.age.pvalue.fdr < 0.05), nrow(gbc.axis)))
+
+gbc.axis$significant.fdr <- gbc.axis$Anova.age.pvalue.fdr < 0.05
+gbc.axis$significant.fdr[gbc.axis$significant.fdr == TRUE] <- 1
+gbc.axis$significant.fdr[gbc.axis$significant.fdr == FALSE] <- 0
+ 
+```
+# i can't get  this to work
+```{r, echo=F, include=F}
+plot(schaefer400, show.legend = FALSE)
+ggplot() + geom_brain(data = gbc.axis, atlas = schaefer400, aes(fill=as.factor(significant.fdr)), show.legend = NA) +scale_fill_discrete(name = "significant.fdr", labels = c("Not Sig","Sig")) 
+
+ ggseg(.data = gbc.axis, atlas = "schaefer400", mapping=aes(fill=significant.fdr), position = c("stacked")) + theme_void() + scale_fill_discrete(name = "significant.fdr", labels = c("Not Sig","Sig")) # Error: Must request at least one colour from a hue palette.
+
+
+ ggseg(gbc.axis, atlas = "schaefer400", mapping=aes(fill=significant.fdr), position = "stacked") + scale_fill_gradientn(colours= c("#053061", "#67001F")) + theme_void()
+     
+```
+
+## Age Effect by S-A Axis position
+
+```{r}
+cor.test(gbc.axis$GAM.age.AdjRsq, as.numeric(gbc.axis$SA.axis_rank), method=c("spearman"), exact=F)
+
+cor(as.numeric(df.dev.spin$GAM.age.AdjRsq), as.numeric(df.dev.spin$SA.axis_rank),method="spearman", use="complete.obs")
+
+perm.sphere.p(as.numeric(df.dev.spin$GAM.age.AdjRsq), as.numeric(df.dev.spin$SA.axis_rank), perm.id.full, corr.type='spearman')
+
+```
+
+```{r, echo=F}
+library(ggpubr)
+# include all data points in figure
+cor.test(gbc.axis$GAM.age.AdjRsq, as.numeric(gbc.axis$SA.axis_rank), method=c("spearman"), exact=F)
+
+gbc.axis <- gbc.axis %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+
+r_text <- expression(paste(italic("r"), "= -0.57, ", italic(p[spin]), "< 0.0001"))
+ 
+## SA axis average rank vs. age effect
+(schaefer400_SA.AgeEffect <- ggplot(gbc.axis, aes(x=SA.axis_rank, y=GAM.age.AdjRsq, fill = SA.axis_rank_signif)) + geom_point(color = "white", shape = 21, size=2) +
+scale_fill_gradient2(low="#6f1282",high = "goldenrod1",, mid = "#EBDAFF", midpoint = median(gbc.axis$SA.axis_rank), na.value="gray") +
+labs(fill = "SA Axis Rank", x="\nSensorimotor-Association Axis Rank\n", y=expression(paste("Age Effect (Delta Adj", " R"^2, ")"))) +
+geom_smooth(data = gbc.axis, method='lm', se=TRUE, fill=alpha(c("gray70"),.9), col="black") +
+theme(
+axis.title.x=element_text(size=12, color = "black"),
+axis.title.y=element_text(size=12, color = "black"),
+axis.line = element_line(color = "black"),
+axis.text=element_text(size=12, color = "black"),
+panel.background=element_blank(),
+legend.position = "right") +
+annotate(geom="text", x=290, y=0.06, label=r_text, color="black"))
+
+#ggsave(schaefer400_SA.AgeEffect, file="/cbica/projects/network_replication/adapted_Rscripts/Figures/Schaefer400/GBC/schaefer400x17_SA.AgeEffect.pdf", width = 5, height=4, dpi=300)
+
+
+
+# exclude the non-significant FDR corrected data points to calculate the correlation
+signif_gbc.axis <- gbc.axis[which(gbc.axis$significant.fdr ==1),] 
+ 
+cor.test(signif_gbc.axis$GAM.age.AdjRsq, as.numeric(signif_gbc.axis$SA.axis_rank), method=c("spearman"), exact=F)
+
+gbc.axis <- gbc.axis %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+
+## SA axis average rank vs. age effect
+(schaefer400_SA.AgeEffect <- ggplot(gbc.axis, aes(x=SA.axis_rank, y=GAM.age.AdjRsq, fill = SA.axis_rank_signif)) + geom_point(color = "white", shape = 21, size=2) +
+scale_fill_gradient2(low="#6f1282",high = "goldenrod1",, mid = "#EBDAFF", midpoint = median(gbc.axis$SA.axis_rank), na.value="gray") +
+labs(fill = "SA Axis Rank", x="\nSensorimotor-Association Axis Rank\n", y=expression(paste("Age Effect (Delta Adj", " R"^2, ")"))) +
+geom_smooth(data = signif_gbc.axis, method='lm', se=TRUE, fill=alpha(c("gray70"),.9), col="black") +
+theme(
+axis.title.x=element_text(size=12, color = "black"),
+axis.title.y=element_text(size=12, color = "black"),
+axis.line = element_line(color = "black"),
+axis.text=element_text(size=12, color = "black"),
+panel.background=element_blank(),
+legend.position = "right") +
+annotate(geom="text", x=300, y=0.06, label="r = -0.36, p < 0.0001  ", color="black"))
+
+ 
+
+ 
+ 
+```
+
+
+
+## GBC Developmental Trajectories
+
+```{r}
+class(gam.smooths.schaefer400$SA.axis_rank)
+# seems like transmodal areas have greater GBC and seem to increase with age, while unimodal areas have smaller GBC and increase or stays the same with age
+(schaefer400_predGBC <- ggplot(gam.smooths.schaefer400,aes(age,fit,group=index)) + 
+  geom_line(data = gam.smooths.schaefer400, size=.8, alpha = .6, aes(color=SA.axis_rank)) + scale_color_gradient2(low="#6f1282",high = "goldenrod1", mid = "#EBDAFF", midpoint = median(gbc.axis$SA.axis_rank)) + 
+  labs(color = "SA Axis Rank",
+       x="Age", 
+       y="Predicted Global Brain Connectivity") +
+  theme(
+axis.title.x=element_text(size=12, color = "black"),
+axis.title.y=element_text(size=12, color = "black"),
+axis.line = element_line(color = "black"),
+axis.text=element_text(size=12, color = "black"),
+panel.background=element_blank(),
+legend.position = "bottom") + coord_cartesian(expand = FALSE, xlim = c(8, 23)))
+ 
+#ggsave(schaefer400_predGBC, file="/cbica/projects/network_replication/adapted_Rscripts/Figures/Schaefer400/GBC/schaefer400x17_predGBC.pdf", width = 4, height=4, dpi=300)
+
+```
+
+## Age of Maximal GBC 
+
+```{r echo=FALSE}
+
+names(gam.agepeaks.schaefer400)[2] <- "region"
+ 
+right_gam.agepeaks.schaefer400 <-  gam.agepeaks.schaefer400
+ 
+right_gam.agepeaks.schaefer400$region<- gsub(x = gam.agepeaks.schaefer400$region, pattern = "17Networks_RH_", replacement = "")
+right_gam.agepeaks.schaefer400 <- right_gam.agepeaks.schaefer400[-which(grepl("17Networks_LH_", right_gam.agepeaks.schaefer400$region)),]
+
+ 
+
+left_gam.agepeaks.schaefer400 <-  gam.agepeaks.schaefer400
+left_gam.agepeaks.schaefer400$region<- gsub(x = gam.agepeaks.schaefer400$region, pattern = "17Networks_LH_", replacement = "")
+left_gam.agepeaks.schaefer400 <- left_gam.agepeaks.schaefer400[-which(grepl("17Networks_RH_", left_gam.agepeaks.schaefer400$region)),]
+
+(schaefer400_agepeakR <- ggplot() + geom_brain(data=right_gam.agepeaks.schaefer400, 
+                      atlas=schaefer17_400, 
+                      mapping=aes(fill=age.peak), 
+                      show.legend=TRUE, 
+                      hemi = "right") + 
+  scale_fill_gradientn(colors = viridis_pal(option="B")(10)) + theme_void())
+#ggsave(schaefer400_agepeakR, file="/cbica/projects/network_replication/adapted_Rscripts/Figures/Schaefer400/GBC/schaefer400x17_agepeakR.pdf", width = 6, height=4, dpi=300)
+
+(schaefer400_agepeakL <- ggplot() + geom_brain(data=left_gam.agepeaks.schaefer400, 
+                      atlas=schaefer17_400, 
+                      mapping=aes(fill=age.peak), 
+                      show.legend=TRUE, 
+                      hemi = "left") + 
+  scale_fill_gradientn(colors = viridis_pal(option="B")(10)) + theme_void())
+#ggsave(schaefer400_agepeakL, file="/cbica/projects/network_replication/adapted_Rscripts/Figures/Schaefer400/GBC/schaefer400x17_agepeakL.pdf", width = 6, height=4, dpi=300)
+
+
+  
+plot(schaefer17_400) +
+  theme(legend.position = "bottom",
+        legend.text = element_text(size = 9)) +
+  guides(fill = guide_legend(ncol = 7))
+
+ 
+```

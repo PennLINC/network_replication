@@ -1,0 +1,133 @@
+---
+title: "GBC GAMs: PNC"
+author: "Valerie Jill Sydnor" adapted by Audrey
+output:
+  html_document:
+    code_folding: show
+    highlight: haddock
+    theme: lumen
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+source("/cbica/projects/network_replication/adapted_Rscripts/GAM_functions.R")
+```
+
+
+**Prepare GBC + Demographics data frame for GAMs**
+```{r}
+participants <- read.csv("/cbica/projects/network_replication/adapted_Rscripts/participants_allIDs.csv") #final study sample pnc IDs (bblid/scanid) from Adam Pines's multiscale paper
+demographics <- read.csv("/cbica/projects/network_replication/PNC/n1601_demographics_go1_20161212.csv") #PNC demographics information
+demographics <- demographics %>% mutate(age = (ageAtScan1/12)) #format age variable
+demographics$sex <- as.factor(demographics$sex) #format sex variable
+
+demographics <- merge(participants, demographics, by="scanid") #get demographics for final study sample only via ID matching
+relRMS <- read.csv("/cbica/projects/network_replication/PNC/qc_files/RBC_PNC_relMeans.csv") 
+demographics <- merge(demographics, relRMS, by="rbcid") #add motion information to demographics df
+```
+
+
+# make GBC-demographics .csv's
+```{r}
+gbc.subxparcel.matrix.glasser <- read.csv("/cbica/projects/network_replication/GBC/GBC_subxparcel_matrix_glasser.csv") #participant x glasser region GBC spreadsheet
+#gbc.subxparcel.matrix.glasser has columns (roi's) that are NA's that need to be removed. those NA's correspond to parcels to be removed because of the SNRmask. Also need to remove the rows (corresponding to subjects that are currently missing files)
+# need to remove 10 rows and 24 columns
+gbc.subxparcel.matrix.glasser <- gbc.subxparcel.matrix.glasser[-c(1:7, 24, 690, 691),] # the subjects that should've been removed earlier 
+col_rm <- as.numeric(levels(as.factor(as.data.frame(which(is.na(gbc.subxparcel.matrix.glasser), arr.ind=TRUE))$col)))
+gbc.subxparcel.matrix.glasser <- gbc.subxparcel.matrix.glasser[, -col_rm]
+gbc.glasser.pnc <- merge(gbc.subxparcel.matrix.glasser, demographics, by="rbcid") #get glasser GBC data and demographics for final study sample via ID matching
+#write.csv(gbc.glasser.pnc, "/cbica/projects/network_replication/GBC/GBCglasser_demographics_finalsample.csv", quote = F, row.names = F)
+ 
+```
+
+
+# load GBC-demographics df's
+```{r}
+gbc.glasser.pnc <- read.csv('/cbica/projects/network_replication/GBC/GBCglasser_demographics_finalsample.csv')
+```
+
+
+# edit parcel labels to reflect SNR mask
+```{r}
+glasser.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/glasser360_regionlist.csv", header = T) #glasser parcel names in order of surface data
+names(glasser.parcel.labels)[2] <- "orig_parcelname"
+# remove parcels using SNR mask
+SNR.mask.glasser360 <- read.csv("/cbica/projects/network_replication/atlases/Masks/SNRmask_glasser360.csv")
+rm <- which(SNR.mask.glasser360$SNR.mask == 0)
+glasser.parcel.labels <- glasser.parcel.labels[-rm,]
+ 
+```
+
+**Fit GAMs**
+
+Fit GAM (GBC ~ s(age) + sex + RMSmotion)) per each region in atlas and save out statistics and derivative-based characteristics
+
+GAMs for Glasser
+```{r}
+gam.GBC.age.glasser <- matrix(data=NA, nrow=dim(glasser.parcel.labels)[1], ncol=9) #empty matrix to save gam.fit output to
+ 
+# get GAMs for gbc.glasser.pnc - which includes glasser GBC data and demographics
+for(row in c(1:nrow(glasser.parcel.labels))){ #for each glasser region
+  region <- glasser.parcel.labels$orig_parcelname[row] 
+  GAM.RESULTS <- gam.fit(measure = "gbc", atlas = "glasser", dataset = "pnc", region = region, smooth_var = "age", covariates = "sex + RMSmotion") #run the gam.fit function
+  gam.GBC.age.glasser[row,] <- GAM.RESULTS}
+
+  
+gam.GBC.age.glasser <- as.data.frame(gam.GBC.age.glasser)
+colnames(gam.GBC.age.glasser) <- c("label","GAM.age.Fvalue","GAM.age.pvalue","GAM.age.AdjRsq","Anova.age.pvalue","age.onsetchange","age.peakchange","maxage.GBC.increase","age.maturation")
+cols = c(2:9)    
+gam.GBC.age.glasser[,cols] = apply(gam.GBC.age.glasser[,cols], 2, function(x) as.numeric(as.character(x)))
+gam.GBC.age.glasser <- gam.GBC.age.glasser %>% mutate(significant = (Anova.age.pvalue < 0.05))
+
+#write.csv(gam.GBC.age.glasser, "/cbica/projects/network_replication/GBC/GAM/GAMresults.GBC.age.glasser.csv", row.names = F, quote = F)
+
+```
+
+ 
+# load GAMs output
+```{r}
+
+gam.GBC.age.glasser <- read.csv("/cbica/projects/network_replication/GBC/GAM/GAMresults.GBC.age.glasser.csv")
+
+```
+
+
+
+**Estimate GAM smooths based on model-predicted data and save out predicted y data**
+
+Estimate GAM smooths - Glasser
+```{r}
+gam.smooths.glasser <- matrix(data=NA, ncol=7) #empty matrix to save gam.predsmooth fits to
+colnames(gam.smooths.glasser) <- c("age","fit","se.fit","selo","sehi","index","label")
+
+gam.peaks.glasser <- matrix(data=NA, ncol=2) #empty matrix to save measure peaks to (value of x when y is predicted to be maximal)
+colnames(gam.peaks.glasser) <- c("label","age.peak")
+
+for(row in c(1:nrow(glasser.parcel.labels))){ #for each glasser region
+  
+  region <- glasser.parcel.labels$orig_parcelname[row] #get the region name
+  GAM.SMOOTH <- gam.predsmooth(measure = "gbc", atlas = "glasser", dataset = "pnc", region = region, smooth_var = "age", covariates = "sex + RMSmotion") #run the gam.predsmooth function
+  
+  preddata <- as.data.frame(GAM.SMOOTH[3]) #get predicted.smooth df from function output
+  preddata$index <- rep(x=row, 1000) #region index
+  preddata$label <- rep(x=GAM.SMOOTH[1], 1000) #label
+  gam.smooths.glasser <- rbind(gam.smooths.glasser, preddata)
+  
+  datapeak <- as.data.frame(cbind(GAM.SMOOTH[1], GAM.SMOOTH[2]))
+  colnames(datapeak) <- c("label","age.peak")
+  gam.peaks.glasser <- rbind(gam.peaks.glasser, datapeak)
+}
+gam.smooths.glasser <- gam.smooths.glasser[-1,] #remove empty initialization row
+gam.smooths.glasser$label <- as.character(gam.smooths.glasser$label)
+gam.peaks.glasser <- gam.peaks.glasser[-1,] #remove empty initialization row
+gam.peaks.glasser$label <- as.character(gam.peaks.glasser$label)
+gam.peaks.glasser$age.peak <- as.numeric(gam.peaks.glasser$age.peak)
+
+#write.csv(gam.smooths.glasser,"/cbica/projects/network_replication/GBC/GAM/GAMsmoothfits.GBC.age.glasser.csv", row.names = F, quote = F)
+#write.csv(gam.peaks.glasser, "/cbica/projects/network_replication/GBC/GAM/GAMpeaks.GBC.age.glasser.csv", row.names = F, quote = F)
+ 
+```

@@ -1,0 +1,131 @@
+---
+title: "WNC GAMs: PNC (Gordon)"
+author: "Valerie Jill Sydnor adapted by Audrey Luo"
+output:
+  html_document:
+    code_folding: show
+    highlight: haddock
+    theme: lumen
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+source("/cbica/projects/network_replication/adapted_Rscripts/GAM_functions.R")
+```
+
+
+**Prepare WNC + Demographics data frame for GAMs**
+
+```{r}
+participants <- read.csv("/cbica/projects/network_replication/adapted_Rscripts/participants_allIDs.csv") #final study sample pnc IDs (bblid/scanid) from Adam Pines's multiscale paper
+demographics <- read.csv("/cbica/projects/network_replication/PNC/n1601_demographics_go1_20161212.csv") #PNC demographics information
+demographics <- demographics %>% mutate(age = (ageAtScan1/12)) #format age variable
+demographics$sex <- as.factor(demographics$sex) #format sex variable
+
+demographics <- merge(participants, demographics, by="scanid") #get demographics for final study sample only via ID matching
+relRMS <- read.csv("/cbica/projects/network_replication/PNC/qc_files/RBC_PNC_relMeans.csv") 
+demographics <- merge(demographics, relRMS, by="rbcid") #add motion information to demographics df
+```
+
+# make WNC-demographics .csv's
+```{r} 
+WNC_subxparcel_matrix_gordon <- read.csv("/cbica/projects/network_replication/WNC/WNC_subxparcel_matrix_gordon.csv") #participant x gordon region WNC spreadsheet
+WNC_subxparcel_matrix_gordon <- WNC_subxparcel_matrix_gordon[-c(1:7, 24, 690, 691),] # the subjects that should've been removed earlier 
+names(WNC_subxparcel_matrix_gordon)
+col_rm <- as.numeric(levels(as.factor(as.data.frame(which(is.na(WNC_subxparcel_matrix_gordon), arr.ind=TRUE))$col)))
+WNC_subxparcel_matrix_gordon <- WNC_subxparcel_matrix_gordon[, -col_rm]
+WNC.gordon.pnc <- merge(WNC_subxparcel_matrix_gordon, demographics, by="rbcid") #get gordon WNC data and demographics for final study sample via ID matching
+
+#write.csv(WNC.gordon.pnc, "/cbica/projects/network_replication/WNC/WNCgordon_demographics_finalsample.csv")
+ 
+ 
+```
+
+# load WNC-demographics df's
+```{r}
+WNC.gordon.pnc <- read.csv('/cbica/projects/network_replication/WNC/WNCgordon_demographics_finalsample.csv')
+```
+
+
+# edit parcel labels to reflect SNR mask
+```{r}
+gordon.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/gordon_regionlist_xcp.csv", header = F) #gordon parcel names in order of surface data
+names(gordon.parcel.labels) <- "orig_parcelname"
+# remove parcels using SNR mask
+SNR.mask.gordon <- read.csv("/cbica/projects/network_replication/atlases/Masks/SNRmask_gordon.csv")
+rm <- which(SNR.mask.gordon$SNR.mask == 0)
+ 
+gordon.parcel.labels <- gordon.parcel.labels[-rm,]
+  
+```
+
+**Fit GAMs**
+
+Fit GAM (WNC ~ s(age) + sex + RMSmotion)) per each region in atlas and save out statistics and derivative-based characteristics
+
+GAMs for gordon
+```{r}
+gam.WNC.age.gordon <- matrix(data=NA, nrow=length(gordon.parcel.labels), ncol=9) #empty matrix to save gam.fit output to
+ 
+# gordon parcel labels and the labels from WNC.gordon.pnc don't currently match. And I don't think parcelnames can begin with a number. following 2 lines fixes this
+ 
+# get GAMs for WNC.gordon.pnc - which includes gordon WNC data and demographics
+for(row in c(1:length(gordon.parcel.labels))){ #for each gordon region
+  region <- gordon.parcel.labels[row] 
+  GAM.RESULTS <- gam.fit(measure = "WNC", atlas = "gordon", dataset = "pnc", region = region, smooth_var = "age", covariates = "sex + RMSmotion") #run the gam.fit function
+  gam.WNC.age.gordon[row,] <- GAM.RESULTS}
+ 
+ 
+gam.WNC.age.gordon <- as.data.frame(gam.WNC.age.gordon)
+colnames(gam.WNC.age.gordon) <- c("label","GAM.age.Fvalue","GAM.age.pvalue","GAM.age.AdjRsq","Anova.age.pvalue","age.onsetchange","age.peakchange","maxage.WNC.increase","age.maturation" )
+cols = c(2:9)    
+gam.WNC.age.gordon[,cols] = apply(gam.WNC.age.gordon[,cols], 2, function(x) as.numeric(as.character(x)))
+gam.WNC.age.gordon <- gam.WNC.age.gordon %>% mutate(significant = (Anova.age.pvalue < 0.05))
+#write.csv(gam.WNC.age.gordon, "/cbica/projects/network_replication/WNC/GAM/GAMresults.WNC.age.gordon.csv", row.names = F, quote = F)
+```
+ 
+# load GAMs output
+```{r} 
+gam.WNC.age.gordon <- read.csv("/cbica/projects/network_replication/WNC/GAM/GAMresults.WNC.age.gordon.csv")
+```
+
+
+
+**Estimate GAM smooths based on model-predicted data and save out predicted y data**
+Estimate GAM smooths - gordon
+```{r}
+gam.smooths.gordon <- matrix(data=NA, ncol=7) #empty matrix to save gam.predsmooth fits to
+colnames(gam.smooths.gordon) <- c("age","fit","se.fit","selo","sehi","index","label")
+
+gam.peaks.gordon <- matrix(data=NA, ncol=2) #empty matrix to save measure peaks to (value of x when y is predicted to be maximal)
+colnames(gam.peaks.gordon) <- c("label","age.peak")
+
+
+for(row in c(1:length(gordon.parcel.labels))){ #for each gordon region
+  
+  region <- gordon.parcel.labels[row] #get the region name
+  GAM.SMOOTH <- gam.predsmooth(measure = "WNC", atlas = "gordon", dataset = "pnc", region = region, smooth_var = "age", covariates = "sex + RMSmotion") #run the gam.predsmooth function
+  
+  preddata <- as.data.frame(GAM.SMOOTH[3]) #get predicted.smooth df from function output
+  preddata$index <- rep(x=row, 1000) #region index
+  preddata$label <- rep(x=GAM.SMOOTH[1], 1000) #label
+  gam.smooths.gordon <- rbind(gam.smooths.gordon, preddata)
+  
+  datapeak <- as.data.frame(cbind(GAM.SMOOTH[1], GAM.SMOOTH[2]))
+  colnames(datapeak) <- c("label","age.peak")
+  gam.peaks.gordon <- rbind(gam.peaks.gordon, datapeak)
+}
+gam.smooths.gordon <- gam.smooths.gordon[-1,] #remove empty initilization row
+gam.smooths.gordon$label <- as.character(gam.smooths.gordon$label)
+gam.peaks.gordon <- gam.peaks.gordon[-1,] #remove empty initilization row
+gam.peaks.gordon$label <- as.character(gam.peaks.gordon$label)
+gam.peaks.gordon$age.peak <- as.numeric(gam.peaks.gordon$age.peak)
+ 
+#write.csv(gam.smooths.gordon,"/cbica/projects/network_replication/WNC/GAM/GAMsmoothfits.WNC.age.gordon.csv", row.names = F, quote = F)
+#write.csv(gam.peaks.gordon, "/cbica/projects/network_replication/WNC/GAM/GAMpeaks.WNC.age.gordon.csv", row.names = F, quote = F)
+ 
+```

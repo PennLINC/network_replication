@@ -1,0 +1,40 @@
+---
+title: "netrep_demo"
+author: "Audrey Luo"
+date: '2022-06-14'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+ 
+
+hbn <- readRDS("/Users/audluo/cbica/projects/RBC/Curation/RBC_demo_pheno/outputs/hbn_data.rds")
+hcp <- readRDS("/Users/audluo/cbica/projects/RBC/Curation/RBC_demo_pheno/outputs/hcpd_data.rds")
+nki <- readRDS("/Users/audluo/cbica/projects/RBC/Curation/RBC_demo_pheno/outputs/nki_data.rds")
+pnc <- readRDS("/Users/audluo/cbica/projects/RBC/Curation/RBC_demo_pheno/outputs/pnc_data.rds")
+
+
+
+range(hbn$age,na.rm=TRUE)
+dim(hbn)
+length(unique(hbn$participant_id)) #5290
+ 
+range(hcp$age,na.rm=TRUE)
+length(which(hcp$age > 7 & pnc$age < 23))
+length(unique(hcp$participant_id)) 
+length(hcp$participant_id) #652
+ 
+range(nki$age,na.rm=TRUE)
+length(which(nki$age > 7 & nki$age < 23))
+length(unique(nki$participant_id[which(nki$age > 7 & nki$age < 23)])) #505
+length(nki$participant_id)   
+
+range(pnc$age,na.rm=TRUE)
+length(which(pnc$age > 7 & pnc$age < 23))
+length(unique(pnc$participant_id[which(pnc$age > 7 & pnc$age < 23)])) #1621
+
+pnc_clinical <- read.csv("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/Aaron/data/clinical/diagnosis_dxpmr_20161014.csv")
+ 
+```
+
+ 

@@ -1,0 +1,126 @@
+---
+title: "Compute Within-Network connectivty in PNC (Schaefer200x7)"
+author: "Audrey Luo"
+output:
+  html_document:
+    code_folding: show
+    highlight: haddock
+    theme: lumen
+    toc: yes
+    toc_depth: 5
+    toc_float: yes
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ciftiTools)
+ciftiTools.setOption('wb_path', '/Applications/workbench/')
+library(gifti)
+library(cifti)
+Sys.setenv(RGL_USE_NULL=TRUE)
+library(ggseg)
+library(ggsegExtra)  
+library(ggsegGlasser) 
+library(ggsegSchaefer)  
+library(viridis)
+require(ggplot2)
+library(dplyr)
+```
+
+ 
+load region list
+```{r}
+schaefer200.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_ggseg_reordered.csv", header = T)
+schaefer200.communityAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer200x7CommunityAffiliation.1D_reordered.csv", header=T)
+
+schaefer200.parcel.labels <- as.data.frame(cbind(schaefer200.parcel.labels$x, schaefer200.communityAffil$x))
+names(schaefer200.parcel.labels) <- c("label", "network")
+
+
+#  make dataframe where rownames are the commAffil number, and then need to transpose V1 to be rows 
+schaefer200x7_rows <- as.data.frame(t(schaefer200.parcel.labels$network))
+schaefer200x7_commAffil_mat <- as.data.frame(schaefer200x7_rows[rep(seq_len(nrow(schaefer200x7_rows)), each = 200), ])
+rownames(schaefer200x7_commAffil_mat) <- NULL
+ 
+ 
+```
+
+# Compute Within-Network Connectivty (WNC) function - clean
+
+```{r}
+SNRmask_schaefer200 <- read.csv('/cbica/projects/network_replication/atlases/Masks/SNRmask_schaefer200x7_reordered.csv')
+
+# computeWNC(rbcid, "schaefer200", schaefer200x7_commAffil_mat, schaefer200.parcel.labels$network)
+
+computeWNC <- function(rbcid, atlas, community_affiliation_mat, network_assignment){
+  #read in connectivity matrix
+  if(atlas == "schaefer200"){
+    connect.matrix <- read_cifti(sprintf("/cbica/projects/network_replication/pconn/%1$s/%1$s_ses-PNC1_task-rest_acq-singleband_space-fsLR_atlas-Schaefer217_den-91k_den-91k_bold.pconn.nii",rbcid))
+    mask <- SNRmask_schaefer200} #200 x 200 matrix 
+ 
+  # set rows and columns corresponding to parcel # in mask to NA
+  connect.matrix$data[which(mask == 0), ] <- NA 
+  connect.matrix$data[,which(mask == 0)] <- NA
+  
+  #compute average within-network connectivity 
+  WNC <- c()
+  for (i in 1:nrow(connect.matrix$data)) {  
+    within_network_values <- c() 
+    WNC_per_node <- c()
+    for (j in 1:length(connect.matrix$data[i,])) {  # entire  row
+       
+      if(is.na(connect.matrix$data[i,j]) || connect.matrix$data[i,j] == 1) { # add NA if excluded by mask or identity
+        within_network_values <- append(within_network_values, NA);
+        } else if (schaefer200.parcel.labels$network[i] == schaefer200x7_commAffil_mat[i,j]) { 
+          within_network_values <- append(within_network_values, connect.matrix$data[i,j])
+          } else if (schaefer200.parcel.labels$network[i] != schaefer200x7_commAffil_mat[i,j]) {  
+            within_network_values <- append(within_network_values, NA)
+          } 
+      }
+    #print(within_network_values)  
+    WNC_per_node <- append(WNC_per_node, mean(within_network_values, na.rm=TRUE))  
+    #print(WNC_per_node) # 1 value
+    WNC <- append(WNC, WNC_per_node)  
+    } 
+  return(WNC)
+}
+ 
+  
+```
+
+     
+
+# Compute WNC for each subject  
+```{r, echo=T, eval=F, warning=F, message=F}
+
+participants <- read.csv('/cbica/projects/network_replication/adapted_Rscripts/participants_allIDs.csv')
+subs_no_files <- read.csv('/cbica/projects/network_replication/adapted_Rscripts/subs_no_files.csv', row.names=NULL)
+subs_no_files <- subs_no_files[,2]
+
+WNC.subxparcel.matrix.schaefer200 <- matrix(data = NA, nrow = nrow(participants), ncol = 201)
+regionheaders <- as.character(schaefer200.parcel.labels$label)
+demoheaders <- c("rbcid")
+colheaders <- as.matrix(c(demoheaders,regionheaders))
+colnames(WNC.subxparcel.matrix.schaefer200) <- colheaders
+ 
+#compute WNC for each subject  
+for(sub in c(1:nrow(participants))){
+  rbcid=as.character(participants[sub,4])
+  if(rbcid %in% subs_no_files){
+    next
+  }
+  else {
+  rbcid.data.schaefer200 <- computeWNC(rbcid, "schaefer200", schaefer200x7_commAffil_mat, schaefer200.parcel.labels$network)
+  WNC.subxparcel.matrix.schaefer200[sub,] <- cbind(rbcid, t(rbcid.data.schaefer200))
+  print(paste(sub, rbcid, "schaefer200"))
+  }
+}
+ 
+ 
+ 
+#write.csv(WNC.subxparcel.matrix.schaefer200, "/cbica/projects/network_replication/WNC/WNC_subxparcel_matrix_schaefer200x7.csv", row.names=F, quote=F)
+  
+WNC.subxparcel.matrix.schaefer200_test <- read.csv("/cbica/projects/network_replication/WNC/WNC_subxparcel_matrix_schaefer200x7.csv") 
+GBC.subxparcel.matrix.schaefer200_test <- read.csv('/cbica/projects/network_replication/GBC/GBC_subxparcel_matrix_schaefer200x17.csv') 
+ 
+
+```

@@ -1,0 +1,108 @@
+---
+title: "Schaefer 7 Network to 17 Network Reordering"
+author: "Audrey Luo"
+date: '2022-06-09'
+output: html_document
+---
+
+
+# Schaefer200x7 to 17
+```{r setup, include=FALSE}
+# reorder parcel labels
+schaefer200x7.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200_7Network_regionlist.csv", header = F)
+schaefer200x17.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x17_regionlist.csv", header = T)
+
+# want to put schaefer200x7 in the same order as schaefer200x17
+# then i think i can do the SNR mask? and other stuff? 
+
+index_schaefer200x7to17 <- read.csv("/cbica/projects/network_replication/software/schaefer7to17_reordering/index_schaefer200x7to17.csv", header=F)
+ 
+index_schaefer200x7to17$V1 <- as.numeric(index_schaefer200x7to17$V1)
+schaefer200x7_reordered <-schaefer200x7.parcel.labels$V1[index_schaefer200x7to17$V1]
+as.matrix(cbind(schaefer200x7_reordered, schaefer200x17.parcel.labels))
+
+#write.csv(schaefer200x7_reordered, "/cbica/projects/network_replication/atlases/parcellations/schaefer200_7Network_regionlist_reordered.csv")
+
+# reorder community affiliation
+schaefer200x7_communityAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer200x7CommunityAffiliation.1D.csv", header=F)
+
+View(schaefer200x7_communityAffil)
+str(schaefer200x7_communityAffil)
+schaefer200x7_communityAffil_reordered <-schaefer200x7_communityAffil$V1[index_schaefer200x7to17$V1]
+
+as.matrix(cbind(schaefer200x7_communityAffil_reordered, schaefer200x7_communityAffil))
+
+#write.csv(schaefer200x7_communityAffil_reordered, "/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer200x7CommunityAffiliation.1D_reordered.csv")
+
+
+# reorder spherical coordinates
+schaefer200x7_coords <- read.csv("/cbica/projects/network_replication/software/rotate_parcellation/Schaefer2018_200Parcels_7Networks_order_FSLMNI152_1mm.Centroid_RAS.csv", header=TRUE)
+schaefer200x7_coords_reordered <-schaefer200x7_coords[index_schaefer200x7to17$V1,]
+#write.csv(schaefer200x7_coords_reordered, "/cbica/projects/network_replication/software/rotate_parcellation/Schaefer2018_200Parcels_7Networks_order_FSLMNI152_1mm.Centroid_RAS_reordered.csv")
+
+# reorder ggseg region list
+schaefer200x7_ggseg <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200_7Network_ggseg_regionlist.csv")
+index_schaefer200x7to17 <- read.csv("/cbica/projects/network_replication/software/schaefer7to17_reordering/index_schaefer200x7to17.csv", header=F)
+ 
+index_schaefer200x7to17$V1 <- as.numeric(index_schaefer200x7to17$V1)
+schaefer200x7_ggseg_reordered <- schaefer200x7_ggseg$region[index_schaefer200x7to17$V1]
+as.matrix(cbind(schaefer200x7_reordered, schaefer200x7_ggseg_reordered))
+
+#write.csv(schaefer200x7_ggseg_reordered, "/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_ggseg_reordered.csv")
+
+
+```
+
+ 
+# Schaefer400x7 to 17
+```{r setup, include=FALSE}
+# reorder parcel labels
+schaefer400x7.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer400_7Network_regionlist.csv", header = F)
+
+schaefer400x17.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer400x17_regionlist.csv", header = T)
+
+# want to put schaefer400x7 in the same order as schaefer400x17
+# then i think i can do the SNR mask? and other stuff? 
+
+index_schaefer400x7to17 <- read.csv("/cbica/projects/network_replication/software/schaefer7to17_reordering/index_schaefer400x7to17.csv", header=F)
+ 
+index_schaefer400x7to17$V1 <- as.numeric(index_schaefer400x7to17$V1)
+schaefer400x7_reordered <-schaefer400x7.parcel.labels$V1[index_schaefer400x7to17$V1]
+as.matrix(cbind(schaefer400x7_reordered, schaefer400x17.parcel.labels))
+
+#write.csv(schaefer400x7_reordered, "/cbica/projects/network_replication/atlases/parcellations/schaefer400_7Network_regionlist_reordered.csv")
+
+
+# reorder community affiliation
+schaefer400x7_communityAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer400x7CommunityAffiliation.1D.csv", header=F)
+
+schaefer400x7_communityAffil_reordered <-schaefer400x7_communityAffil$V1[index_schaefer400x7to17$V1]
+
+#write.csv(schaefer400x7_communityAffil_reordered, "/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer400x7CommunityAffiliation.1D_reordered.csv")
+
+
+# reorder spherical coordinates
+schaefer400x7_coords <- read.csv("/cbica/projects/network_replication/software/rotate_parcellation/Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.Centroid_RAS.csv", header=TRUE)
+schaefer400x7_coords_reordered <- schaefer400x7_coords[index_schaefer400x7to17$V1,]
+#write.csv(schaefer400x7_coords_reordered, "/cbica/projects/network_replication/software/rotate_parcellation/Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.Centroid_RAS_reordered.csv")
+
+schaefer400x7_coords[300,]
+# reorder ggseg region list
+schaefer400x7_ggseg <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer400_7Network_ggseg_regionlist.csv")
+index_schaefer400x7to17 <- read.csv("/cbica/projects/network_replication/software/schaefer7to17_reordering/index_schaefer400x7to17.csv", header=F)
+ 
+index_schaefer400x7to17$V1 <- as.numeric(index_schaefer400x7to17$V1)
+schaefer400x7_ggseg_reordered <- schaefer400x7_ggseg$region[index_schaefer400x7to17$V1]
+as.matrix(cbind(schaefer400x7_reordered, schaefer400x7_ggseg_reordered))
+
+#write.csv(schaefer400x7_ggseg_reordered, "/cbica/projects/network_replication/atlases/parcellations/schaefer400x7_ggseg_reordered.csv")
+
+```
+
+
+```{r}
+
+ 
+ 
+```
+

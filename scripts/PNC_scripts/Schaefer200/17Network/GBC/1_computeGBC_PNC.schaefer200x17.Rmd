@@ -1,0 +1,97 @@
+---
+title: "Compute GBC in PNC (Schaefer200x17)"
+author: "Audrey Luo"
+output:
+  html_document:
+    code_folding: show
+    highlight: haddock
+    theme: lumen
+    toc: yes
+    toc_depth: 5
+    toc_float: yes
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ciftiTools)
+ciftiTools.setOption('wb_path', '/Applications/workbench/')
+library(gifti)
+library(cifti)
+Sys.setenv(RGL_USE_NULL=TRUE)
+library(ggseg)
+library(ggsegExtra)  
+library(ggsegGlasser) 
+library(ggsegSchaefer)  
+library(viridis)
+require(ggplot2)
+library(dplyr)
+```
+
+ 
+load region list
+```{r}
+schaefer200.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x17_regionlist.csv", header = T)
+names(schaefer200.parcel.labels)[2] <- "label"
+schaefer200.parcel.labels$label
+```
+
+# Compute Global Brain Connectivity (GBC) function
+
+```{r}
+
+SNRmask_schaefer200 <- read.csv('/cbica/projects/network_replication/atlases/Masks/SNRmask_schaefer200x17.csv')
+
+computeGBC <- function(rbcid, atlas){
+  
+  #read in connectivity matrix
+  if(atlas == "schaefer200"){
+    connect.matrix <- read_cifti(sprintf("/cbica/projects/network_replication/pconn/%1$s/%1$s_ses-PNC1_task-rest_acq-singleband_space-fsLR_atlas-Schaefer217_den-91k_den-91k_bold.pconn.nii",rbcid))
+    mask <- SNRmask_schaefer200} #200 x 200 matrix 
+ 
+  # set rows and columns corresponding to parcel # in mask to NA
+  connect.matrix$data[which(mask == 0), ] <- NA
+  connect.matrix$data[,which(mask == 0)] <- NA
+  #compute average connectivity 
+    GBC <- as.array(rowMeans(connect.matrix$data, na.rm = TRUE))
+  return(GBC)
+}
+
+```
+
+
+# Compute GBC for each subject  
+```{r, echo=T, eval=F, warning=F, message=F}
+
+participants <- read.csv('/cbica/projects/network_replication/adapted_Rscripts/participants_allIDs.csv')
+subs_no_files <- read.csv('/cbica/projects/network_replication/adapted_Rscripts/subs_no_files.csv', row.names=NULL)
+subs_no_files <- subs_no_files[,2]
+
+GBC.subxparcel.matrix.schaefer200 <- matrix(data = NA, nrow = nrow(participants), ncol = 201)
+regionheaders <- as.character(schaefer200.parcel.labels$label)
+demoheaders <- c("rbcid")
+colheaders <- as.matrix(c(demoheaders,regionheaders))
+colnames(GBC.subxparcel.matrix.schaefer200) <- colheaders
+ 
+#compute GBC for each subject  
+for(sub in c(1:nrow(participants))){
+  rbcid=as.character(participants[sub,4])
+  if(rbcid %in% subs_no_files){
+    next
+  }
+  else {
+  rbcid.data.schaefer200 <- computeGBC(rbcid, "schaefer200") 
+  GBC.subxparcel.matrix.schaefer200[sub,] <- cbind(rbcid, t(rbcid.data.schaefer200))
+  print(paste(rbcid, "schaefer200"))
+  }
+}
+  
+#write.csv(GBC.subxparcel.matrix.schaefer200, "/cbica/projects/network_replication/GBC/GBC_subxparcel_matrix_schaefer200x17.csv", row.names=F, quote=F)
+  
+GBC.subxparcel.matrix.schaefer200_test <- read.csv('/cbica/projects/network_replication/GBC/GBC_subxparcel_matrix_schaefer200x17.csv') 
+
+as.data.frame(GBC.subxparcel.matrix.schaefer200)
+GBC.subxparcel.matrix.schaefer200_test
+
+```

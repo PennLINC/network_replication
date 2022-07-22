@@ -1,0 +1,274 @@
+---
+title: "BNC Developmental Trajectories: PNC (Schaefer200x7)"
+author: "Valerie Jill Sydnor, adapted by Audrey Luo"
+output:
+  html_document:
+    code_folding: show
+    highlight: haddock
+    theme: lumen
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+require(ggplot2)
+library(cowplot)
+library(cifti)
+library(ggseg)
+Sys.setenv(RGL_USE_NULL=TRUE)
+library(ggsegExtra)
+library(ggsegSchaefer)
+library(ggcorrplot)
+library(viridis)
+library(scales)
+library(stringr)
+library(tidyr)
+
+
+```
+  
+  
+# load schaefer200 parcellated S-A axis
+```{r}
+# load SNR mask 
+SNRmask_schaefer200 <- read.csv('/cbica/projects/network_replication/atlases/Masks/SNRmask_schaefer200x7_reordered.csv')
+
+# load region list
+schaefer200.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_ggseg_reordered.csv", header = T) #schaefer parcel names in order of surface data
+names(schaefer200.parcel.labels)[2] <- "label"
+schaefer200.parcel.labels[which(SNRmask_schaefer200 == 0),] <- NA # apply SNR mask to parcel names
+schaefer200.parcel.labels <- na.omit(schaefer200.parcel.labels)
+ 
+
+# load parcellated SA axis
+schaefer200_SAaxis_cifti <- read_cifti("/cbica/projects/network_replication/SAaxis/SensorimotorAssociation_Axis_parcellated/SensorimotorAssociation.Axis.Schaefer200.7Networks.pscalar.nii")  
+
+schaefer200_SAaxis <- as.data.frame(cbind(rank(schaefer200_SAaxis_cifti$data), names(schaefer200_SAaxis_cifti$Parcel)))
+colnames(schaefer200_SAaxis) <- c("SA.axis_rank","label")
+
+# reorder SA axis (7 to 17)
+index_schaefer200x7to17 <- read.csv("/cbica/projects/network_replication/software/schaefer7to17_reordering/index_schaefer200x7to17.csv", header=F)
+ 
+index_schaefer200x7to17$V1 <- as.numeric(index_schaefer200x7to17$V1)
+schaefer200_SAaxis <-schaefer200_SAaxis[index_schaefer200x7to17$V1,]
+#as.matrix(cbind(schaefer200_SAaxis, schaefer200.parcel.labels))
+
+
+# apply SNR mask
+schaefer200_SAaxis[which(SNRmask_schaefer200 == 0),] <- NA
+schaefer200_SAaxis <- na.omit(schaefer200_SAaxis) 
+
+identical(schaefer200_SAaxis$label, schaefer200.parcel.labels$label)
+ 
+```
+
+
+```{r include=FALSE}
+## GAM Results
+
+gam.BNC.age.schaefer200 <- read.csv("/Users/audluo/cbica/projects/network_replication/BNC/GAM/GAMresults.BNC.age.schaefer200x7.csv")
+
+gam.BNC.age.schaefer200 <- gam.BNC.age.schaefer200 %>% select(-label)
+gam.BNC.age.schaefer200$label <- schaefer200_SAaxis$label
+ 
+
+gam.smooths.schaefer200 <- read.csv("/Users/audluo/cbica/projects/network_replication/BNC/GAM/GAMsmoothfits.BNC.age.schaefer200x7.csv")
+gam.smooths.schaefer200$orig_parcelname <- gam.smooths.schaefer200$label
+ 
+
+gam.agepeaks.schaefer200 <- read.csv("/Users/audluo/cbica/projects/network_replication/BNC/GAM/GAMpeaks.BNC.age.schaefer200x7.csv")
+gam.agepeaks.schaefer200 <- gam.agepeaks.schaefer200 %>% select(-label)
+gam.agepeaks.schaefer200$label <- schaefer200_SAaxis$label
+
+
+```
+
+ 
+# schaefer200 final Dfs
+```{r include=FALSE}
+# Combine into Final Dfs
+df.list <- list(schaefer200_SAaxis,gam.BNC.age.schaefer200)
+  
+BNC.axis <- Reduce(function(x,y) merge(x,y, all=TRUE, sort=F), df.list) 
+BNC.axis$SA.axis_rank <- as.numeric(BNC.axis$SA.axis_rank)
+ 
+```
+
+ 
+ 
+```{r include=FALSE}
+  
+a <- merge(schaefer200.parcel.labels, schaefer200_SAaxis, by="label", sort=F)
+a$label <- gsub("7Networks_", "", a$label)
+ 
+gam.smooths.schaefer200 <- left_join(gam.smooths.schaefer200, a, by = "label")
+ 
+gam.smooths.schaefer200$SA.axis_rank <-as.numeric(gam.smooths.schaefer200$SA.axis_rank) 
+
+gam.agepeaks.schaefer200 <- left_join(gam.agepeaks.schaefer200, schaefer200_SAaxis, by="label")
+gam.agepeaks.schaefer200$SA.axis_rank <-as.numeric(gam.agepeaks.schaefer200$SA.axis_rank) 
+```
+ 
+ 
+#Load Spin Test Parcel Rotation Matrix
+```{r}
+source("/cbica/projects/network_replication/software/rotate.parcellation.R")
+source("/cbica/projects/network_replication/software/perm.sphere.p.R")
+
+schaefer200.coords <- read.csv("/cbica/projects/network_replication/software/rotate_parcellation/Schaefer2018_200Parcels_7Networks_order_FSLMNI152_1mm.Centroid_RAS_reordered.csv") #coordinates of schaefer200.coords parcel centroids on the freesurfer sphere
+
+perm.id.full <- rotate.parcellation(coord.l = as.matrix(schaefer200.coords[1:100,4:6]), coord.r = as.matrix(schaefer200.coords[101:200,4:6]), nrot = 10000) #rotate the schaefer200.coords parcellation 10,000 times on the freesurfer sphere to generate spatial nulls for spin-based permutation significance testing 
+
+ 
+## saveRDS(perm.id.full, "/cbica/projects/network_replication/software/rotate_parcellation/schaefer200x7.coords_sphericalrotations_N10k.rds")
+
+perm.id.full <- readRDS("/cbica/projects/network_replication/software/rotate_parcellation/schaefer200x7.coords_sphericalrotations_N10k.rds")
+```
+
+#create df.dev.spin formatted for spatial permutation testing 
+ 
+```{r}
+# need to reintroduced the parcels removed by SNRmask as NA's
+
+schaefer200.parcel.labels_noMask <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_ggseg_reordered.csv", header = T) 
+names(schaefer200.parcel.labels_noMask) <- c("orig_parcel", "label")
+
+BNC.axis$label <- gsub("7Networks_", "", BNC.axis$label)
+schaefer200.parcel.labels_noMask$label <- gsub("7Networks_", "", schaefer200.parcel.labels_noMask$label)
+setdiff(BNC.axis$label, schaefer200.parcel.labels_noMask$label)
+
+schaefer200.parcel.labels_noMask$label[which(!schaefer200.parcel.labels_noMask$label %in% BNC.axis$label)] # names of removed parcels
+
+
+# need to go through parcel.labels and see which are in BNC.axis label
+# then for the ones that aren't in BNC.axis$label, insert parcel.labels[row_of_missing_label] into BNC.axis, and have the rest of the row be NA
+# r = the row index -- indices of SNR removed parcels
+# newrow = content of inserted row -- c('name of parcel', NA, NA, NA etc)
+# existingDF = BNC.axis
+insertRow <- function(r, existingDF, orig.parcel.labels) {
+  newrow <- c(paste0(orig.parcel.labels[r]), rep(NA, 10)) # format data for spin tests by assigning NA to low SNR parcels, treating them like the medial wall
+  existingDF[seq(r+1,nrow(existingDF)+1),] <- existingDF[seq(r,nrow(existingDF)),]
+  existingDF[r,] <- newrow
+  existingDF
+}
+
+ 
+r <- which(!schaefer200.parcel.labels_noMask$label %in% BNC.axis$label) # indices of removed parcels
+existingDF <- BNC.axis  
+ 
+for(i in c(1:length(r))){
+   existingDF <- insertRow(r[i], existingDF, schaefer200.parcel.labels_noMask$label)
+}
+
+   
+df.dev.spin <- rbind(existingDF[1:100,], existingDF[101:200,]) #format df as left hemisphere -> right hemisphere for spin tests
+df.dev.spin <- cbind(df.dev.spin, SNRmask_schaefer200) 
+ 
+identical(df.dev.spin$label, schaefer200.parcel.labels_noMask$label)
+ 
+```
+
+# BNC Developmental Effects
+
+## Number of significant parcels (FDR corrected)
+
+```{r echo=FALSE}
+BNC.axis$Anova.age.pvalue.fdr <- p.adjust(BNC.axis$Anova.age.pvalue, method=c("fdr"))
+cat(sprintf("There are %s/%s significant parcels", sum(BNC.axis$Anova.age.pvalue.fdr < 0.05), nrow(BNC.axis)))
+
+BNC.axis$significant.fdr <- BNC.axis$Anova.age.pvalue.fdr < 0.05
+BNC.axis$significant.fdr[BNC.axis$significant.fdr == TRUE] <- 1
+BNC.axis$significant.fdr[BNC.axis$significant.fdr == FALSE] <- 0
+ 
+```
+ 
+## Age Effect by S-A Axis position
+
+```{r}
+cor.test(BNC.axis$GAM.age.AdjRsq, as.numeric(BNC.axis$SA.axis_rank), method=c("spearman"), exact=F)
+cor(as.numeric(df.dev.spin$GAM.age.AdjRsq), as.numeric(df.dev.spin$SA.axis_rank),method="spearman", use="complete.obs")
+
+perm.sphere.p(as.numeric(df.dev.spin$GAM.age.AdjRsq), as.numeric(df.dev.spin$SA.axis_rank), perm.id.full, corr.type='spearman')
+```
+
+
+```{r, echo=F}
+library(ggpubr)
+BNC.axis <- BNC.axis %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+
+ 
+## SA axis average rank vs. age effect
+# included all datapoints for this figure
+cor.test(BNC.axis$GAM.age.AdjRsq, as.numeric(BNC.axis$SA.axis_rank), method=c("spearman"), exact=F)
+
+r_text <- expression(paste(italic("r"), "= -0.57, ", italic(p[spin]), "< 0.0001"))
+
+(schaefer200_SA.AgeEffect <- ggplot(BNC.axis, aes(x=SA.axis_rank, y=GAM.age.AdjRsq, fill = SA.axis_rank_signif)) + geom_point(color = "white", shape = 21, size=2) +
+scale_fill_gradient2(low="#6f1282",high = "goldenrod1",, mid = "#EBDAFF", midpoint = median(BNC.axis$SA.axis_rank), na.value="gray") +
+labs(fill = "SA Axis Rank", x="\nSensorimotor-Association Axis Rank\n", y=expression(paste("Age Effect (Delta Adj", " R"^2, ")"))) +
+geom_smooth(data = BNC.axis, method='lm', se=TRUE, fill=alpha(c("gray70"),.9), col="black") +
+theme(
+axis.title.x=element_text(size=12, color = "black"),
+axis.title.y=element_text(size=12, color = "black"),
+axis.line = element_line(color = "black"),
+axis.text=element_text(size=12, color = "black"),
+panel.background=element_blank(),
+legend.position = "right") +
+annotate(geom="text", x=140, y=0.055, label=r_text, color="black"))
+# ggsave(schaefer200_SA.AgeEffect, file="/cbica/projects/network_replication/adapted_Rscripts/Figures/Schaefer200/BNC/schaefer200x7_SA.AgeEffect.pdf", width = 5, height=4, dpi=300)
+
+```
+ 
+  
+## BNC Developmental Trajectories
+
+```{r}
+
+gam.smooths.schaefer200$SA.axis_rank <- as.numeric(gam.smooths.schaefer200$SA.axis_rank)
+# seems like transmodal areas have greater BNC and seem to increase with age, while unimodal areas have smaller BNC and increase or stays the same with age
+(schaefer200_predBNC <- ggplot(gam.smooths.schaefer200,aes(age,fit,group=index)) + 
+  geom_line(data = gam.smooths.schaefer200, size=.8, alpha = .6, aes(color=SA.axis_rank)) + scale_color_gradient2(low="#6f1282",high = "goldenrod1", mid = "#EBDAFF", midpoint = median(BNC.axis$SA.axis_rank)) + 
+  labs(color = "SA Axis Rank",
+       x="Age", 
+       y="Predicted between-Network Coupling") +
+  theme(
+axis.title.x=element_text(size=12, color = "black"),
+axis.title.y=element_text(size=12, color = "black"),
+axis.line = element_line(color = "black"),
+axis.text=element_text(size=12, color = "black"),
+panel.background=element_blank(),
+legend.position = "bottom") + coord_cartesian(expand = FALSE, xlim = c(8, 23)))
+ 
+
+#ggsave(schaefer200_predBNC, file="/cbica/projects/network_replication/adapted_Rscripts/Figures/Schaefer200/BNC/schaefer200x7_predBNC.pdf", width = 4, height=4, dpi=300)
+
+```
+
+## Age of Maximal BNC 
+
+```{r echo=FALSE}
+
+names(gam.agepeaks.schaefer200)[2] <- "region"
+
+(schaefer200_agepeak <- ggplot() + geom_brain(data=gam.agepeaks.schaefer200, 
+                      atlas=schaefer7_200, 
+                      mapping=aes(fill=age.peak), 
+                      show.legend=TRUE, 
+                      position = position_brain(hemi ~ side)) + 
+  scale_fill_gradientn(colors = viridis_pal(option="B")(10)) + theme_void())
+#ggsave(schaefer200_agepeak, file="/cbica/projects/network_replication/adapted_Rscripts/Figures/Schaefer200/BNC/schaefer200x7_agepeak.pdf", width = 6, height=4, dpi=300)
+
+  
+plot(schaefer7_200) +
+  theme(legend.position = "bottom",
+        legend.text = element_text(size = 9)) +
+  guides(fill = guide_legend(ncol = 7))
+gam.agepeaks.schaefer200
+ 
+```
