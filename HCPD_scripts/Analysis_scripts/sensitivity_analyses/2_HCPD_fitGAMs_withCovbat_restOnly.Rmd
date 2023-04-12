@@ -1,0 +1,321 @@
+---
+title: "HCPD fit GAMs"
+author: "Audrey Luo"
+date: "2023-01-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+library(dplyr)
+source("/cbica/projects/network_replication/adapted_Rscripts/GAM_functions.R")
+source("/cbica/projects/network_replication/adapted_Rscripts/sensitivity_analyses/fitGAMs_restOnly.R")  
+dataset = "HCPD"
+knitr::opts_chunk$set(include = FALSE, eval = TRUE, echo = FALSE, warning = FALSE, message = FALSE) 
+  
+```
+
+ 
+# make connectivityMetric-demographics .csv's
+```{r connMetric_demographics, include=FALSE}
+
+demographics <- read.csv("/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_demographics_finalsample_restOnly_20230103.csv")
+names(demographics)[c(which(names(demographics) == "sub"))] <- "subject"
+demographics$age <- demographics$interview_age/12
+demographics <- demographics[,c(which(names(demographics) == "subject"), which(names(demographics) == "sex"), which(names(demographics)=="age"), which(names(demographics) =="meanFD_avgSes"))] 
+# GBC
+## creates GBC.glasser.HCPD, GBC.gordon.HCPD, GBC.schaefer200.HCPD, GBC.schaefer400.HCPD csv's
+atlases <- c("glasser", "gordon", "schaefer200", "schaefer400")
+metric = "GBC"
+for(i in c(1:length(atlases))){
+  df_name <- paste0(metric, ".", atlases[i], ".", dataset)
+  assign(df_name, make_connMetricsDemog_covbat(atlases[i], metric, demographics, "subject", dataset))
+}
+
+
+# BNC
+## BNC.gordon.HCPD, BNC.schaefer200x7.HCPD, BNC.schaefer200x17.HCPD, BNC.schaefer400x7.HCPD, BNC.schaefer400x17.HCPD
+atlases <- c("gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
+metric = "BNC"
+for(i in c(1:length(atlases))){
+  df_name <- paste0(metric, ".", atlases[i], ".", dataset)
+  assign(df_name, make_connMetricsDemog_covbat(atlases[i], metric, demographics, "subject", dataset))
+}
+
+# WNC
+## WNC.gordon.HCPD, WNC.schaefer200x7.HCPD, WNC.schaefer200x17.HCPD, WNC.schaefer400x7.HCPD, WNC.schaefer400x17.HCPD
+atlases <- c("gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
+metric = "WNC"
+
+for(i in c(1:length(atlases))){
+  df_name <- paste0(metric, ".", atlases[i], ".", dataset)
+  assign(df_name, make_connMetricsDemog_covbat(atlases[i], metric, demographics, "subject", dataset))
+} 
+
+ 
+# edge
+## edge.glasser.HCPD, edge.gordon.HCPD, edge.schaefer200x7.HCPD, edge.schaefer200x17.HCPD, edge.schaefer400x7.HCPD, edge.schaefer400x17.HCPD
+#atlases <- c("glasser","gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
+#make_connMetricsDemog_covbat("gordon", demographics, "subject", dataset)
+#for(i in c(1:length(atlases))){
+#  df_name <- paste0("edge.", atlases[i], ".", dataset)
+#  assign(df_name, make_EdgeDemog(atlases[i],  demographics, "subject", dataset))
+#} 
+ 
+ 
+```
+
+
+ 
+
+# load connectivityMetric-demographics .csv's
+```{r load_connectivity, include=TRUE} 
+GBC.glasser.HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/GBC/GBCglasser_demographics_finalsample_covbat.csv", dataset))
+GBC.gordon.HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/GBC/GBCgordon_demographics_finalsample_covbat.csv", dataset)) 
+GBC.schaefer200.HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/GBC/GBCschaefer200_demographics_finalsample_covbat.csv", dataset)) 
+names(GBC.schaefer200.HCPD) <- gsub('X17Networks', "Networks", names(GBC.schaefer200.HCPD))
+
+GBC.schaefer400.HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/GBC/GBCschaefer400_demographics_finalsample_covbat.csv", dataset)) 
+names(GBC.schaefer400.HCPD) <- gsub('X17Networks', "Networks", names(GBC.schaefer400.HCPD)) 
+ 
+ 
+# BNC
+BNC.gordon.HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/BNC/BNCgordon_demographics_finalsample_covbat.csv", dataset))   
+BNC.schaefer200x7.HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/BNC/BNCschaefer200x7_demographics_finalsample_covbat.csv", dataset)) 
+names(BNC.schaefer200x7.HCPD) <- gsub("X7", "", names(BNC.schaefer200x7.HCPD))
+
+BNC.schaefer200x17.HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/BNC/BNCschaefer200x17_demographics_finalsample_covbat.csv", dataset))    
+names(BNC.schaefer200x17.HCPD) <- gsub("X17", "", names(BNC.schaefer200x17.HCPD))
+
+BNC.schaefer400x7.HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/BNC/BNCschaefer400x7_demographics_finalsample_covbat.csv", dataset))
+names(BNC.schaefer400x7.HCPD) <- gsub("X7", "", names(BNC.schaefer400x7.HCPD))
+
+BNC.schaefer400x17.HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/BNC/BNCschaefer400x17_demographics_finalsample_covbat.csv", dataset))   
+names(BNC.schaefer400x17.HCPD) <- gsub("X17", "", names(BNC.schaefer400x17.HCPD))
+
+# WNC
+WNC.gordon.HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/WNC/WNCgordon_demographics_finalsample_covbat.csv", dataset))    
+WNC.schaefer200x7.HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/WNC/WNCschaefer200x7_demographics_finalsample_covbat.csv", dataset))
+names(WNC.schaefer200x7.HCPD) <- gsub("X7", "", names(WNC.schaefer200x7.HCPD))
+
+WNC.schaefer200x17.HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/WNC/WNCschaefer200x17_demographics_finalsample_covbat.csv", dataset)) 
+names(WNC.schaefer200x17.HCPD) <- gsub("X17", "", names(WNC.schaefer200x17.HCPD))
+
+WNC.schaefer400x7.HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/WNC/WNCschaefer400x7_demographics_finalsample_covbat.csv", dataset)) 
+names(WNC.schaefer400x7.HCPD) <- gsub("X7", "", names(WNC.schaefer400x7.HCPD))
+
+WNC.schaefer400x17.HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/WNC/WNCschaefer400x17_demographics_finalsample_covbat.csv", dataset))  
+names(WNC.schaefer400x17.HCPD) <- gsub("X17", "", names(WNC.schaefer400x17.HCPD))
+ 
+
+#not doing edge-wise sensitivity analysis for now
+#edge.gordon.HCPD <- readRDS("/cbica/projects/network_replication/output/HCPD/edge/gordon_demographics_finalsample.RData")
+#edge.glasser.HCPD <- readRDS("/cbica/projects/network_replication/output/HCPD/edge/glasser_demographics_finalsample.RData")
+#edge.schaefer200x7.HCPD <- readRDS("/cbica/projects/network_replication/output/HCPD/edge/schaefer200x7_demographics_finalsample.RData")
+#edge.schaefer200x17.HCPD <- readRDS("/cbica/projects/network_replication/output/HCPD/edge/schaefer200x17_demographics_finalsample.RData")
+#edge.schaefer400x7.HCPD <- readRDS("/cbica/projects/network_replication/output/HCPD/edge/schaefer400x7_demographics_finalsample.RData")
+#edge.schaefer400x17.HCPD <- readRDS("/cbica/projects/network_replication/output/HCPD/edge/schaefer400x17_demographics_finalsample.RData")
+
+# make sex a factor
+ 
+GBC.glasser.HCPD$sex <- as.factor(GBC.glasser.HCPD$sex)
+GBC.gordon.HCPD$sex <- as.factor(GBC.gordon.HCPD$sex)
+GBC.schaefer200.HCPD$sex <- as.factor(GBC.schaefer200.HCPD$sex)
+GBC.schaefer400.HCPD$sex <- as.factor(GBC.schaefer400.HCPD$sex)
+
+ 
+BNC.gordon.HCPD$sex <- as.factor(BNC.gordon.HCPD$sex)
+BNC.schaefer200x7.HCPD$sex <- as.factor(BNC.schaefer200x7.HCPD$sex)
+BNC.schaefer200x17.HCPD$sex <- as.factor(BNC.schaefer200x17.HCPD$sex)
+BNC.schaefer400x7.HCPD$sex <- as.factor(BNC.schaefer400x7.HCPD$sex)
+BNC.schaefer400x17.HCPD$sex <- as.factor(BNC.schaefer400x17.HCPD$sex)
+
+ 
+WNC.gordon.HCPD$sex <- as.factor(WNC.gordon.HCPD$sex)   
+WNC.schaefer200x17.HCPD$sex <- as.factor(WNC.schaefer200x17.HCPD$sex) 
+WNC.schaefer400x17.HCPD$sex <- as.factor(WNC.schaefer400x17.HCPD$sex) 
+WNC.schaefer200x7.HCPD$sex <- as.factor(WNC.schaefer200x7.HCPD$sex) 
+WNC.schaefer400x7.HCPD$sex <- as.factor(WNC.schaefer400x7.HCPD$sex) 
+
+names(GBC.glasser.HCPD)
+#edge.gordon.HCPD$sex <- as.factor(edge.gordon.HCPD$sex)
+#edge.glasser.HCPD$sex <- as.factor(edge.glasser.HCPD$sex)
+#edge.schaefer200x7.HCPD$sex <- as.factor(edge.schaefer200x7.HCPD$sex)
+#edge.schaefer200x17.HCPD$sex <- as.factor(edge.schaefer200x17.HCPD$sex)
+#edge.schaefer400x7.HCPD$sex <- as.factor(edge.schaefer400x7.HCPD$sex)
+#edge.schaefer400x17.HCPD$sex <- as.factor(edge.schaefer400x17.HCPD$sex)
+ 
+```
+
+ 
+# load parcel labels and edges 
+```{r}
+# load parcel labels 
+
+glasser.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/glasser360_regionlist_final.csv")
+
+gordon.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/gordon_regionlist_final.csv")
+
+schaefer200x7.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_regionlist_final.csv")
+
+schaefer200x17.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x17_regionlist_final.csv")
+schaefer200.parcel.labels <- schaefer200x17.parcel.labels #gbc
+
+schaefer400x7.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer400x7_regionlist_final.csv")
+
+schaefer400x17.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer400x17_regionlist_final.csv")
+schaefer400.parcel.labels <- schaefer400x17.parcel.labels #gbc
+
+
+# edges
+#gordon_edge <- read.csv("/cbica/projects/network_replication/atlases/edge/gordon_edge.csv")
+#gordon_edge <- gordon_edge[,2]
+
+#glasser_edge <- read.csv("/cbica/projects/network_replication/atlases/edge/glasser_edge.csv")
+#glasser_edge <- glasser_edge[,2]
+#schaefer200x7_edge <- read.csv("/cbica/projects/network_replication/atlases/edge/schaefer200x7_edge.csv")
+#schaefer200x7_edge <- schaefer200x7_edge[,2]
+#schaefer200x17_edge <- read.csv("/cbica/projects/network_replication/atlases/edge/schaefer200x17_edge.csv")
+#schaefer200x17_edge <- schaefer200x17_edge[,2]
+
+#schaefer400x7_edge <- read.csv("/cbica/projects/network_replication/atlases/edge/schaefer400x7_edge.csv")
+#schaefer400x7_edge <- schaefer400x7_edge[,2]
+#schaefer400x17_edge <- read.csv("/cbica/projects/network_replication/atlases/edge/schaefer400x17_edge.csv")
+#schaefer400x17_edge <- schaefer400x17_edge[,2]
+
+ 
+```  
+
+
+# Fit GAMs
+```{r}
+ 
+# GBC GAMs
+gam.GBC.age.glasser <- fitGAMs_covbat(glasser.parcel.labels, "GBC", "glasser", "",dataset)
+gam.GBC.age.gordon <- fitGAMs_covbat(gordon.parcel.labels, "GBC", "gordon", "", dataset)
+gam.GBC.age.schaefer200 <- fitGAMs_covbat(schaefer200x17.parcel.labels, "GBC", "schaefer200", "", dataset)
+gam.GBC.age.schaefer400 <- fitGAMs_covbat(schaefer400x17.parcel.labels, "GBC", "schaefer400", "", dataset)
+ 
+
+# BNC GAMs
+gam.BNC.age.gordon <- fitGAMs_covbat(gordon.parcel.labels, "BNC", "gordon", "", dataset)
+gam.BNC.age.schaefer200x7 <- fitGAMs_covbat(schaefer200x7.parcel.labels, "BNC", "schaefer200", "x7", dataset)
+gam.BNC.age.schaefer200x17 <- fitGAMs_covbat(schaefer200x17.parcel.labels, "BNC", "schaefer200", "x17",dataset)  
+gam.BNC.age.schaefer400x7 <- fitGAMs_covbat(schaefer400x7.parcel.labels, "BNC", "schaefer400", "x7", dataset)   
+gam.BNC.age.schaefer400x17 <- fitGAMs_covbat(schaefer400x17.parcel.labels, "BNC", "schaefer400", "x17",dataset)  
+ 
+
+# WNC GAMs
+gam.WNC.age.gordon <- fitGAMs_covbat(gordon.parcel.labels, "WNC", "gordon", "", dataset)
+gam.WNC.age.schaefer200x7 <- fitGAMs_covbat(schaefer200x7.parcel.labels, "WNC", "schaefer200", "x7", dataset)   
+gam.WNC.age.schaefer200x17 <- fitGAMs_covbat(schaefer200x17.parcel.labels, "WNC", "schaefer200", "x17",dataset)  
+gam.WNC.age.schaefer400x7 <- fitGAMs_covbat(schaefer400x7.parcel.labels, "WNC", "schaefer400", "x7",dataset)  
+gam.WNC.age.schaefer400x17 <- fitGAMs_covbat(schaefer400x17.parcel.labels, "WNC", "schaefer400", "x17",dataset)  
+
+
+ 
+# Edge GAMs  - need to do on CUBIC
+#glasser_edge <- gsub("-", ".", glasser_edge)
+#names(edge.glasser.HCPD) <- gsub("-", ".",names(edge.glasser.HCPD))
+#schaefer200x7_edge <- gsub("7Networks", "Networks", schaefer200x7_edge)
+#names(edge.schaefer200x7.HCPD) <- gsub("7Networks", "Networks", names(edge.schaefer200x7.HCPD))
+#schaefer200x17_edge <- gsub("17Networks", "Networks", schaefer200x17_edge)
+#names(edge.schaefer200x17.HCPD) <- gsub("17Networks", "Networks", names(edge.schaefer200x17.HCPD))
+#schaefer400x7_edge <- gsub("7Networks", "Networks", schaefer400x7_edge)
+#names(edge.schaefer400x7.HCPD) <- gsub("7Networks", "Networks", names(edge.schaefer400x7.HCPD))
+#schaefer400x17_edge <- gsub("17Networks", "Networks", schaefer400x17_edge)
+#names(edge.schaefer400x17.HCPD) <- gsub("17Networks", "Networks", names(edge.schaefer400x17.HCPD))
+ 
+#gam.edge.age.glasser <- fitGAMs_covbat_edge(glasser_edge,"edge","glasser", dataset)  
+#gam.edge.age.gordon <- fitGAMs_covbat_edge(gordon_edge,"edge","gordon", dataset)
+#gam.edge.age.schaefer200x7 <- fitGAMs_covbat_edge(schaefer200x7_edge,"edge","schaefer200x7", dataset)
+#gam.edge.age.schaefer200x17 <- fitGAMs_covbat_edge(schaefer200x17_edge,"edge","schaefer200x17", dataset)
+#gam.edge.age.schaefer400x7 <- fitGAMs_covbat_edge(schaefer400x7_edge,"edge","schaefer400x7", dataset)
+#gam.edge.age.schaefer400x17 <- fitGAMs_covbat_edge(schaefer400x17_edge,"edge","schaefer400x17", dataset)
+  
+```
+
+
+
+
+# Estimate GAM smooths based on model-predicted data and save out predicted y data** 
+```{r}
+# if there's an error with select(.init), restart Rstudio  
+# GBC GAMs 
+gam.GBC.smooths.glasser <- estimate_GAMsmooths_covbat(glasser.parcel.labels, "GBC", "glasser", "",dataset)
+gam.GBC.smooths.gordon <- estimate_GAMsmooths_covbat(gordon.parcel.labels, "GBC", "gordon", "", dataset)
+gam.GBC.smooths.schaefer200 <- estimate_GAMsmooths_covbat(schaefer200x17.parcel.labels, "GBC", "schaefer200", "", dataset)
+gam.GBC.smooths.schaefer400 <- estimate_GAMsmooths_covbat(schaefer400x17.parcel.labels, "GBC", "schaefer400", "", dataset)
+
+
+# BNC GAMs
+gam.BNC.smooths.gordon <- estimate_GAMsmooths_covbat(gordon.parcel.labels, "BNC", "gordon", "", dataset)
+gam.BNC.smooths.schaefer200x7 <- estimate_GAMsmooths_covbat(schaefer200x7.parcel.labels, "BNC", "schaefer200", "x7", dataset)
+gam.BNC.smooths.schaefer200x17 <- estimate_GAMsmooths_covbat(schaefer200x17.parcel.labels, "BNC", "schaefer200", "x17",dataset)
+gam.BNC.smooths.schaefer400x7 <- estimate_GAMsmooths_covbat(schaefer400x7.parcel.labels, "BNC", "schaefer400", "x7",dataset)
+gam.BNC.smooths.schaefer400x17 <- estimate_GAMsmooths_covbat(schaefer400x17.parcel.labels, "BNC", "schaefer400", "x17",dataset)
+
+# WNC GAMs
+gam.WNC.smooths.gordon <- estimate_GAMsmooths_covbat(gordon.parcel.labels, "WNC", "gordon", "", dataset)
+gam.WNC.smooths.schaefer200x7 <- estimate_GAMsmooths_covbat(schaefer200x7.parcel.labels, "WNC", "schaefer200", "x7", dataset)
+gam.WNC.smooths.schaefer200x17 <- estimate_GAMsmooths_covbat(schaefer200x17.parcel.labels, "WNC", "schaefer200", "x17",dataset)
+gam.WNC.smooths.schaefer400x7 <- estimate_GAMsmooths_covbat(schaefer400x7.parcel.labels, "WNC", "schaefer400", "x7",dataset)
+gam.WNC.smooths.schaefer400x17 <- estimate_GAMsmooths_covbat(schaefer400x17.parcel.labels, "WNC", "schaefer400", "x17",dataset)
+```
+
+
+
+# Calculate Region-wise Developmental Derivatives
+```{r}
+
+# GBC GAMs age derivatives
+gam.GBC.derivatives.glasser <- dev_derivatives_covbat(glasser.parcel.labels, "GBC", "glasser", dataset)
+gam.GBC.derivatives.gordon <- dev_derivatives_covbat(gordon.parcel.labels, "GBC", "gordon", dataset)
+gam.GBC.derivatives.schaefer200 <- dev_derivatives_covbat(schaefer200x17.parcel.labels, "GBC", "schaefer200", dataset)
+gam.GBC.derivatives.schaefer400 <- dev_derivatives_covbat(schaefer400x17.parcel.labels, "GBC", "schaefer400", dataset)
+
+ 
+# BNC GAMs age derivatives
+gam.BNC.derivatives.gordon <- dev_derivatives_covbat(gordon.parcel.labels, "BNC", "gordon", dataset)
+gam.BNC.derivatives.schaefer200x7 <- dev_derivatives_covbat(schaefer200x7.parcel.labels, "BNC", "schaefer200x7", dataset)
+gam.BNC.derivatives.schaefer200x17 <- dev_derivatives_covbat(schaefer200x17.parcel.labels, "BNC", "schaefer200x17", dataset)
+gam.BNC.derivatives.schaefer400x7 <- dev_derivatives_covbat(schaefer400x7.parcel.labels, "BNC", "schaefer400x7", dataset)
+gam.BNC.derivatives.schaefer400x17 <- dev_derivatives_covbat(schaefer400x17.parcel.labels, "BNC", "schaefer400x17", dataset)
+
+# WNC GAMs age derivatives
+gam.WNC.derivatives.gordon <- dev_derivatives_covbat(gordon.parcel.labels, "WNC", "gordon", dataset)
+gam.WNC.derivatives.schaefer200x7 <- dev_derivatives_covbat(schaefer200x7.parcel.labels, "WNC", "schaefer200x7", dataset)
+gam.WNC.derivatives.schaefer200x17 <- dev_derivatives_covbat(schaefer200x17.parcel.labels, "WNC", "schaefer200x17",dataset)
+gam.WNC.derivatives.schaefer400x7 <- dev_derivatives_covbat(schaefer400x7.parcel.labels, "WNC", "schaefer400x7", dataset)
+gam.WNC.derivatives.schaefer400x17 <- dev_derivatives_covbat(schaefer400x17.parcel.labels, "WNC", "schaefer400x17", dataset)
+  
+```
+
+
+
+# Calculate Region-wise Posterior Smooth Derivatives Correlation with SA Axis (computationally heavy - can compute on cluster)
+
+```{r}
+# GBC - Region-wise Posterior Smooth Derivatives Correlation with SA Axis
+deriv.SAaxis.posteriorcor_glasser.GBC <- make_deriv.SAaxis.posteriorcor("GBC", "glasser", dataset)
+deriv.SAaxis.posteriorcor_gordon.GBC <- make_deriv.SAaxis.posteriorcor("GBC", "gordon", dataset)
+deriv.SAaxis.posteriorcor_schaefer200.GBC <- make_deriv.SAaxis.posteriorcor("GBC", "schaefer200", dataset)
+deriv.SAaxis.posteriorcor_schaefer400.GBC <- make_deriv.SAaxis.posteriorcor("GBC", "schaefer400", dataset)
+
+# BNC - Region-wise Posterior Smooth Derivatives Correlation with SA Axis
+deriv.SAaxis.posteriorcor_gordon.BNC <- make_deriv.SAaxis.posteriorcor("BNC", "gordon", dataset)
+deriv.SAaxis.posteriorcor_schaefer200x7.BNC <- make_deriv.SAaxis.posteriorcor("BNC", "schaefer200x7", dataset)
+deriv.SAaxis.posteriorcor_schaefer400x7.BNC <- make_deriv.SAaxis.posteriorcor("BNC", "schaefer400x7", dataset)
+deriv.SAaxis.posteriorcor_schaefer200x17.BNC <- make_deriv.SAaxis.posteriorcor("BNC", "schaefer200x17", dataset)
+deriv.SAaxis.posteriorcor_schaefer400x17.BNC <- make_deriv.SAaxis.posteriorcor("BNC", "schaefer400x17", dataset)
+
+
+# WNC - Region-wise Posterior Smooth Derivatives Correlation with SA Axis
+deriv.SAaxis.posteriorcor_gordon.WNC <- make_deriv.SAaxis.posteriorcor("WNC", "gordon", dataset)
+deriv.SAaxis.posteriorcor_schaefer200x7.WNC <- make_deriv.SAaxis.posteriorcor("WNC", "schaefer200x7", dataset)
+deriv.SAaxis.posteriorcor_schaefer400x7.WNC <- make_deriv.SAaxis.posteriorcor("WNC", "schaefer400x7", dataset)
+deriv.SAaxis.posteriorcor_schaefer200x17.WNC <- make_deriv.SAaxis.posteriorcor("WNC", "schaefer200x17", dataset)
+deriv.SAaxis.posteriorcor_schaefer400x17.WNC <- make_deriv.SAaxis.posteriorcor("WNC", "schaefer400x17", dataset)
+ 
+```
+
