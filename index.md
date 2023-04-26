@@ -169,6 +169,7 @@ Vertex-level fMRI timeseries were parcellated with fsLR surface atlases utilizin
 + *Network solution*: [7 Network](https://github.com/ThomasYeoLab/CBIG/blob/6d1400a2d643261246f6b042e7ef5fbe417506cd/utilities/matlab/FC/CBIG_ReorderParcelIndex.m) 
 
 **Sensitivity analysis:** 
+
 *Data*: resting-state fMRI only was used to construct conn matrices using 
 ```
 /Rscripts/<dataset>_scripts/ConnMatrices_scripts/<dataset>_makeConnMatrices_restOnly.R
