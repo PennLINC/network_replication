@@ -92,11 +92,11 @@ All project analyses are described below along with the corresponding code on Gi
  
 <br>
 
-### 1. Parcellating the sensorimotor-association (S-A) axis  
+## 1. Parcellating the sensorimotor-association (S-A) axis  
 We parcellated the fslr/cifti [Sensorimotor-Association Axis](https://github.com/PennLINC/S-A_ArchetypalAxis/blob/main/FSLRVertex/SensorimotorAssociation_Axis.dscalar.nii) with cortical atlases (Schaefer 200, Schaefer 400, Gordon, and HCP-MMP) using [/Rscripts/Generate_input/1_parcellate_SAaxis.Rmd](https://github.com/PennLINC/network_replication/blob/main/Generate_input/1_parcellate_SAaxis.Rmd).
 
 
-### 2. Sample selection for each dataset: PNC (discovery), NKI, HCP-D, and HBN (replication)  
+## 2. Sample selection for each dataset: PNC (discovery), NKI, HCP-D, and HBN (replication)  
 The final samples for each dataset were constructed using `/Rscripts/<dataset>/QC_scripts/<dataset>_SampleSelection.Rmd`. Links to the corresponding github code and descriptions of each final sample are as follows: 
 
 * PNC: [PNC_SampleSelection.Rmd](https://github.com/PennLINC/network_replication/blob/main/PNC_scripts/QC_scripts/PNC_SampleSelection.Rmd)
@@ -133,7 +133,7 @@ The final samples for each dataset were constructed using `/Rscripts/<dataset>/Q
         5) Include scans with at least 7 minutes of scan time: N= 1438, 3939 scans (final sample), 546 females
         6) Exclude participants with missing data (i.e. age and sex): N= 1379, 3767 scans, 546 females. Age: mean=11.6, sd= 3.7
 
-### 3. Constructing connectivity matrices for each dataset
+## 3. Constructing connectivity matrices for each dataset
 
 fMRIPrep 20.2.3 (PNC and NKI) and 22.0.2 (HCP-D and HBN) were run with the following parameters:
 
@@ -168,16 +168,15 @@ $ /usr/local/miniconda/bin/xcp_abcd inputs/data/fmriprep xcp participant --despi
 + *Cortical parcellation*: [Schaefer 400](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_400Parcels_17Networks_order.dlabel.nii), [HCP multimodal](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/glasser_space-fsLR_den-32k_desc-atlas.dlabel.nii), [Gordon](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/gordon_space-fsLR_den-32k_desc-atlas.dlabel.nii)
     + *Network solution*: 7 Network and 17 Network (Schaefer atlases)
 
-### 4. Image harmonization: applying [covbat-gam](https://github.com/andy1764/ComBatFamily) to multi-site data (HCP-D and HBN)
-### 5. Quantification of functional connectivity metrics 
-### 6. Fitting generalized additive models (GAMs) 
-### 7. Characterization of relationships between functional connectivity metrics, age, and the S-A axis
+## 4. Image harmonization: applying [covbat-gam](https://github.com/andy1764/ComBatFamily) to multi-site data (HCP-D and HBN)
 
+## 5. Quantification of functional connectivity metrics 
+
+## 6. Fitting generalized additive models (GAMs) 
+
+## 7. Characterization of relationships between functional connectivity metrics, age, and the S-A axis
+
+  
+
+# Data Interpretation and Visualization 
  
-
-
-
-### Data Interpretation and Visualization 
-
-
-### Sensitivity Analyses
