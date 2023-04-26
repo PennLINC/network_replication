@@ -104,11 +104,72 @@ All project analyses are described below along with the corresponding code on Gi
 <br>
 
 ### 1. Parcellating the sensorimotor-association (S-A) axis  
+We parcellated the fslr/cifti [Sensorimotor-Association Axis](https://github.com/PennLINC/S-A_ArchetypalAxis/blob/main/FSLRVertex/SensorimotorAssociation_Axis.dscalar.nii) with cortical atlases (Schaefer 200, Schaefer 400, Gordon, and HCP-MMP) using [/Rscripts/Generate_input/1_parcellate_SAaxis.Rmd](https://github.com/PennLINC/network_replication/blob/main/Generate_input/1_parcellate_SAaxis.Rmd).
+
+
 ### 2. Sample selection for each dataset: PNC (discovery), NKI, HCP-D, and HBN (replication)  
+The final samples for each dataset were consructed using /Rscripts/<dataset>/QC_scripts/<dataset>_SampleSelection.Rmd. Links to the corresponding github code and descriptions of each final sample are as follows: 
+
+* PNC: [PNC_SampleSelection.Rmd](https://github.com/PennLINC/network_replication/blob/main/PNC_scripts/QC_scripts/PNC_SampleSelection.Rmd)
+
+        1) Original sample: N=1559, 4546 scans total, ages 8-22
+        2) Exclude participants with medical conditions affecting brain function, gross neurological abnormalities, and psychoactive medical medications: N=1413, 4136 scans 
+        3) Include passing T1 QC: N=1374, 4041 scans
+        4) Include meanFD < 0.3: N=1262, 3365 scans
+        5) Include scans with at least 7 minutes of scan time: N= 1207,  3310 scans (final sample), 646 females. Age: mean = 15, SD = 3.3. 
+* NKI: [NKI_SampleSelection.Rmd](https://github.com/PennLINC/network_replication/blob/main/NKI_scripts/QC_scripts/NKI_SampleSelection.Rmd)
+
+        1) Original sample: N=1268, ages 6-85, 6226 scans total
+        2) Include ages 6-22: N=424, 2570 scans
+        3) Include passing T1 QC: N=402, 2281 scans. 
+        - delete all scans from a given session if fail T1 
+        4) Include meanFD < 0.3: N=386, 1816 scans
+        5) Choose the session that has the most scans surviving the head motion exclusion: N=386, 998 scans
+        6) Include scans with at least 7 minutes of scan time: N=381, 993 scans (final sample),  177 females. Age: mean=14.5, SD=4.4
+
+* HCP-D: [HCPD_SampleSelection.Rmd](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/QC_scripts/HCPD_SampleSelection.Rmd)
+
+        1) Original sample: N=652, ages 5-21, 5716 scans total
+        2) Exclude participants with medical conditions affecting brain function, gross neurological abnormalities: N=631, 5527 scans
+        3) Include passing T1 QC: all scans in dataset have survived T1 QC already 
+        4) Include meanFD < 0.3: N=629, 5165 scans 
+        5) Include scans with at least 7 minutes of scan time: N=625, 5159 scans (final sample), 337 females. Age: mean=14.5, SD=4.1
+
+* HBN: [HBN_SampleSelection.Rmd](https://github.com/PennLINC/network_replication/blob/main/HBN_scripts/QC_scripts/HBN_SampleSelection.Rmd)
+
+        1) Original sample: N= 2255, ages 5-21, 6915 scans total
+        2) Exclude participants with medical conditions affecting brain function, gross neurological abnormalities: no medical exclusion in HBN
+        3) Include passing T1 QC: pending T1 QC from RBC
+        4) Include meanFD < 0.3: N= 1649, 3964 scans 
+        5) Include scans with at least 7 minutes of scan time: N= 1438, 3939 scans (final sample), 546 females
+        6) Exclude participants with missing demographics data (i.e. age and sex): N= 1380, 3767 scans, 546 females. Age: mean=11.6, sd= 3.7
+
 ### 3. Constructing connectivity matrices for each dataset
+
+fMRIPrep 20.2.3 (PNC and NKI) and 22.0.2 (HCP-D and HBN) were run with the following parameters:
+
+```bash
+$  /usr/local/miniconda/bin/fmriprep inputs/data prep participant -w /scratch/rbc/SGE_820171/$subid/ds/.git/tmp/wkdir --n_cpus 1 --stop-on-first-crash --fs-license-file code/license.txt --skip-bids-validation --bids-filter-file /scratch/rbc/SGE_820171/$subid.json --output-spaces MNI152NLin6Asym:res-2 --participant-label $subid --force-bbr --cifti-output 91k -v -v
+```
+
+xcp-d 0.0.8 (NKI) and 0.3.2 (PNC, HCP-D, HBN) were run with the following parameters: 
+
+```bash
+$ /usr/local/miniconda/bin/xcp_abcd inputs/data/fmriprep xcp participant --despike --nthreads 1 --lower-bpf 0.01 --upper-bpf 0.08 --participant_label $subid -p 36P -f 10 --cifti
+
+```
+
+
 ### 4. Image harmonization: applying [covbat-gam](https://github.com/andy1764/ComBatFamily) to multi-site data (HCP-D and HBN)
 ### 5. Quantification of functional connectivity metrics 
 ### 6. Fitting generalized additive models (GAMs) 
 ### 7. Characterization of relationships between functional connectivity metrics, age, and the S-A axis
 
  
+
+
+
+### Data Interpretation and Visualization 
+
+
+### Sensitivity Analyses
