@@ -84,7 +84,6 @@ All project analyses are described below along with the corresponding code on Gi
 1. Parcellating the sensorimotor-association (S-A) axis  
 2. Sample selection for each dataset: PNC (discovery), NKI, HCP-D, and HBN (replication)  
 3. Constructing connectivity matrices for each dataset 
-
 * **Main analysis:**
     + *Data*: concatenated task and resting-state fMRI
     + *Cortical parcellation*: [Schaefer 200 atlas](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_200Parcels_17Networks_order.dlabel.nii)
@@ -142,7 +141,7 @@ The final samples for each dataset were consructed using /Rscripts/<dataset>/QC_
         3) Include passing T1 QC: pending T1 QC from RBC
         4) Include meanFD < 0.3: N= 1649, 3964 scans 
         5) Include scans with at least 7 minutes of scan time: N= 1438, 3939 scans (final sample), 546 females
-        6) Exclude participants with missing demographics data (i.e. age and sex): N= 1380, 3767 scans, 546 females. Age: mean=11.6, sd= 3.7
+        6) Exclude participants with missing data (i.e. age and sex): N= 1379, 3767 scans, 546 females. Age: mean=11.6, sd= 3.7
 
 ### 3. Constructing connectivity matrices for each dataset
 
