@@ -97,7 +97,7 @@ We parcellated the fslr/cifti [Sensorimotor-Association Axis](https://github.com
 
 
 ### 2. Sample selection for each dataset: PNC (discovery), NKI, HCP-D, and HBN (replication)  
-The final samples for each dataset were consructed using `/Rscripts/<dataset>/QC_scripts/<dataset>_SampleSelection.Rmd`. Links to the corresponding github code and descriptions of each final sample are as follows: 
+The final samples for each dataset were constructed using `/Rscripts/<dataset>/QC_scripts/<dataset>_SampleSelection.Rmd`. Links to the corresponding github code and descriptions of each final sample are as follows: 
 
 * PNC: [PNC_SampleSelection.Rmd](https://github.com/PennLINC/network_replication/blob/main/PNC_scripts/QC_scripts/PNC_SampleSelection.Rmd)
 
@@ -149,7 +149,7 @@ $ /usr/local/miniconda/bin/xcp_abcd inputs/data/fmriprep xcp participant --despi
 ```
 
 **Main analysis:**  
-+ *Data*: concatenated task and resting-state fMRI using `/Rscripts/<dataset>_scripts/ConnMatrices_scripts/<dataset>_makeConnMatrices.R`  
++ *Data*: task and resting-state fMRI were concatenated using `/Rscripts/<dataset>_scripts/ConnMatrices_scripts/<dataset>_makeConnMatrices.R`  
     + PNC: [PNC_makeConnMatrices.R](https://github.com/PennLINC/network_replication/blob/main/PNC_scripts/ConnMatrices_scripts/PNC_makeConnMatrices.R)
     + NKI: [NKI_makeConnMatrices.R](https://github.com/PennLINC/network_replication/blob/main/NKI_scripts/ConnMatrices_scripts/NKI_makeConnMatrices.R)
     + HCP-D: [HCPD_makeConnMatrices.R](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/ConnMatrices_scripts/HCPD_makeConnMatrices.R)
@@ -159,7 +159,12 @@ $ /usr/local/miniconda/bin/xcp_abcd inputs/data/fmriprep xcp participant --despi
     + *Network solution*: [7 Network](https://github.com/ThomasYeoLab/CBIG/blob/6d1400a2d643261246f6b042e7ef5fbe417506cd/utilities/matlab/FC/CBIG_ReorderParcelIndex.m) 
 
 **Sensitivity analysis:** 
-+ *Data*: resting-state fMRI only 
++ *Data*: resting-state fMRI only was used to construct conn matrices using `/Rscripts/<dataset>_scripts/ConnMatrices_scripts/<dataset>_makeConnMatrices_restOnly.R` 
+    + PNC: [PNC_makeConnMatrices_restOnly.R](https://github.com/PennLINC/network_replication/blob/main/PNC_scripts/ConnMatrices_scripts/PNC_makeConnMatrices_restOnly.R)
+    + NKI: no sensitivity analyses done with resting-state only since NKI only has resting-state to begin with! 
+    + HCP-D: [HCPD_makeConnMatrices_restOnly.R](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/ConnMatrices_scripts/HCPD_makeConnMatrices_restOnly.R)
+    + HBN:  [HBN_makeConnMatrices_restOnly.R](https://github.com/PennLINC/network_replication/blob/main/HBN_scripts/ConnMatrices_scripts/HBN_makeConnMatrices_restOnly.R)
+
 + *Cortical parcellation*: [Schaefer 400](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_400Parcels_17Networks_order.dlabel.nii), [HCP multimodal](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/glasser_space-fsLR_den-32k_desc-atlas.dlabel.nii), [Gordon](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/gordon_space-fsLR_den-32k_desc-atlas.dlabel.nii)
     + *Network solution*: 7 Network and 17 Network (Schaefer atlases)
 
