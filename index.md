@@ -1,5 +1,6 @@
 <br>
 <br>
+
 # Functional Connectivity Development Aligns with the Sensorimotor-Association Cortical Axis in Four Independent Datasets 
 
 *Cortical maturation has been posited to be organized along the sensorimotor-association axis, a hierarchical axis of brain organization that spans from unimodal sensorimotor cortices to transmodal association cortices. In this preregistered study, we used four large-scale datasets to investigate whether the development of functional connectivity reliably varies along the sensorimotor-association axis during childhood through adolescence. To do so, we examined four datasets that included youth ages 5-22: the Philadelphia Neurodevelopmental Cohort (N=1207), Nathan Kline Institute-Rockland (N=381), Human Connectome Project: Development (N=625), and Healthy Brain Network (N=1379). Across all datasets, the spatial patterning of connectivity at region aligned with the S-A axis through development. Specifically, global connectivity in sensorimotor regions increased, whereas global connectivity declined in association cortices. Convergent findings across four independent datasets robustly establish that the sensorimotor-association axis is not only a major axis of brain organization, but also encodes the dominant pattern of functional connectivity development.* 
@@ -44,6 +45,7 @@ subdirectory/: description
 
 <br>
 <br>
+
 # CODE DOCUMENTATION  
 
 All project analyses are described below along with the corresponding code on Github. The analytic workflow was executed in the following order:  
