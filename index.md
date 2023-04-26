@@ -15,7 +15,7 @@ Theodore D. Satterthwaite
 Valerie J. Sydnor
 
 ### Collaborators 
-Valerie J. Sydnor, Arielle S. Keller, Aaron F. Alexander-Bloch, Matthew Cieslak, Sydney Covitz, Andrew Chen, Eric Feczko, Alexandre R. Franco, Raquel E. Gur, Ruben C. Gur, Audrey Houghton, Fengling Hu, Gregory Kiar, Bart Larsen, Adam Pinesa, Giovanni Salumg, Tinashe Taperaa, Ting Xu, Damien A. Fair, Michael P. Milham, Theodore D. Satterthwaite
+Valerie J. Sydnor, Arielle S. Keller, Aaron F. Alexander-Bloch, Matthew Cieslak, Sydney Covitz, Andrew Chen, Eric Feczko, Alexandre R. Franco, Raquel E. Gur, Ruben C. Gur, Audrey Houghton, Fengling Hu, Gregory Kiar, Bart Larsen, Adam Pines, Giovanni Salum, Tinashe Tapera, Ting Xu, Chenying Zhao, Damien A. Fair, Michael P. Milham, Theodore D. Satterthwaite
 
 ### Project Start Date
 December 2021
@@ -53,11 +53,14 @@ All project analyses are described below along with the corresponding code on Gi
 1. Parcellating the sensorimotor-association (S-A) axis  
 2. Sample selection for each dataset: PNC (discovery), NKI, HCP-D, and HBN (replication)  
 3. Constructing connectivity matrices for each dataset 
-* *Main analysis:* 
-    + concatenated task and resting-state fMRI
-    + cortical parcellation: [Schaefer 200 atlas](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_200Parcels_17Networks_order.dlabel.nii)
-    + network solution: 7 Network
-* *Sensitivity analysis:* resting-state fMRI only 
+* **Main analysis:**
+    + *Data*: concatenated task and resting-state fMRI
+    + *Cortical parcellation*: [Schaefer 200 atlas](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_200Parcels_17Networks_order.dlabel.nii)
+         + *Network solution*: [7 Network](https://github.com/ThomasYeoLab/CBIG/blob/6d1400a2d643261246f6b042e7ef5fbe417506cd/utilities/matlab/FC/CBIG_ReorderParcelIndex.m) 
+* **Sensitivity analysis:** 
+    + *Data*: resting-state fMRI only 
+    + *Cortical parcellation*: [Schaefer 400](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_400Parcels_17Networks_order.dlabel.nii), [HCP multimodal](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/glasser_space-fsLR_den-32k_desc-atlas.dlabel.nii), [Gordon](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/gordon_space-fsLR_den-32k_desc-atlas.dlabel.nii)
+        + *Network solution*: 7 Network and 17 Network (Schaefer atlases)
 4. Image harmonization: applying [covbat-gam](https://github.com/andy1764/ComBatFamily) to multi-site data (HCP-D and HBN)
 5. Quantification of functional connectivity metrics: global brain connectivity, between- and within-network connectivity
 6. Fitting generalized additive models (GAMs) 

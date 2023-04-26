@@ -29,8 +29,8 @@ library(pammtools)
  
 library(gratia)
 
-source("/cbica/projects/network_replication/adapted_Rscripts/DevEffect_Figures.R")
-source("/cbica/projects/network_replication/adapted_Rscripts/netrep_spinTests.R")
+source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/DevEffect_Figures.R")
+source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/netrep_spinTests.R")
 source("/cbica/projects/network_replication/software/perm.sphere.p.R")
 
 atlases_GBC <- c("glasser", "gordon", "schaefer200", "schaefer400")
@@ -38,268 +38,14 @@ atlases <- c("gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "scha
 ```
  
  
-# Spatial correlation across all 4 datasets (for GBC in Schaefer200)
-```{r corrplot, fig.height=3, fig.width=3}
-# need to load all the datasets with probably the dataset.axis + fdr corrected? not sure
-# want the GAM.age.adjR for each dataset in schaefer200
-# correlate across datasets and make corrplot
-
-library(ggcorrplot)
-library(corrplot)
-library(Hmisc)
-
-
-
-PNC <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", "PNC", "GBC", "GBC.axis_schaefer200"))
-NKI <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", "NKI", "GBC", "GBC.axis_schaefer200"))
-HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", "HCPD", "GBC", "GBC.axis_schaefer200"))
-HBN <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", "HBN", "GBC", "GBC.axis_schaefer200"))
-
  
-dat2 <- bind_cols(PNC$label, as.numeric(PNC$GAM.age.AdjRsq), NKI$GAM.age.AdjRsq, HCPD$GAM.age.AdjRsq, HBN$GAM.age.AdjRsq)
-names(dat2) <- c("label", "PNC", "NKI", "HCPD", "HBN")
- 
-  
-corr <- round(cor(dat2[,-1], use = "complete.obs"), 5)
-  
- 
-# compute matrix of correlation p-values
-p.mat <- cor_pmat(dat2[,-1])
-
-
-#############
-## figure ##
-#############
-# Visualize the correlation matrix
-(correlation_matrix <- ggcorrplot(corr,  
-   lab = FALSE, type = "lower",
-   outline.col = "white",
-   ggtheme = ggplot2::theme_void, lab_size = 4, 
-   hc.order = FALSE, insig = "blank", p.mat=p.mat)  +
-   scale_fill_gradient2(low = "white",
-  mid = "#E5B9ADFF",
-  high = "#A50026FF", midpoint=0.5,limit= c(0, 1)) + 
- theme(axis.text=element_text(size=20, color = "black")))  
-
-
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig2/Fig2_corrPlot_lower_noLabel.pdf", dpi=300, width = 5, height = 5)
-
-#corrplot(corr, method = 'color', 
-    #     addCoef.col = 'white', 
-    #     outline =  T, 
-    #     addgrid.col = "white", 
-    #     tl.col = "black", 
-    #     tl.srt = 0,
-    #     tl.offset = 1, 
-    #     col.lim = c(0,1))
-         
- 
-```
- 
-
-# Brain surface plot (parcels surviving FDR correction are colored)
-```{r brain_surface}
-
-
-PNC <- PNC %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
-PNC$region <- PNC$label
-PNC$region <- gsub("Network", "17Network", PNC$region)
-#PNC <- PNC %>% filter(significant.fdr ==1)
-
-PNC <- bind_cols(PNC$region, PNC$GAM.age.AdjRsq, PNC$significant.fdr)
-names(PNC) <- c("region", "GAM.age.AdjRsq", "significant.fdr")
-PNC$significant.fdr <- gsub("0", "Non_Sig", PNC$significant.fdr)
-PNC$significant.fdr <- gsub("1", "Sig", PNC$significant.fdr)
- 
- 
- 
-
- 
-NKI <- NKI %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
-NKI$region <- NKI$label
-NKI$region <- gsub("Network", "17Network", NKI$region)
-NKI <- bind_cols(NKI$region, NKI$GAM.age.AdjRsq, NKI$significant.fdr)
-names(NKI) <- c("region", "GAM.age.AdjRsq", "significant.fdr")
-NKI$significant.fdr <- gsub("0", "Non_Sig", NKI$significant.fdr)
-NKI$significant.fdr <- gsub("1", "Sig", NKI$significant.fdr)
-
- 
-
-
-HCPD <- HCPD %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
-HCPD$region <- HCPD$label
-HCPD$region <- gsub("Network", "17Network", HCPD$region)
-HCPD <- bind_cols(HCPD$region, HCPD$GAM.age.AdjRsq, HCPD$significant.fdr)
-names(HCPD) <- c("region", "GAM.age.AdjRsq", "significant.fdr")
-HCPD$significant.fdr <- gsub("0", "Non_Sig", HCPD$significant.fdr)
-HCPD$significant.fdr <- gsub("1", "Sig", HCPD$significant.fdr)
-
-HBN <- HBN %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
-HBN$region <- HBN$label
-HBN$region <- gsub("Network", "17Network", HBN$region)
-HBN <- bind_cols(HBN$region, HBN$GAM.age.AdjRsq, HBN$significant.fdr)
-names(HBN) <- c("region", "GAM.age.AdjRsq", "significant.fdr")
-HBN$significant.fdr <- gsub("0", "Non_Sig", HBN$significant.fdr)
-HBN$significant.fdr <- gsub("1", "Sig", HBN$significant.fdr)
- 
-
-
-range(PNC$GAM.age.AdjRsq)
-range(NKI$GAM.age.AdjRsq)
-range(HCPD$GAM.age.AdjRsq)
-range(HBN$GAM.age.AdjRsq)
-
-ageEffect_surf.fig <- function(dataset_name){
-  surf.fig <- ggplot() + geom_brain(data=get(dataset_name), 
-                        atlas=schaefer17_200, 
-                        mapping=aes(fill=GAM.age.AdjRsq, colour=significant.fdr, size=I(0.3)),
-                        show.legend=FALSE, 
-                        position = position_brain(hemi~side)) + scale_colour_manual(values = c(Sig = "black", Non_Sig = "grey84")) + 
-      scale_fill_gradientn(colors= c("#009DA1FF", "#FFFFFF","#D94602FF"), limits = c(-0.05,0.15),  oob=squish,
-                           values=rescale(c(-0.05,0,0.15))) +
-      theme_void()
-  return(surf.fig)
-}
-  
- 
-
-# PNC
-ageEffect_surf_PNC <- ageEffect_surf.fig("PNC")
-ageEffect_surf_PNC
- 
- 
-#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig2/Fig2_ageSurface_PNC.pdf", dpi=1200, width = 5, height = 5)
-
-# NKI
-ageEffect_surf_NKI <- ageEffect_surf.fig("NKI")
-ageEffect_surf_NKI
-g#gsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig2/Fig2_ageSurface_NKI.pdf", dpi=1200, width = 5, height = 5)
-
-# HCPD
-ageEffect_surf_HCPD <- ageEffect_surf.fig("HCPD")
-ageEffect_surf_HCPD
-#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig2/Fig2_ageSurface_HCPD.pdf", dpi=1200, width = 5, height = 5)
-
-# HBN
-ageEffect_surf_HBN <- ageEffect_surf.fig("HBN")
-ageEffect_surf_HBN
-#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig2/Fig2_ageSurface_HBN.pdf", dpi=1200, width = 5, height = 5)
-
- 
-```
-
- 
-# Topographical surface plot 
-```{r brain_surface}
-
-# makes SA.diff_schaefer200x7
-# age_SA.diff_schaefer200x7_dataset
-# double_age_SA.diff_schaefer200x7_dataset 
-
-SA.diff <- read.csv("/cbica/projects/network_replication/atlases/edge/SA.diff_schaefer200x7.csv")
-make_double_age_df <- function(dataset) {
-  if(dataset=="PNC" | dataset=="NKI") {
-    gam.edge.age <- readRDS(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.schaefer200x7.RData", dataset, "edge"))
-  } else {
-    gam.edge.age <- readRDS(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.schaefer200x7_covbat.RData", dataset, "edge"))
-  }
-  
-   
-  age_SA.diff <- cbind(gam.edge.age, SA.diff)
-  age_SA.diff <- sig_parcels(age_SA.diff) 
-
-  # make a double df for symmetry - parcel1 and parcel2.SA.vec repeated in opposite ordering (see lines 500-510 in Adam's Edge-level-Age.md)
-  age_SA.diff2 <- age_SA.diff 
-  age_SA.diff2$parcel1.SA.vec <- age_SA.diff$parcel2.SA.vec
-  age_SA.diff2$parcel2.SA.vec <- age_SA.diff$parcel1.SA.vec
-  
-  # "stacked" df
-  double_age_SA.diff <- rbind(age_SA.diff2,age_SA.diff)
-  print(paste0("double_age_SA.diff for ", dataset, " finished"))
-   
-  return(double_age_SA.diff)
-}
-  
- 
-double_age_SA.diff_PNC <- make_double_age_df("PNC")
-double_age_SA.diff_NKI <- make_double_age_df("NKI")
-
-double_age_SA.diff_HCPD <- make_double_age_df("HCPD")
-double_age_SA.diff_HBN <- make_double_age_df("HBN")
-
-range(double_age_SA.diff_HBN$GAM.age.AdjRsq) 
-# PNC: -0.0851635  0.1642760
-# HCPD: -0.1184872  0.1964245  
-# NKI: -0.1164879  0.1763821
-# HBN: -0.1006294  0.1181795
- 
-
-hist(double_age_SA.diff_PNC$GAM.age.AdjRsq)
-hist(double_age_SA.diff_NKI$GAM.age.AdjRsq)
-hist(double_age_SA.diff_HCPD$GAM.age.AdjRsq)
-hist(double_age_SA.diff_HBN$GAM.age.AdjRsq)
-```
-
- 
-```{r model_surface, fig.height= 12, fig.width= 8}
-# model the surface
- 
-
-make_surface_plot_datasets <- function(dataset) {
-  double_age_SA.diff <- get(paste0("double_age_SA.diff_", dataset))
-  g2 <- gam(GAM.age.AdjRsq ~ te(parcel2.SA.vec,parcel1.SA.vec,k=3),data = double_age_SA.diff)
-  a <- quantile(double_age_SA.diff$GAM.age.AdjRsq, prob=c(0.01, 0.5, 0.99))[1]
-  b <- quantile(double_age_SA.diff$GAM.age.AdjRsq, prob=c(0.01, 0.5, 0.99))[3]
-  
-  surface.plot.fig <- gg_tensor(g2)+theme_classic() +
-    theme(
-      axis.title.x=element_text(size=24, color = "black"),
-      axis.title.y=element_text(size=24, color = "black"),
-      axis.line = element_line(color = "black"),
-      axis.text=element_text(size=24, color = "black")) + 
-   scale_fill_gradientn(colors= c("#009DA1FF", "#FFFFFF","#D94602FF"), limits = c(-0.011,0.019), oob=squish, 
-                           values=rescale(c(-0.011,0,0.019))) +
-    xlab("Parcel SA Rank") + 
-    ylab("Parcel SA Rank") + 
-    geom_vline(xintercept = mean(range(double_age_SA.diff$parcel1.SA.vec)),
-               linetype='dashed',size=1) + 
-    geom_hline(yintercept = mean(range(double_age_SA.diff$parcel1.SA.vec)),
-               linetype='dashed',size=1) +
-    theme(legend.position='none')
-  return(surface.plot.fig)
-}
- 
- 
-surfacePlot_PNC <- make_surface_plot_datasets("PNC")
-surfacePlot_NKI <- make_surface_plot_datasets("NKI")
-
-surfacePlot_HCPD <- make_surface_plot_datasets("HCPD")
-surfacePlot_HBN <- make_surface_plot_datasets("HBN")
-
-plot_grid(surfacePlot_PNC, surfacePlot_NKI, surfacePlot_HCPD, surfacePlot_HBN)
-
-#surfacePlot_PNC
-#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig6_New/colorbar.pdf", dpi=1200, width = 5, height = 5)
-
-surfacePlot_PNC
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig6_New/Fig6_EdgeSurfacePlot_PNC.pdf", dpi=1200, width = 5, height = 5)
-
-surfacePlot_NKI
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig6_New/Fig6_EdgeSurfacePlot_NKI.pdf", dpi=1200, width = 5, height = 5)
-
-surfacePlot_HCPD
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig6_New/Fig6_EdgeSurfacePlot_HCPD.pdf", dpi=1200, width = 5, height = 5)
-
-surfacePlot_HBN
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig6_New/Fig6_EdgeSurfacePlot_HBN.pdf", dpi=1200, width = 5, height = 5)
-
-
-```
-
- 
- 
-# Plot the predicted GBC for each parcel at age 8, 12, 20 in PNC
+**Figure 1A-D**
+# Plot the predicted GBC for each parcel at age 8, 14, 22
 ```{r}
+
+
+schaefer200x17.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x17_regionlist_final.csv")
+schaefer200.parcel.labels <- schaefer200x17.parcel.labels #gbc
  
 GBC.schaefer200.PNC <- read.csv("/cbica/projects/network_replication/output/PNC/GBC/GBCschaefer200_demographics_finalsample.csv")
 names(GBC.schaefer200.PNC) <- gsub('X17Networks', "Networks", names(GBC.schaefer200.PNC))
@@ -334,7 +80,7 @@ parcel.labels <- schaefer200.parcel.labels$label
 metric="GBC"
 atlas_name="schaefer200"
 network_parcellation=""
-dataset_name="HBN"
+dataset_name="PNC"
 
 make_fitted_df <- function(parcel.labels, metric, atlas_name, network_parcellation, dataset_name, sex_var_name) {
   fitted_df <- matrix(data=NA, nrow=1, ncol=8)
@@ -357,7 +103,7 @@ make_fitted_df <- function(parcel.labels, metric, atlas_name, network_parcellati
     if (str_detect(atlas_name, "schaefer") && metric == "GBC") {
       fitted_df$region <- gsub("Network", "17Network", fitted_df$region)
     }
-    write.csv(fitted_df, sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/fitted%2$s_ageResolved_%3$s%4$s.csv", dataset_name, metric, atlas_name, network_parcellation), row.names = F, quote = F)
+    #write.csv(fitted_df, sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/fitted%2$s_ageResolved_%3$s%4$s.csv", dataset_name, metric, atlas_name, network_parcellation), row.names = F, quote = F)
     return(fitted_df)
 
 }
@@ -474,18 +220,309 @@ ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network
 age22_HBN_fig
 ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/FittedGBC_Age22_HBN.pdf", dpi=1200, width = 5, height = 5)
 
-
-
-
-
+ 
 
 
 ```
 
 
+ 
+**Figure 2A** 
+# Spatial correlation across all 4 datasets (for GBC in Schaefer200)
+```{r corrplot, fig.height=3, fig.width=3}
+# need to load all the datasets with probably the dataset.axis + fdr corrected? not sure
+# want the GAM.age.adjR for each dataset in schaefer200
+# correlate across datasets and make corrplot
+
+library(ggcorrplot)
+library(corrplot)
+library(Hmisc)
 
 
-# make gganimate version 
+
+PNC <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", "PNC", "GBC", "GBC.axis_schaefer200"))
+NKI <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", "NKI", "GBC", "GBC.axis_schaefer200"))
+HCPD <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", "HCPD", "GBC", "GBC.axis_schaefer200"))
+HBN <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", "HBN", "GBC", "GBC.axis_schaefer200"))
+
+ 
+dat2 <- bind_cols(PNC$label, as.numeric(PNC$GAM.age.AdjRsq), NKI$GAM.age.AdjRsq, HCPD$GAM.age.AdjRsq, HBN$GAM.age.AdjRsq)
+names(dat2) <- c("label", "PNC", "NKI", "HCPD", "HBN")
+ 
+  
+corr <- round(cor(dat2[,-1], use = "complete.obs"), 5)
+  
+ 
+# compute matrix of correlation p-values
+p.mat <- cor_pmat(dat2[,-1])
+
+
+#############
+## figure ##
+#############
+# Visualize the correlation matrix
+(correlation_matrix <- ggcorrplot(corr,  
+   lab = FALSE, type = "lower",
+   outline.col = "white",
+   ggtheme = ggplot2::theme_void, lab_size = 4, 
+   hc.order = FALSE, insig = "blank", p.mat=p.mat)  +
+   scale_fill_gradient2(low = "white",
+  mid = "#E5B9ADFF",
+  high = "#A50026FF", midpoint=0.5,limit= c(0, 1)) + 
+ theme(axis.text=element_text(size=20, color = "black")))  
+
+
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig2/Fig2_corrPlot_lower_noLabel.pdf", dpi=300, width = 5, height = 5)
+
+#corrplot(corr, method = 'color', 
+    #     addCoef.col = 'white', 
+    #     outline =  T, 
+    #     addgrid.col = "white", 
+    #     tl.col = "black", 
+    #     tl.srt = 0,
+    #     tl.offset = 1, 
+    #     col.lim = c(0,1))
+         
+ 
+
+schaefer200x17.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x17_regionlist_final.csv")
+schaefer200.parcel.labels <- schaefer200x17.parcel.labels #gbc
+
+# spin test
+perm.id.full_schaefer200x17 <- readRDS("/cbica/projects/network_replication/software/rotate_parcellation/schaefer200x17.coords_sphericalrotations_N10k.rds")
+ 
+# GBC - make df.dev.spin_GBC_schaefer200 
+parcel.labels <- schaefer200.parcel.labels$label
+df.dev.spin_PNC <- rbind(PNC[1:c(length(parcel.labels)/2),], PNC[c(length(parcel.labels)/2+1):length(parcel.labels),]) 
+df.dev.spin_NKI <- rbind(NKI[1:c(length(parcel.labels)/2),], NKI[c(length(parcel.labels)/2+1):length(parcel.labels),])
+df.dev.spin_HCPD <- rbind(HCPD[1:c(length(parcel.labels)/2),], HCPD[c(length(parcel.labels)/2+1):length(parcel.labels),])
+df.dev.spin_HBN <- rbind(HBN[1:c(length(parcel.labels)/2),], HBN[c(length(parcel.labels)/2+1):length(parcel.labels),])
+
+corr.PNC_NKI <- cor.test(PNC$GAM.age.AdjRsq, NKI$GAM.age.AdjRsq, method=c("pearson"), exact=F)$estimate # r = 0.8751161 
+corr.PNC_HCPD <- cor.test(PNC$GAM.age.AdjRsq, HCPD$GAM.age.AdjRsq, method=c("pearson"), exact=F)$estimate # r = 0.8156431  
+corr.PNC_HBN <- cor.test(PNC$GAM.age.AdjRsq, HBN$GAM.age.AdjRsq, method=c("pearson"), exact=F)$estimate # r = 0.6506219 
+
+corr.NKI_HCPD <- cor.test(HCPD$GAM.age.AdjRsq, NKI$GAM.age.AdjRsq, method=c("pearson"), exact=F)$estimate # r = 0.6539157 
+corr.NKI_HBN <- cor.test(HBN$GAM.age.AdjRsq, NKI$GAM.age.AdjRsq, method=c("pearson"), exact=F)$estimate # r = 0.4890007 
+corr.HBN_HCPD <- cor.test(HBN$GAM.age.AdjRsq, HCPD$GAM.age.AdjRsq, method=c("pearson"), exact=F)$estimate # r = 0.7599854 
+ 
+# do spin test - environmental effects and S-A axis rank are not significantly associated. r = 0.117, pspin > 0.05
+p_spin_PNC_NKI  <- perm.sphere.p(PNC$GAM.age.AdjRsq, NKI$GAM.age.AdjRsq, perm.id.full_schaefer200x17, corr.type='pearson') # pspin = 0
+p_spin_PNC_HCPD <- perm.sphere.p(PNC$GAM.age.AdjRsq, HCPD$GAM.age.AdjRsq, perm.id.full_schaefer200x17, corr.type='pearson') # pspin = 0
+p_spin_PNC_HBN  <- perm.sphere.p(PNC$GAM.age.AdjRsq, HBN$GAM.age.AdjRsq, perm.id.full_schaefer200x17, corr.type='pearson') # pspin = 0
+p_spin_NKI_HCPD  <- perm.sphere.p(HCPD$GAM.age.AdjRsq, NKI$GAM.age.AdjRsq, perm.id.full_schaefer200x17, corr.type='pearson') # pspin = 0
+p_spin_NKI_HBN  <- perm.sphere.p(HBN$GAM.age.AdjRsq, NKI$GAM.age.AdjRsq, perm.id.full_schaefer200x17, corr.type='pearson') # pspin = 0.0012
+p_spin_HBN_HCPD  <- perm.sphere.p(HBN$GAM.age.AdjRsq, HCPD$GAM.age.AdjRsq, perm.id.full_schaefer200x17, corr.type='pearson') # pspin = 0
+
+```
+ 
+
+**Figure 2C**
+# Brain surface plot (parcels surviving FDR correction are colored)
+```{r brain_surface}
+
+
+PNC <- PNC %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+PNC$region <- PNC$label
+PNC$region <- gsub("Network", "17Network", PNC$region)
+#PNC <- PNC %>% filter(significant.fdr ==1)
+
+PNC <- bind_cols(PNC$region, PNC$GAM.age.AdjRsq, PNC$significant.fdr)
+names(PNC) <- c("region", "GAM.age.AdjRsq", "significant.fdr")
+PNC$significant.fdr <- gsub("0", "Non_Sig", PNC$significant.fdr)
+PNC$significant.fdr <- gsub("1", "Sig", PNC$significant.fdr)
+ 
+ 
+ 
+
+ 
+NKI <- NKI %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+NKI$region <- NKI$label
+NKI$region <- gsub("Network", "17Network", NKI$region)
+NKI <- bind_cols(NKI$region, NKI$GAM.age.AdjRsq, NKI$significant.fdr)
+names(NKI) <- c("region", "GAM.age.AdjRsq", "significant.fdr")
+NKI$significant.fdr <- gsub("0", "Non_Sig", NKI$significant.fdr)
+NKI$significant.fdr <- gsub("1", "Sig", NKI$significant.fdr)
+
+ 
+
+
+HCPD <- HCPD %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+HCPD$region <- HCPD$label
+HCPD$region <- gsub("Network", "17Network", HCPD$region)
+HCPD <- bind_cols(HCPD$region, HCPD$GAM.age.AdjRsq, HCPD$significant.fdr)
+names(HCPD) <- c("region", "GAM.age.AdjRsq", "significant.fdr")
+HCPD$significant.fdr <- gsub("0", "Non_Sig", HCPD$significant.fdr)
+HCPD$significant.fdr <- gsub("1", "Sig", HCPD$significant.fdr)
+
+HBN <- HBN %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+HBN$region <- HBN$label
+HBN$region <- gsub("Network", "17Network", HBN$region)
+HBN <- bind_cols(HBN$region, HBN$GAM.age.AdjRsq, HBN$significant.fdr)
+names(HBN) <- c("region", "GAM.age.AdjRsq", "significant.fdr")
+HBN$significant.fdr <- gsub("0", "Non_Sig", HBN$significant.fdr)
+HBN$significant.fdr <- gsub("1", "Sig", HBN$significant.fdr)
+ 
+
+
+range(PNC$GAM.age.AdjRsq)
+range(NKI$GAM.age.AdjRsq)
+range(HCPD$GAM.age.AdjRsq)
+range(HBN$GAM.age.AdjRsq)
+
+ageEffect_surf.fig <- function(dataset_name){
+  surf.fig <- ggplot() + geom_brain(data=get(dataset_name), 
+                        atlas=schaefer17_200, 
+                        mapping=aes(fill=GAM.age.AdjRsq, colour=significant.fdr, size=I(0.3)),
+                        show.legend=FALSE, 
+                        position = position_brain(hemi~side)) + scale_colour_manual(values = c(Sig = "black", Non_Sig = "grey84")) + 
+      scale_fill_gradientn(colors= c("#009DA1FF", "#FFFFFF","#D94602FF"), limits = c(-0.05,0.15),  oob=squish,
+                           values=rescale(c(-0.05,0,0.15))) +
+      theme_void()
+  return(surf.fig)
+}
+  
+ 
+
+# PNC
+ageEffect_surf_PNC <- ageEffect_surf.fig("PNC")
+ageEffect_surf_PNC
+ 
+ 
+#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig2/Fig2_ageSurface_PNC.pdf", dpi=1200, width = 5, height = 5)
+
+# NKI
+ageEffect_surf_NKI <- ageEffect_surf.fig("NKI")
+ageEffect_surf_NKI
+g#gsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig2/Fig2_ageSurface_NKI.pdf", dpi=1200, width = 5, height = 5)
+
+# HCPD
+ageEffect_surf_HCPD <- ageEffect_surf.fig("HCPD")
+ageEffect_surf_HCPD
+#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig2/Fig2_ageSurface_HCPD.pdf", dpi=1200, width = 5, height = 5)
+
+# HBN
+ageEffect_surf_HBN <- ageEffect_surf.fig("HBN")
+ageEffect_surf_HBN
+#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig2/Fig2_ageSurface_HBN.pdf", dpi=1200, width = 5, height = 5)
+
+ 
+```
+
+ 
+ 
+**Figure 7**
+# Topographical surface plot 
+```{r brain_surface}
+
+# makes SA.diff_schaefer200x7
+# age_SA.diff_schaefer200x7_dataset
+# double_age_SA.diff_schaefer200x7_dataset 
+
+SA.diff <- read.csv("/cbica/projects/network_replication/atlases/edge/SA.diff_schaefer200x7.csv")
+make_double_age_df <- function(dataset) {
+  if(dataset=="PNC" | dataset=="NKI") {
+    gam.edge.age <- readRDS(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.schaefer200x7.RData", dataset, "edge"))
+  } else {
+    gam.edge.age <- readRDS(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.schaefer200x7_covbat.RData", dataset, "edge"))
+  }
+  
+   
+  age_SA.diff <- cbind(gam.edge.age, SA.diff)
+  age_SA.diff <- sig_parcels(age_SA.diff) 
+
+  # make a double df for symmetry - parcel1 and parcel2.SA.vec repeated in opposite ordering (see lines 500-510 in Adam's Edge-level-Age.md)
+  age_SA.diff2 <- age_SA.diff 
+  age_SA.diff2$parcel1.SA.vec <- age_SA.diff$parcel2.SA.vec
+  age_SA.diff2$parcel2.SA.vec <- age_SA.diff$parcel1.SA.vec
+  
+  # "stacked" df
+  double_age_SA.diff <- rbind(age_SA.diff2,age_SA.diff)
+  print(paste0("double_age_SA.diff for ", dataset, " finished"))
+   
+  return(double_age_SA.diff)
+}
+  
+ 
+double_age_SA.diff_PNC <- make_double_age_df("PNC")
+double_age_SA.diff_NKI <- make_double_age_df("NKI")
+
+double_age_SA.diff_HCPD <- make_double_age_df("HCPD")
+double_age_SA.diff_HBN <- make_double_age_df("HBN")
+ 
+range(double_age_SA.diff_HBN$GAM.age.AdjRsq) 
+# PNC: -0.0851635  0.1642760
+# HCPD: -0.1184872  0.1964245  
+# NKI: -0.1164879  0.1763821
+# HBN: -0.1006294  0.1181795
+ 
+
+hist(double_age_SA.diff_PNC$GAM.age.AdjRsq)
+hist(double_age_SA.diff_NKI$GAM.age.AdjRsq)
+hist(double_age_SA.diff_HCPD$GAM.age.AdjRsq)
+hist(double_age_SA.diff_HBN$GAM.age.AdjRsq)
+```
+
+ 
+```{r model_surface, fig.height= 12, fig.width= 8}
+# model the surface
+ 
+
+make_surface_plot_datasets <- function(dataset) {
+  double_age_SA.diff <- get(paste0("double_age_SA.diff_", dataset))
+  g2 <- gam(GAM.age.AdjRsq ~ te(parcel2.SA.vec,parcel1.SA.vec,k=3),data = double_age_SA.diff)
+  a <- quantile(double_age_SA.diff$GAM.age.AdjRsq, prob=c(0.01, 0.5, 0.99))[1]
+  b <- quantile(double_age_SA.diff$GAM.age.AdjRsq, prob=c(0.01, 0.5, 0.99))[3]
+  
+  surface.plot.fig <- gg_tensor(g2)+theme_classic() +
+    theme(
+      axis.title.x=element_text(size=24, color = "black"),
+      axis.title.y=element_text(size=24, color = "black"),
+      axis.line = element_line(color = "black"),
+      axis.text=element_text(size=24, color = "black")) + 
+   scale_fill_gradientn(colors= c("#009DA1FF", "#FFFFFF","#D94602FF"), limits = c(-0.011,0.019), oob=squish, 
+                           values=rescale(c(-0.011,0,0.019))) +
+    xlab("Parcel SA Rank") + 
+    ylab("Parcel SA Rank") + 
+    geom_vline(xintercept = mean(range(double_age_SA.diff$parcel1.SA.vec)),
+               linetype='dashed',size=1) + 
+    geom_hline(yintercept = mean(range(double_age_SA.diff$parcel1.SA.vec)),
+               linetype='dashed',size=1) +
+    theme(legend.position='none')
+  return(surface.plot.fig)
+}
+ 
+ 
+surfacePlot_PNC <- make_surface_plot_datasets("PNC")
+surfacePlot_NKI <- make_surface_plot_datasets("NKI")
+
+surfacePlot_HCPD <- make_surface_plot_datasets("HCPD")
+surfacePlot_HBN <- make_surface_plot_datasets("HBN")
+
+plot_grid(surfacePlot_PNC, surfacePlot_NKI, surfacePlot_HCPD, surfacePlot_HBN)
+
+#surfacePlot_PNC
+#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig6_New/colorbar.pdf", dpi=1200, width = 5, height = 5)
+
+surfacePlot_PNC
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig6_New/Fig6_EdgeSurfacePlot_PNC.pdf", dpi=1200, width = 5, height = 5)
+
+surfacePlot_NKI
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig6_New/Fig6_EdgeSurfacePlot_NKI.pdf", dpi=1200, width = 5, height = 5)
+
+surfacePlot_HCPD
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig6_New/Fig6_EdgeSurfacePlot_HCPD.pdf", dpi=1200, width = 5, height = 5)
+
+surfacePlot_HBN
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig6_New/Fig6_EdgeSurfacePlot_HBN.pdf", dpi=1200, width = 5, height = 5)
+
+
+```
+
+ 
+
+
+# make gganimate
  
 ```{r}
 library(gganimate)
