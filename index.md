@@ -170,6 +170,10 @@ Vertex-level fMRI timeseries were parcellated with fsLR surface atlases utilizin
 
 **Sensitivity analysis:** 
 
+To investigate whether our findings were driven by potentially confounding factors including use of task and rest scans and atlas used for cortical parcellation. Sensitivity analyses were performed with only resting state data while excluding fMRI acquired during task conditions. Datasets used in this rest-only sensitivity analysis include PNC, HCP-D, and HBN. Analyses for NKI were completed with resting-state fMRI only due to absence of task scans. We only included participants with at least 6 minutes of resting-state fMRI. We analyzed data from 998 participants (549 females) from PNC, 611 participants (328 females) from HCP-D, and 1039 participants (426 females). The total scan time for fully acquired resting-state scans was 11 minutes and 12 seconds (224 volumes) for PNC, 25 minutes and 30 seconds (1912 volumes) for HCP-D, and 10 minutes and 9 seconds (750 volumes) for HBN. 
+
+Second, analyses were also evaluated using additional cortical parcellations. Our primary parcellation utilized the Schaefer 200 atlas; secondary atlases included the Schaefer 400 atlas, the Gordon atlas, and HCP-MMP atlas. For analyses of secondary outcome measures that require community structure, namely average between- and within-network connectivity, we evaluated both the Yeo 7 and 17-network partitions associated with the Schaefer atlas. Results from sensitivity analyses are presented in the supplement.
+
 *Data*: resting-state fMRI only was used to construct conn matrices using 
 ```
 /Rscripts/<dataset>_scripts/ConnMatrices_scripts/<dataset>_makeConnMatrices_restOnly.R
