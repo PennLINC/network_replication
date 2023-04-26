@@ -35,20 +35,51 @@ RBC PNC (Health excude), NKI, HCP-D, and HBN
 - Poster to be presented at Organization for Human Brain Mapping, July 2023
 
 ### Cubic Project Directory
-/cbica/projects/network_replication
+`/cbica/projects/network_replication`
 
-```
-subdirectory/: description
-```
+<br>
+
+`software/`: project software 
+`Rscripts/`: contains functions for main and sensitivity analyses as well as Rmd files for each step of the analytic workflow (see below) for each dataset. 
+`atlases/dlabel/*.nii` : Cortical parcellations for Schaefer 200 (7 and 17 network), Schaefer 400 (7 and 17 network), Gordon, and HCP-MMP 
+
+`atlases/parcellations/*regionlist_final.csv`: 
+ parcel labels for each cortical parcellation (see below) used for study
+
+`atlases/edge/*_edge.csv`: edge names used for edge-level analysis for each cortical parcellation
+
+`input/<dataset>/datalad_xcp/`: MRI data for each dataset pulled via datalad get
+
+`input/<dataset>/<dataset>_xcp/`: only fMRI data in fsLR space and qc data for each subject
 
 
+`input/<dataset>/connMatricesData/connectivity_matrices`: connectivity matrices derived from concatenated task and rest fMRI scans 
+ 
+<br>
 
+Demographics .csv's all live in `input/<dataset>/sample_selection` but have different file names: 
+* PNC: `pnc_participants.tsv` 
+* NKI: `nki_participants.tsv`
+* HCP-D: `hcpd_demographics.csv`
+* HBN: `participants.tsv`
+
+<br>
+
+Final sample lists for each dataset all live in `input/<dataset>/sample_selection` but have different file names:
+* PNC: `PNC_demographics_finalsample_20230103.csv` 
+* NKI: `NKI_demographics_finalsample_20221219.csv`
+* HCP-D: `HCPD_demographics_finalsample_20221226.csv`
+* HBN: `HBN_demographics_finalsample_202230226.csv`
+
+<br>
+
+`output/<dataset>/<functional_connectivity_metric>/GAM`: GAM results. Includes effect sizes, p-values, fitted- values, smooth estimates. Outputs for HBN and HCP-D include covbat harmonized outputs. 
 <br>
 <br>
 
 # CODE DOCUMENTATION  
 
-All project analyses are described below along with the corresponding code on Github. The following outline describes the order of the analytic workflow: 
+All project analyses are described below along with the corresponding code on Github. The following outline describes the order of the analytic workflow:
 
 1. Parcellating the sensorimotor-association (S-A) axis  
 2. Sample selection for each dataset: PNC (discovery), NKI, HCP-D, and HBN (replication)  
@@ -63,6 +94,7 @@ All project analyses are described below along with the corresponding code on Gi
     + *Data*: resting-state fMRI only 
     + *Cortical parcellation*: [Schaefer 400](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_400Parcels_17Networks_order.dlabel.nii), [HCP multimodal](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/glasser_space-fsLR_den-32k_desc-atlas.dlabel.nii), [Gordon](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/gordon_space-fsLR_den-32k_desc-atlas.dlabel.nii)
         + *Network solution*: 7 Network and 17 Network (Schaefer atlases)
+
 4. Image harmonization: applying [covbat-gam](https://github.com/andy1764/ComBatFamily) to multi-site data (HCP-D and HBN)
 5. Quantification of functional connectivity metrics: global brain connectivity, between- and within-network connectivity
 6. Fitting generalized additive models (GAMs) 
