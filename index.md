@@ -191,20 +191,25 @@ GBC, BNC, WNC, and edge-level connectivity were computed or extracted using
 ```
 /Rscripts/<dataset>_scripts/Analysis_scripts/1_<dataset>_computeConnMetrics.Rmd
 ```
-
++ PNC: [1_PNC_computeConnMetrics.Rmd](https://github.com/PennLINC/network_replication/blob/main/PNC_scripts/Analysis_scripts/1_PNC_computeConnMetrics.Rmd)
++ NKI: [1_NKI_computeConnMetrics.Rmd](https://github.com/PennLINC/network_replication/blob/main/NKI_scripts/Analysis_scripts/1_NKI_computeConnMetrics.Rmd)
++ HCP-D: [1_HCPD_computeConnMetrics.Rmd](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/Analysis_scripts/1_HCPD_computeConnMetrics.Rmd)
++ HBN: [1_HBN_computeConnMetrics.Rmd](https://github.com/PennLINC/network_replication/blob/main/HBN_scripts/Analysis_scripts/1_HBN_computeConnMetrics.Rmd)
 
 ### 5. Image harmonization: applying [covbat-gam](https://github.com/andy1764/ComBatFamily) to multi-site data (HCP-D and HBN)
 
 [Correcting Covariance Batch Effects (CovBat)](https://onlinelibrary.wiley.com/doi/10.1002/hbm.25688) was used to harmonize multi-site MRI data to ensure the imaging measures were comparable across sites. CovBat was applied to functional connectivity metrics for multi-site dataset (HCP-D and HBN) using the [ComBatFamily R package](https://github.com/andy1764/ComBatFamily). Sex and in-scanner motion were included as covariates with age modeled as a smooth term via a [generalized additive model](https://www.sciencedirect.com/science/article/pii/S1053811919310419?via%3Dihub) using the ‘covfam’ function, which enables flexible covariate modeling with penalized splines.  
 
-Covbat was applied to GBC, BNC, WNC, and edges as part of `/Rscripts/<dataset>_scripts/Analysis_scripts/1_<dataset>_computeConnMetrics.Rmd`
-+ HCP-D: [1_HCPD_computeConnMetrics.Rmd](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/Analysis_scripts/1_HCPD_computeConnMetrics.Rmd#L187-L377)
-+ HBN: [1_HBN_computeConnMetrics.Rmd](https://github.com/PennLINC/network_replication/blob/main/HBN_scripts/Analysis_scripts/1_HBN_computeConnMetrics.Rmd#L188-L427)
-
-
+Covbat was applied to GBC, BNC, WNC, and edges as part of 
+```
+/Rscripts/<dataset>_scripts/Analysis_scripts/1_<dataset>_computeConnMetrics.Rmd
+```
++ HCP-D: [1_HCPD_computeConnMetrics.Rmd (L187-377)](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/Analysis_scripts/1_HCPD_computeConnMetrics.Rmd#L187-L377)
++ HBN: [1_HBN_computeConnMetrics.Rmd (L188-427)](https://github.com/PennLINC/network_replication/blob/main/HBN_scripts/Analysis_scripts/1_HBN_computeConnMetrics.Rmd#L188-L427)
 
 
 ### 6. Fitting generalized additive models (GAMs) 
+GAMs were fit for GBC, BNC, WNC, and edge-level connectivity for each dataset. 
 
 ### 7. Characterization of relationships between functional connectivity metrics, age, and the S-A axis
 
