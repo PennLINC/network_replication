@@ -8,9 +8,9 @@ library(tidyverse)
 library(dplyr)
 library(magrittr)
 
-source("/cbica/projects/network_replication/adapted_Rscripts/GAM_functions.R")
-source("/cbica/projects/network_replication/adapted_Rscripts/GAM_functions_Val.R")
-source("/cbica/projects/network_replication/adapted_Rscripts/fitGAMs.R")
+source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/GAM_functions.R")
+source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/GAM_functions_Val.R")
+source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/fitGAMs.R")
 
 
 args <- commandArgs(trailingOnly = TRUE) 

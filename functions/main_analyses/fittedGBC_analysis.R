@@ -1,7 +1,7 @@
 library(dplyr, lib.loc="/cbica/home/luoau/Rlibs")
 library(purrr, lib.loc="/cbica/home/luoau/Rlibs")
 library(stringr, lib.loc="/cbica/home/luoau/Rlibs")
-source("/cbica/projects/network_replication/adapted_Rscripts/gam.smooths.predict_posterior.R")
+source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/gam.smooths.predict_posterior.R")
 
 args <- commandArgs(trailingOnly = TRUE) 
 dataset = args[1]

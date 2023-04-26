@@ -1,7 +1,7 @@
 library(dplyr, lib.loc="/cbica/home/luoau/Rlibs")
 library(purrr, lib.loc="/cbica/home/luoau/Rlibs")
 library(stringr, lib.loc="/cbica/home/luoau/Rlibs")
-source("/cbica/projects/network_replication/adapted_Rscripts/GAM_functions.R")
+source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/GAM_functions.R")
 
 args <- commandArgs(trailingOnly = TRUE) 
 dataset = args[1]

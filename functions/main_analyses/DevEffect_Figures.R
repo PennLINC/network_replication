@@ -1,7 +1,7 @@
 # make figures
 
 
-source("/cbica/projects/network_replication/adapted_Rscripts/GAM_functions.R")
+source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/GAM_functions.R")
 library(dplyr)
 library(magrittr)
 library(ggplot2)
