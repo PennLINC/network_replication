@@ -485,7 +485,7 @@ ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network
 
 
 
-# make gganimate version TEEHEEHEE!!
+# make gganimate version 
  
 ```{r}
 library(gganimate)
