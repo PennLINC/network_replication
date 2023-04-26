@@ -28,6 +28,8 @@ RBC PNC (Health excude), NKI, HCP-D, and HBN
 
 ### Github Repository
 <https://github.com/PennLINC/network_replication>
+### Slack Channel:
+#network_replication 
 
 ### Conference Presentations
  
@@ -83,20 +85,20 @@ All project analyses are described below along with the corresponding code on Gi
 
 1. Parcellating the sensorimotor-association (S-A) axis  
 2. Sample selection for each dataset: PNC (discovery), NKI, HCP-D, and HBN (replication)  
-3. Constructing connectivity matrices for each dataset   
-4. Image harmonization: applying [covbat-gam](https://github.com/andy1764/ComBatFamily) to multi-site data (HCP-D and HBN)
-5. Quantification of functional connectivity metrics: global brain connectivity, between- and within-network connectivity
+3. Constructing connectivity matrices for each dataset 
+4. Quantification of functional connectivity metrics: global brain connectivity, between- and within-network connectivity  
+5. Image harmonization: applying [covbat-gam](https://github.com/andy1764/ComBatFamily) to multi-site data (HCP-D and HBN)
 6. Fitting generalized additive models (GAMs) 
 7. Characterization of relationships between functional connectivity metrics, age, and the S-A axis
 
  
 <br>
 
-## 1. Parcellating the sensorimotor-association (S-A) axis  
+### 1. Parcellating the sensorimotor-association (S-A) axis  
 We parcellated the fslr/cifti [Sensorimotor-Association Axis](https://github.com/PennLINC/S-A_ArchetypalAxis/blob/main/FSLRVertex/SensorimotorAssociation_Axis.dscalar.nii) with cortical atlases (Schaefer 200, Schaefer 400, Gordon, and HCP-MMP) using [/Rscripts/Generate_input/1_parcellate_SAaxis.Rmd](https://github.com/PennLINC/network_replication/blob/main/Generate_input/1_parcellate_SAaxis.Rmd).
 
 
-## 2. Sample selection for each dataset: PNC (discovery), NKI, HCP-D, and HBN (replication)  
+### 2. Sample selection for each dataset: PNC (discovery), NKI, HCP-D, and HBN (replication)  
 The final samples for each dataset were constructed using `/Rscripts/<dataset>/QC_scripts/<dataset>_SampleSelection.Rmd`. Links to the corresponding github code and descriptions of each final sample are as follows: 
 
 * PNC: [PNC_SampleSelection.Rmd](https://github.com/PennLINC/network_replication/blob/main/PNC_scripts/QC_scripts/PNC_SampleSelection.Rmd)
@@ -133,7 +135,7 @@ The final samples for each dataset were constructed using `/Rscripts/<dataset>/Q
         5) Include scans with at least 7 minutes of scan time: N= 1438, 3939 scans (final sample), 546 females
         6) Exclude participants with missing data (i.e. age and sex): N= 1379, 3767 scans, 546 females. Age: mean=11.6, sd= 3.7
 
-## 3. Constructing connectivity matrices for each dataset
+### 3. Constructing connectivity matrices for each dataset
 
 fMRIPrep 20.2.3 (PNC and NKI) and 22.0.2 (HCP-D and HBN) were run with the following parameters:
 
@@ -148,7 +150,10 @@ $ /usr/local/miniconda/bin/xcp_abcd inputs/data/fmriprep xcp participant --despi
 
 ```
 
+
 **Main analysis:**  
+Vertex-level fMRI timeseries were parcellated with fsLR surface atlases utilizing Connectome Workbench 1.5.0.19. This produced fMRI timeseries within individual cortical regions. The Schaefer200 atlas was used as the primary atlas and Schaefer 400, HCP-MMP, and Gordon atlases were used in sensitivity analyses. Next, parcellated rest and task fMRI timeseries were concatenated and the Pearson correlation between concatenated timeseries was computed for every pair of cortical regions. 
+
 + *Data*: task and resting-state fMRI were concatenated using `/Rscripts/<dataset>_scripts/ConnMatrices_scripts/<dataset>_makeConnMatrices.R`  
     + PNC: [PNC_makeConnMatrices.R](https://github.com/PennLINC/network_replication/blob/main/PNC_scripts/ConnMatrices_scripts/PNC_makeConnMatrices.R)
     + NKI: [NKI_makeConnMatrices.R](https://github.com/PennLINC/network_replication/blob/main/NKI_scripts/ConnMatrices_scripts/NKI_makeConnMatrices.R)
@@ -168,15 +173,30 @@ $ /usr/local/miniconda/bin/xcp_abcd inputs/data/fmriprep xcp participant --despi
 + *Cortical parcellation*: [Schaefer 400](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_400Parcels_17Networks_order.dlabel.nii), [HCP multimodal](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/glasser_space-fsLR_den-32k_desc-atlas.dlabel.nii), [Gordon](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/gordon_space-fsLR_den-32k_desc-atlas.dlabel.nii)
     + *Network solution*: 7 Network and 17 Network (Schaefer atlases)
 
-## 4. Image harmonization: applying [covbat-gam](https://github.com/andy1764/ComBatFamily) to multi-site data (HCP-D and HBN)
+### 4. Quantification of functional connectivity metrics 
 
-## 5. Quantification of functional connectivity metrics 
+Global brain connectivity (GBC) was calculated for each cortical parcel by averaging its timeseries correlation with all other parcels. Hence, global brain connectivity represents the mean edge strength of a given region with all other regions, without thresholding. Average between-network connectivity (BNC) was defined as the mean edge strength (Pearson correlation) of a given region and all other regions not in that region’s network. Average within-network connectivity (WNC) was defined as the mean edge strength (Pearson correlation) of a given region and all other regions within that region’s network. We also examined functional connectivity at the edge level by extracting the Pearson correlation between timeseries for each pair of regions. 
 
-## 6. Fitting generalized additive models (GAMs) 
+GBC, BNC, WNC, and edge-level connectivity were computed or extracted using `/Rscripts/<dataset>_scripts/Analysis_scripts/1_<dataset>_computeConnMetrics.Rmd`. 
 
-## 7. Characterization of relationships between functional connectivity metrics, age, and the S-A axis
 
-  
+### 5. Image harmonization: applying [covbat-gam](https://github.com/andy1764/ComBatFamily) to multi-site data (HCP-D and HBN)
+
+[Correcting Covariance Batch Effects (CovBat)](https://onlinelibrary.wiley.com/doi/10.1002/hbm.25688) was used to harmonize multi-site MRI data to ensure the imaging measures were comparable across sites. CovBat was applied to functional connectivity metrics for multi-site dataset (HCP-D and HBN) using the [ComBatFamily R package](https://github.com/andy1764/ComBatFamily). Sex and in-scanner motion were included as covariates with age modeled as a smooth term via a [generalized additive model](https://www.sciencedirect.com/science/article/pii/S1053811919310419?via%3Dihub) using the ‘covfam’ function, which enables flexible covariate modeling with penalized splines.  
+
+Covbat was applied to GBC, BNC, WNC, and edges as part of `/Rscripts/<dataset>_scripts/Analysis_scripts/1_<dataset>_computeConnMetrics.Rmd`
++ HCP-D: [1_HCPD_computeConnMetrics.Rmd](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/Analysis_scripts/1_HCPD_computeConnMetrics.Rmd#L187-L377)
++ HBN: [1_HBN_computeConnMetrics.Rmd](https://github.com/PennLINC/network_replication/blob/main/HBN_scripts/Analysis_scripts/1_HBN_computeConnMetrics.Rmd#L188-L427)
+
+
+
+
+### 6. Fitting generalized additive models (GAMs) 
+
+### 7. Characterization of relationships between functional connectivity metrics, age, and the S-A axis
+
+
+<br>
 
 # Data Interpretation and Visualization 
  
