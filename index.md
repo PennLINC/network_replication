@@ -48,15 +48,17 @@ subdirectory/: description
 
 # CODE DOCUMENTATION  
 
-All project analyses are described below along with the corresponding code on Github. The analytic workflow was executed in the following order:  
+All project analyses are described below along with the corresponding code on Github. The following outline describes the order of the analytic workflow: 
 
 1. Parcellating the sensorimotor-association (S-A) axis  
 2. Sample selection for each dataset: PNC (discovery), NKI, HCP-D, and HBN (replication)  
 3. Constructing connectivity matrices for each dataset 
+
 * **Main analysis:**
     + *Data*: concatenated task and resting-state fMRI
     + *Cortical parcellation*: [Schaefer 200 atlas](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_200Parcels_17Networks_order.dlabel.nii)
          + *Network solution*: [7 Network](https://github.com/ThomasYeoLab/CBIG/blob/6d1400a2d643261246f6b042e7ef5fbe417506cd/utilities/matlab/FC/CBIG_ReorderParcelIndex.m) 
+
 * **Sensitivity analysis:** 
     + *Data*: resting-state fMRI only 
     + *Cortical parcellation*: [Schaefer 400](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_400Parcels_17Networks_order.dlabel.nii), [HCP multimodal](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/glasser_space-fsLR_den-32k_desc-atlas.dlabel.nii), [Gordon](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/gordon_space-fsLR_den-32k_desc-atlas.dlabel.nii)
