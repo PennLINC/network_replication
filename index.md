@@ -38,26 +38,26 @@ RBC PNC (Health excude), NKI, HCP-D, and HBN
 `/cbica/projects/network_replication`
 <br>
 
-`software/`: project software 
+`/software/`: project software 
 
-`Rscripts/`: contains functions for main and sensitivity analyses as well as Rmd files for each step of the analytic workflow (see below) for each dataset. 
+`/Rscripts/`: contains functions for main and sensitivity analyses as well as Rmd files for each step of the analytic workflow (see below) for each dataset. 
 
-`atlases/dlabel/*.nii` : Cortical parcellations for Schaefer 200 (7 and 17 network), Schaefer 400 (7 and 17 network), Gordon, and HCP-MMP 
+`/atlases/dlabel/*.nii` : Cortical parcellations for Schaefer 200 (7 and 17 network), Schaefer 400 (7 and 17 network), Gordon, and HCP-MMP 
 
-`atlases/parcellations/*regionlist_final.csv`: parcel labels for each cortical parcellation (see below) used for study
+`/atlases/parcellations/*regionlist_final.csv`: parcel labels for each cortical parcellation (see below) used for study
 
-`atlases/edge/*_edge.csv`: edge names used for edge-level analysis for each cortical parcellation
+`/atlases/edge/*_edge.csv`: edge names used for edge-level analysis for each cortical parcellation
 
-`input/<dataset>/datalad_xcp/`: MRI data for each dataset pulled via datalad get
+`/input/<dataset>/datalad_xcp/`: MRI data for each dataset pulled via datalad get
 
-`input/<dataset>/<dataset>_xcp/`: only fMRI data in fsLR space and qc data for each subject
+`/input/<dataset>/<dataset>_xcp/`: only fMRI data in fsLR space and qc data for each subject
 
 
-`input/<dataset>/connMatricesData/connectivity_matrices`: connectivity matrices derived from concatenated task and rest fMRI scans 
+`/input/<dataset>/connMatricesData/connectivity_matrices`: connectivity matrices derived from concatenated task and rest fMRI scans 
  
 <br>
 
-Demographics .csv's all live in `input/<dataset>/sample_selection` but have different file names: 
+Demographics .csv's all live in `/input/<dataset>/sample_selection` but have different file names: 
 * PNC: `pnc_participants.tsv` 
 * NKI: `nki_participants.tsv`
 * HCP-D: `hcpd_demographics.csv`
@@ -65,7 +65,7 @@ Demographics .csv's all live in `input/<dataset>/sample_selection` but have diff
 
 <br>
 
-Final sample lists for each dataset all live in `input/<dataset>/sample_selection` but have different file names:
+Final sample lists for each dataset all live in `/input/<dataset>/sample_selection` but have different file names:
 * PNC: `PNC_demographics_finalsample_20230103.csv` 
 * NKI: `NKI_demographics_finalsample_20221219.csv`
 * HCP-D: `HCPD_demographics_finalsample_20221226.csv`
@@ -73,7 +73,7 @@ Final sample lists for each dataset all live in `input/<dataset>/sample_selectio
 
 <br>
 
-`output/<dataset>/<functional_connectivity_metric>/GAM`: GAM results. Includes effect sizes, p-values, fitted- values, smooth estimates. Outputs for HBN and HCP-D include covbat harmonized outputs. 
+`/output/<dataset>/<functional_connectivity_metric>/GAM`: GAM results. Includes effect sizes, p-values, fitted- values, smooth estimates. Outputs for HBN and HCP-D include covbat harmonized outputs. 
 <br>
 <br>
 
@@ -97,7 +97,7 @@ We parcellated the fslr/cifti [Sensorimotor-Association Axis](https://github.com
 
 
 ### 2. Sample selection for each dataset: PNC (discovery), NKI, HCP-D, and HBN (replication)  
-The final samples for each dataset were consructed using /Rscripts/<dataset>/QC_scripts/<dataset>_SampleSelection.Rmd. Links to the corresponding github code and descriptions of each final sample are as follows: 
+The final samples for each dataset were consructed using `/Rscripts/<dataset>/QC_scripts/<dataset>_SampleSelection.Rmd`. Links to the corresponding github code and descriptions of each final sample are as follows: 
 
 * PNC: [PNC_SampleSelection.Rmd](https://github.com/PennLINC/network_replication/blob/main/PNC_scripts/QC_scripts/PNC_SampleSelection.Rmd)
 
@@ -149,7 +149,12 @@ $ /usr/local/miniconda/bin/xcp_abcd inputs/data/fmriprep xcp participant --despi
 ```
 
 **Main analysis:**  
-+ *Data*: concatenated task and resting-state fMRI  
++ *Data*: concatenated task and resting-state fMRI using `/Rscripts/<dataset>_scripts/ConnMatrices_scripts/<dataset>_makeConnMatrices.R`  
+    + PNC: [PNC_makeConnMatrices.R](https://github.com/PennLINC/network_replication/blob/main/PNC_scripts/ConnMatrices_scripts/PNC_makeConnMatrices.R)
+    + NKI: [NKI_makeConnMatrices.R](https://github.com/PennLINC/network_replication/blob/main/NKI_scripts/ConnMatrices_scripts/NKI_makeConnMatrices.R)
+    + HCP-D: [HCPD_makeConnMatrices.R](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/ConnMatrices_scripts/HCPD_makeConnMatrices.R)
+    + HBN:  [HBN_makeConnMatrices.R](https://github.com/PennLINC/network_replication/blob/main/HBN_scripts/ConnMatrices_scripts/HBN_makeConnMatrices.R)
+
 + *Cortical parcellation*: [Schaefer 200 atlas](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_200Parcels_17Networks_order.dlabel.nii)
     + *Network solution*: [7 Network](https://github.com/ThomasYeoLab/CBIG/blob/6d1400a2d643261246f6b042e7ef5fbe417506cd/utilities/matlab/FC/CBIG_ReorderParcelIndex.m) 
 
