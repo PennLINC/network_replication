@@ -73,8 +73,6 @@ Final sample lists for each dataset all live in `/input/<dataset>/sample_selecti
 * HCP-D: `HCPD_demographics_finalsample_20221226.csv`
 * HBN: `HBN_demographics_finalsample_202230226.csv`
 
-<br>
-
 `/output/<dataset>/<functional_connectivity_metric>/GAM`: GAM results. Includes effect sizes, p-values, fitted- values, smooth estimates. Outputs for HBN and HCP-D include covbat harmonized outputs. 
 <br>
 <br>
