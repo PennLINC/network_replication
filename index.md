@@ -236,11 +236,18 @@ Note that this Rmd has some additional analyses that aren't reported in the pape
 * HCP-D: [2_HCPD_fitGAMs_withCovbat.Rmd](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/Analysis_scripts/2_HCPD_fitGAMs_withCovbat.Rmd)
 * HBN: [2_HBN_fitGAMs_withCovbat.Rmd](https://github.com/PennLINC/network_replication/blob/main/HBN_scripts/Analysis_scripts/2_HBN_fitGAMs_withCovbat.Rmd)
 
-Note that running GAMs for edges requires submitting a job on cubic since this process takes many hours. Rscript can be found at `/Rscripts/functions/main_analyses/edge_fitGAMs.R` and shell script found at `/Rscripts/<dataset>_scripts/Analysis_scripts/connMetrics_scripts/fitGAMs_edge_<dataset>.sh`.
+Note that running GAMs for edges requires submitting a job on cubic since this process takes many hours. Rscript can be found at `/Rscripts/functions/main_analyses/edge_fitGAMs.R` and shell script found at 
+```
+/Rscripts/<dataset>_scripts/Analysis_scripts/connMetrics_scripts/fitGAMs_edge_<dataset>.sh
+```
 
 ### 7. Characterization of relationships between functional connectivity metrics, age, and the S-A axis
 
-We used Spearman’s rank correlations to quantify the association between S-A axis ranks and observed developmental effects. 
+We used Spearman’s rank correlations to quantify the association between S-A axis ranks and observed developmental effects. This was performed within 
+```
+/Rscripts/<dataset>_scripts/Analysis_scripts/3_<dataset>_devEffectFigures.Rmd
+``` 
+(specifically, in the chunk "Correlations and Spin-based spatial permutation tests"). 
 
 To investigate how the development of edge-level connectivity differs across sensorimotor-association axis, we examined age-related changes in connectivity across edges by fitting a bivariate smooth interaction. The effect of S-A axis rank on edge-level age effects was modeled using a tensor product smooth. This analysis was performed for all datasets together in [/Rscripts/CombinedFigures/CombinedFigures.Rmd](https://github.com/PennLINC/network_replication/blob/main/CombinedFigures/CombinedFigures.Rmd#L413-L519). 
 
@@ -250,3 +257,6 @@ To investigate how the development of edge-level connectivity differs across sen
 
 # Data Interpretation and Visualization 
  
+
+
+### A note on sensitivity analyses
