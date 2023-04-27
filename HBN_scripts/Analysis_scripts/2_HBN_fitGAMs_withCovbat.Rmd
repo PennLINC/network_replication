@@ -1,7 +1,6 @@
 ---
 title: "HBN fit GAMs"
 author: "Audrey Luo"
-date: "2022-08-03"
 output: html_document
 ---
 

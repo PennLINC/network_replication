@@ -1,7 +1,6 @@
 ---
 title: "PNC fit GAMs"
 author: "Audrey Luo"
-date: "2023-01-04"
 output: html_document
 ---
 

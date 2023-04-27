@@ -1,7 +1,6 @@
 ---
 title: "PNC Compute Functional Connectivity Metrics"
 author: "Audrey Luo"
-date: "2022-08-02"
 output: html_document
 ---
 
