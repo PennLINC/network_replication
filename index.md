@@ -279,24 +279,37 @@ Model results and correspondence of developmenta effects to the S-A axis were co
 
 
 ### Figure 1. The spatial distribution of global brain connectivity is highly similar across all four datasets and is refined with age. 
-
+![Fig1](./Fig1.png)
 
 ### Figure 2. Global brain connectivity developmental effects replicate across four large datasets. 
-
+![Fig2](./Fig2.png)
 
 ### Figure 3. Global brain connectivity shows dissociable patterns of maturation across the sensorimotor-association axis.
-
+![Fig3](./Fig3.png)
 
 ### Figure 4. Developmental change in global brain connectivity aligns with the sensorimotor-association axis. 
-
+![Fig4](./Fig4.png)
 
 ### Figure 5. The spatial distribution of global brain connectivity increasingly aligns with the sensorimotor-association axis with age.  
+![Fig5](./Fig5.png)
 
 
 ### Figure 6. Hierarchical developmental change in average between-network and within-network connectivity. 
-
+![Fig6](./Fig6.png)
 
 ### Figure 7. Edge-level age effects confirm divergent connectivity refinement along the sensorimotor-association axis. 
-
+![Fig7](./Fig7.png)
 
 ### A note on sensitivity analyses
+As described above, sensitivity analyses were performed using only resting-state fMRI and with multiple cortical parcellations.
+
+Analyses using only resting-state can be found in
+```
+/Rscripts/<dataset>_scripts/Analysis_scripts/sensitivity_analyses
+```
+  * PNC: [sensitivity_analyses](https://github.com/PennLINC/network_replication/tree/main/PNC_scripts/Analysis_scripts/sensitivity_analyses)
+  * NKI: [sensitivity_analyses](https://github.com/PennLINC/network_replication/tree/main/NKI_scripts/Analysis_scripts/sensitivity_analyses)
+  * HCP-D:[sensitivity_analyses](https://github.com/PennLINC/network_replication/tree/main/HCPD_scripts/Analysis_scripts/sensitivity_analyses)
+  * HBN: [sensitivity_analyses](https://github.com/PennLINC/network_replication/tree/main/HBN_scripts/Analysis_scripts/sensitivity_analyses)
+
+Sensitivity analyses with cortical parcellations were done alongside the main analyses (Schaefer 200) in the .Rmd's linked above (1_computeConnMetrics, 2_fitGAMs, and 3_devEffectFigures). 
