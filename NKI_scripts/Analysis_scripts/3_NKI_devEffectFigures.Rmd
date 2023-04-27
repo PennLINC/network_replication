@@ -1,5 +1,5 @@
 ---
-title: "HBN Figures"
+title: "NKI Figures"
 author: "Audrey Luo"
 output: html_document
 ---
@@ -25,7 +25,7 @@ library(tidyr)
 library(ggpubr)
 library(purrr)
 library(pammtools)
-
+#load('NKI_devEffectFigures_environment.RData')
 
 source("/cbica/projects/network_replication/adapted_Rscripts/DevEffect_Figures.R")
 source("/cbica/projects/network_replication/adapted_Rscripts/netrep_spinTests.R")
@@ -33,8 +33,7 @@ source("/cbica/projects/network_replication/software/perm.sphere.p.R")
 
 atlases_GBC <- c("glasser", "gordon", "schaefer200", "schaefer400")
 atlases <- c("gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
-dataset <- "HBN"
-  
+dataset <- "NKI"
   
  
 ```
@@ -63,8 +62,6 @@ schaefer400_SAaxis <- schaefer400x17_SAaxis
 ```
 
  
- 
- 
 
 #### load gam results
 ```{r load_gam, include=FALSE, cache=TRUE}
@@ -73,7 +70,7 @@ schaefer400_SAaxis <- schaefer400x17_SAaxis
 metric = "GBC"
 for(i in c(1:length(atlases_GBC))){
   df_name <- paste0("gam.", metric, ".", "age.", atlases_GBC[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.%3$s_covbat.csv", dataset, metric, atlases_GBC[i])))
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.%3$s.csv", dataset, metric, atlases_GBC[i])))
   assign(df_name, get(df_name) %>% select(-label))
   if(str_detect(atlases_GBC[i], "schaefer")) {
   SAaxis <- get(paste0(atlases_GBC[i], "x17_", "SAaxis"))
@@ -91,7 +88,7 @@ for(i in c(1:length(atlases_GBC))){
 metric = "BNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0("gam.", metric, ".", "age.", atlases[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.%3$s_covbat.csv", dataset, metric, atlases[i])))
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.%3$s.csv", dataset, metric, atlases[i])))
   assign(df_name, get(df_name) %>% select(-label))
   SAaxis <- get(paste0(atlases[i], "_", "SAaxis"))
   df_to.label <- get(df_name)
@@ -105,13 +102,14 @@ for(i in c(1:length(atlases))){
 metric = "WNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0("gam.", metric, ".", "age.", atlases[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.%3$s_covbat.csv", dataset, metric, atlases[i])))
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.%3$s.csv", dataset, metric, atlases[i])))
   assign(df_name, get(df_name) %>% select(-label))
   SAaxis <- get(paste0(atlases[i], "_", "SAaxis"))
   df_to.label <- get(df_name)
   df_to.label$label <- SAaxis$label
   assign(df_name, df_to.label)
 } 
+
  
 ```
 
@@ -125,7 +123,7 @@ for(i in c(1:length(atlases))){
 metric = "GBC"
 for(i in c(1:length(atlases_GBC))){
   filename <- paste0("gam.", metric, ".derivatives.", atlases_GBC[i])
-  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename)))
+  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", dataset, metric, filename)))
   print(filename)
 } 
   
@@ -135,7 +133,7 @@ for(i in c(1:length(atlases_GBC))){
 metric = "BNC"
 for(i in c(1:length(atlases))){
   filename <- paste0("gam.", metric, ".derivatives.", atlases[i])
-  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename)))
+  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", dataset, metric, filename)))
   print(filename)
 } 
  
@@ -145,7 +143,7 @@ for(i in c(1:length(atlases))){
 metric = "WNC"
 for(i in c(1:length(atlases))){
   filename <- paste0("gam.", metric, ".derivatives.", atlases[i])
-  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename)))
+  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", dataset, metric, filename)))
   print(filename)
 } 
 ```
@@ -207,7 +205,7 @@ metric = "GBC"
 for(i in c(1:length(atlases_GBC))){
   df_name <- paste0(metric, ".axis_", atlases_GBC[i])
   filename <- paste0(df_name)
-  #write.csv(get(filename), sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename))
+  #write.csv(get(filename), sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", dataset, metric, filename))
   print(df_name)
 } 
 
@@ -217,7 +215,7 @@ metric = "BNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0(metric, ".axis_", atlases[i])
   filename <- paste0(df_name)
-  #write.csv(get(filename), sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename))
+  #write.csv(get(filename), sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", dataset, metric, filename))
   print(df_name)
 } 
 
@@ -227,7 +225,7 @@ metric = "WNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0(metric, ".axis_", atlases[i])
   filename <- paste0(df_name)
-  #write.csv(get(filename), sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename))
+  #write.csv(get(filename), sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", dataset, metric, filename))
   print(df_name)
 } 
 
@@ -241,7 +239,7 @@ for(i in c(1:length(atlases))){
 metric = "GBC"
 for(i in c(1:length(atlases_GBC))){
   filename <- paste0(metric, ".axis_", atlases_GBC[i])
-  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename)))
+  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", dataset, metric, filename)))
   print(filename)
 } 
   
@@ -250,7 +248,7 @@ for(i in c(1:length(atlases_GBC))){
 metric = "BNC"
 for(i in c(1:length(atlases))){
   filename <- paste0(metric, ".axis_", atlases[i])
-  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename)))
+  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", dataset, metric, filename)))
   print(filename)
 } 
   
@@ -259,14 +257,12 @@ for(i in c(1:length(atlases))){
 metric = "WNC"
 for(i in c(1:length(atlases))){
   filename <- paste0(metric, ".axis_", atlases[i])
-  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename)))
+  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", dataset, metric, filename)))
   print(filename)
 } 
 
 ```
-
-
-
+ 
 #### Spin-based spatial permutation tests - prepping dataframes
 ```{r prep_pspindfs, include=FALSE, cache=TRUE}
 #Load Spin Test Parcel Rotation Matrix
@@ -329,6 +325,7 @@ names(ageEffect_BNC.fig) <- atlases
 #WNC
 ageEffect_WNC.fig <- lapply(atlases, ageEffect_surf_figure, "WNC")
 names(ageEffect_WNC.fig) <- atlases
+
 ```
 
 
@@ -350,6 +347,7 @@ plot_grid(ageEffect_BNC.fig$gordon, ageEffect_BNC.fig$schaefer200x7, ageEffect_B
 plot_grid(ageEffect_WNC.fig$gordon, ageEffect_WNC.fig$schaefer200x7, ageEffect_WNC.fig$schaefer200x17, ageEffect_WNC.fig$schaefer400x7, ageEffect_WNC.fig$schaefer400x17, labels = "AUTO")
 
 ```
+
 
 
 #### Correlations and Spin-based spatial permutation tests
@@ -384,7 +382,7 @@ for(i in c(1:length(atlases))){
 } 
 
 spearman_rho <- data.frame(cbind(corr.GBC_glasser, corr.GBC_gordon, corr.GBC_schaefer200, corr.GBC_schaefer400, corr.BNC_gordon, corr.BNC_schaefer200x7, corr.BNC_schaefer400x7, corr.BNC_schaefer200x17, corr.BNC_schaefer400x17, corr.WNC_gordon, corr.WNC_schaefer200x7, corr.WNC_schaefer400x7, corr.WNC_schaefer200x17, corr.WNC_schaefer400x17))
-write.csv(spearman_rho, "/cbica/projects/network_replication/output/HBN/spearman_rho_covbat.csv")
+#write.csv(spearman_rho, "/cbica/projects/network_replication/output/NKI/spearman_rho.csv")
 
 # spin permutation tests:
 metric = "GBC"
@@ -430,134 +428,194 @@ p_spin_GBC$p_spin_GBC = as.numeric(p_spin_GBC$p_spin_GBC)
 names(p_spin_GBC)[1] <- "atlases"
 p_spin_BNC$p_spin_BNC = as.numeric(p_spin_BNC$p_spin_BNC)
 
-#saveRDS(list(p_spin_GBC, p_spin_BNC, p_spin_WNC), "/cbica/projects/network_replication/output/HBN/pspin_vals_covbat.RData")
+#saveRDS(list(p_spin_GBC, p_spin_BNC, p_spin_WNC), "/cbica/projects/network_replication/output/NKI/pspin_vals.RData")
 ```
 
-
-```{r}
-
-t(spearman_rho)
-pspin_vals
-```
-
+ 
 ### DevEffect with p_spin: 
 this section requires manual input since expression() doesn't take variables :( 
 ```{r make_figures_pspin, include=FALSE}
-spearman_rho <- read.csv("/cbica/projects/network_replication/output/HBN/spearman_rho_covbat.csv")
-pspin_vals <- readRDS("/cbica/projects/network_replication/output/HBN/pspin_vals_covbat.RData")
-
+spearman_rho <- read.csv("/cbica/projects/network_replication/output/NKI/spearman_rho.csv")
+pspin_vals <- readRDS("/cbica/projects/network_replication/output/NKI/pspin_vals.RData")
  
+
 #GBC
 #list(p_spin_GBC, p_spin_BNC, p_spin_WNC)
  
-r_text_GBC.glasser <- expression(paste(italic("r"), " = -0.75, ",  , italic(p[spin]), "< 0.0001")) 
+r_text_GBC.glasser <- expression(paste(italic("r"), " = -0.54, ",  , italic(p[spin]), "< 0.0001")) 
 (GBC_glasser <- gam_figure_p.spin(GBC.axis_glasser, "GBC", "Glasser", r_text_GBC.glasser,x_pos= 270, y_pos=0.12))
 
-r_text_GBC.gordon <- expression(paste(italic("r"), "= -0.67, ",  , italic(p[spin]), "< 0.0001"))
+r_text_GBC.gordon <- expression(paste(italic("r"), "= -0.58, ",  , italic(p[spin]), "< 0.0001"))
 (GBC_gordon <- gam_figure_p.spin(GBC.axis_gordon, "GBC", "Gordon", r_text_GBC.gordon, x_pos= 270, y_pos=0.12))
 
-r_text_GBC.schaefer200 <- expression(paste(italic("r"), "= -0.73, ",  , italic(p[spin]), "< 0.0001"))
-(GBC_schaefer200 <- gam_figure_p.spin(GBC.axis_schaefer200, "GBC", "Schaefer200", r_text_GBC.schaefer200, x_pos= 150, y_pos=0.09))
+r_text_GBC.schaefer200 <- expression(paste(italic("r"), "= -0.54, ",  , italic(p[spin]), "< 0.001"))
+(GBC_schaefer200 <- gam_figure_p.spin(GBC.axis_schaefer200, "GBC", "Schaefer200", r_text_GBC.schaefer200, x_pos= 150, y_pos=0.12))
 
-r_text_GBC.schaefer400 <- expression(paste(italic("r"), "= -0.72, ",  , italic(p[spin]), "< 0.0001"))
+r_text_GBC.schaefer400 <- expression(paste(italic("r"), "= -0.54, ",  , italic(p[spin]), "< 0.0001"))
 (GBC_schaefer400 <- gam_figure_p.spin(GBC.axis_schaefer400, "GBC", "Schaefer400", r_text_GBC.schaefer400, x_pos= 260, y_pos=0.12))
- 
- 
  
 #BNC
  
-r_text_BNC.gordon <- expression(paste(italic("r"), "= -0.67, ",  , italic(p[spin]), "< 0.0001"))
+r_text_BNC.gordon <- expression(paste(italic("r"), "= -0.60, ",  , italic(p[spin]), "< 0.0001"))
 (BNC_gordon <- gam_figure_p.spin(BNC.axis_gordon, "BNC", "Gordon", r_text_BNC.gordon, x_pos= 270, y_pos=0.12))
 
-r_text_BNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.68, ",  , italic(p[spin]), "< 0.0001"))
-(BNC_schaefer200x7 <- gam_figure_p.spin(BNC.axis_schaefer200x7, "BNC", "schaefer200x7", r_text_BNC.schaefer200x7, x_pos= 160, y_pos=0.08))
+r_text_BNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.47, ",  , italic(p[spin]), "< 0.001"))
+(BNC_schaefer200x7 <- gam_figure_p.spin(BNC.axis_schaefer200x7, "BNC", "schaefer200x7", r_text_BNC.schaefer200x7, x_pos= 150, y_pos=0.1))
 
-r_text_BNC.schaefer200x17 <- expression(paste(italic("r"), "= -0.72, ",  , italic(p[spin]), "< 0.0001"))
+r_text_BNC.schaefer200x17 <- expression(paste(italic("r"), "= -0.54, ",  , italic(p[spin]), "< 0.001"))
 (BNC_schaefer200x17 <- gam_figure_p.spin(BNC.axis_schaefer200x17, "BNC", "schaefer200x17", r_text_BNC.schaefer200x17, x_pos= 160, y_pos=0.1))
 
-r_text_BNC.schaefer400x7 <- expression(paste(italic("r"), "= -0.66, ",  , italic(p[spin]), "< 0.0001"))
+r_text_BNC.schaefer400x7 <- expression(paste(italic("r"), "= -0.46, ",  , italic(p[spin]), "< 0.0001"))
 (BNC_schaefer400x7 <- gam_figure_p.spin(BNC.axis_schaefer400x7, "BNC", "schaefer400x7", r_text_BNC.schaefer400x7, x_pos= 260, y_pos=0.1))
 
-r_text_BNC.schaefer400x17 <- expression(paste(italic("r"), "= -0.72, ",  , italic(p[spin]), "< 0.0001"))
+r_text_BNC.schaefer400x17 <- expression(paste(italic("r"), "= -0.51, ",  , italic(p[spin]), "< 0.0001"))
 (BNC_schaefer400x17 <- gam_figure_p.spin(BNC.axis_schaefer400x17, "BNC", "schaefer400x17", r_text_BNC.schaefer400x17, x_pos= 260, y_pos=0.1))
  
 
 #WNC
  
-r_text_WNC.gordon <- expression(paste(italic("r"), "= -0.14, ",  , italic(p[spin]), "= N.S"))
+r_text_WNC.gordon <- expression(paste(italic("r"), "= -0.29, ",  , italic(p[spin]), "= N.S"))
 (WNC_gordon <- gam_figure_p.spin(WNC.axis_gordon, "WNC", "Gordon", r_text_WNC.gordon, x_pos= 270, y_pos=0.12))
 
-r_text_WNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.41, ",  , italic(p[spin]), "< 0.0001"))
-(WNC_schaefer200x7 <- gam_figure_p.spin(WNC.axis_schaefer200x7, "WNC", "schaefer200x7", r_text_WNC.schaefer200x7, x_pos= 150, y_pos=0.15))
+r_text_WNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.27, ",  , italic(p[spin]), "< 0.05"))
+(WNC_schaefer200x7 <- gam_figure_p.spin(WNC.axis_schaefer200x7, "WNC", "schaefer200x7", r_text_WNC.schaefer200x7, x_pos= 150, y_pos=0.12))
 
-r_text_WNC.schaefer200x17 <- expression(paste(italic("r"), "= -0.32, ",  , italic(p[spin]), "< 0.01"))
+r_text_WNC.schaefer200x17 <- expression(paste(italic("r"), "= -0.19, ",  , italic(p[spin]), "= N.S."))
 (WNC_schaefer200x17 <- gam_figure_p.spin(WNC.axis_schaefer200x17, "WNC", "schaefer200x17", r_text_WNC.schaefer200x17, x_pos= 160, y_pos=0.1))
 
-r_text_WNC.schaefer400x7 <- expression(paste(italic("r"), "= -0.36, ",  , italic(p[spin]), "< 0.001"))
+r_text_WNC.schaefer400x7 <- expression(paste(italic("r"), "= -0.28, ",  , italic(p[spin]), "= N.S."))
 (WNC_schaefer400x7 <- gam_figure_p.spin(WNC.axis_schaefer400x7, "WNC", "schaefer400x7", r_text_WNC.schaefer400x7, x_pos= 260, y_pos=0.1))
 
-r_text_WNC.schaefer400x17 <- expression(paste(italic("r"), "= -0.19, ",  , italic(p[spin]), "< 0.05"))
+r_text_WNC.schaefer400x17 <- expression(paste(italic("r"), "= -0.20, ",  , italic(p[spin]), "= N.S."))
 (WNC_schaefer400x17 <- gam_figure_p.spin(WNC.axis_schaefer400x17, "WNC", "schaefer400x17", r_text_WNC.schaefer400x17, x_pos= 260, y_pos=0.1))
  
  
 ```
  
-#### **Figure 4D**: GBC DevEffect 
+#### **Figure 4B**: GBC DevEffect 
 ```{r Fig1, fig.height= 8, fig.width= 10, warning=FALSE, cache=TRUE}
 
 plot_grid(GBC_glasser, GBC_gordon, GBC_schaefer200, GBC_schaefer400, labels = "AUTO")
 
 GBC_schaefer200
-#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Figures/OHBM_2023/GBC_schaefer200_HBN.svg", dpi=300, width = 5, height = 4)
-#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/harmonization/HBN_GBCAgeEffect_Covbat.pdf", dpi=300, width = 5, height = 4)
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig4_New/Fig4_GBCAgeEffect_HBN_Covbat.pdf", dpi=300, width = 5, height = 5)
+#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Figures/OHBM_2023/GBC_schaefer200_NKI.svg", dpi=300, width = 5, height = 4)
+#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig3/Fig3_GBCAgeEffect_NKI.pdf", dpi=300, width = 5, height = 4)
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig4_New/Fig4_GBCAgeEffect_NKI.pdf", dpi=300, width = 5, height = 5)
+
 ```
 
 
 
-#### **Figure 6D**: BNC DevEffect  
+#### **Figure 6B**: BNC DevEffect  
 ```{r Fig2, fig.height= 8, fig.width= 16, warning=FALSE, cache=TRUE}
 
 plot_grid(BNC_gordon, BNC_schaefer200x7, BNC_schaefer200x17, BNC_schaefer400x7, BNC_schaefer400x17, labels = "AUTO")
  
 
 BNC_schaefer200x7
+#BNC_schaefer200x17
 #ggsave("/cbica/projects/network_replication/output/Figures/Flux/BNC_schaefer200x17.svg", dpi=300)
 
-#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/harmonization/HBN_BNCAgeEffect_Covbat.pdf", dpi=300, width = 5, height = 4)
-
-
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig5_New/Fig5_BNCAgeEffect_HBN_covbat.pdf", dpi=300, width = 6, height = 5)
-
+#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig4/Fig4_BNCAgeEffect_NKI.pdf", dpi=300, width = 5, height = 4)
+save_plot("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig5_New/Fig5_BNCAgeEffect_NKI.pdf", BNC_schaefer200x7, dpi=300,base_width = 6, base_height = 5)
 ```
 
 
 
-#### **Figure 6H**: WNC DevEffect  
+#### **Figure 6F**: WNC DevEffect  
 ```{r Fig3, fig.height= 8, fig.width= 16, warning=FALSE, cache=TRUE}
 
 plot_grid(WNC_gordon, WNC_schaefer200x7, WNC_schaefer200x17, WNC_schaefer400x7, WNC_schaefer400x17, labels = "AUTO")
  
 WNC_schaefer200x7
 #ggsave("/cbica/projects/network_replication/output/Figures/Flux/WNC_schaefer200x17.svg", dpi=300)
-#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/harmonization/HBN_WNCAgeEffect_Covbat.pdf", dpi=300, width = 5, height = 4)
 
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig5_New/Fig5_WNCAgeEffect_HBN_covbat.pdf", dpi=300, width = 6, height = 5)
+#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig4/Fig4_WNCAgeEffect_NKI.pdf", dpi=300, width = 5, height = 4)
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig5_New/Fig5_WNCAgeEffect_NKI.pdf", dpi=300, width = 6, height = 5)
 
+
+```
+
+
+
+
+HHMI
+```{r}
+ 
+
+r_text_GBC.schaefer200 <- expression(paste(italic("r"), "= -0.54, ",  , italic(p[spin]), "< 0.001"))
+(GBC_schaefer200 <- gam_figure_p.spin_Val(GBC.axis_schaefer200, "GBC", "Schaefer200", r_text_GBC.schaefer200, x_pos= 150, y_pos=0.12))
+
+GBC_schaefer200
+#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Figures/OHBM_2023/GBC_schaefer200_NKI.svg", dpi=300, width = 5, height = 4)
+#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/harmonization/NKI_GBCAgeEffect_Covbat.pdf", dpi=300, width = 5, height = 4)
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig4_GBCAgeEffect_NKI_Covbat.pdf", dpi=300, width = 5, height = 5)
+```
+
+
+#### plot: Correlation between Age Effect of BNC vs. WNC
+```{r BNC_WNC.fig, include=FALSE, eval=FALSE}
+
+#need to clean this code
+cor.test(BNC.axis_gordon$GAM.age.AdjRsq, WNC.axis_gordon$GAM.age.AdjRsq)
+nrow(BNC.axis_gordon)/3
+
+ordered_BNC.axis_gordon <- BNC.axis_gordon[order(BNC.axis_gordon$SA.axis_rank),]
+ordered_BNC.axis <- ordered_BNC.axis_gordon
+
+ordered_WNC.axis_gordon <- WNC.axis_gordon[order(WNC.axis_gordon$SA.axis_rank),]
+ordered_WNC.axis <- ordered_WNC.axis_gordon
+ 
+sensorimotor <- c(1:round(nrow(ordered_BNC.axis_gordon)/3)) 
+visual <- which(str_detect(ordered_BNC.axis_gordon$label, "Visual"))
+SM <- which(str_detect(ordered_BNC.axis_gordon$label, "SM"))
+auditory <- which(str_detect(ordered_BNC.axis_gordon$label, "Auditory"))
+ 
+
+
+ordered_BNC.axis_sensorimotor <- ordered_BNC.axis[c(sensorimotor),] # range SA rank: 1-101
+ordered_BNC.axis_SM <- ordered_BNC.axis[c(SM),] # range SA rank: 1-107
+ordered_BNC.axis_visual <- ordered_BNC.axis[c(visual),]# range SA rank: 2-149
+ordered_BNC.axis_auditory <- ordered_BNC.axis[c(auditory),] # range SA rank: 57-170
+
+ordered_WNC.axis_sensorimotor <- ordered_WNC.axis[c(sensorimotor),] # range SA rank: 1-101
+ordered_WNC.axis <- ordered_WNC.axis[order(ordered_WNC.axis$SA.axis_rank),]
+ordered_WNC.axis_SM <- ordered_WNC.axis[c(SM),] # range SA rank: 1-107
+ordered_WNC.axis_visual <- ordered_WNC.axis[c(visual),]# range SA rank: 2-149
+ordered_WNC.axis_auditory <- ordered_WNC.axis[c(auditory),] # range SA rank: 57-170
+
+atlas.BNC_WNC <- data.frame(cbind(ordered_BNC.axis_sensorimotor$label, ordered_BNC.axis_sensorimotor$SA.axis_rank, ordered_BNC.axis_gordon_sensorimotor$GAM.age.AdjRsq, ordered_WNC.axis_gordon_sensorimotor$GAM.age.AdjRsq))
+names(atlas.BNC_WNC) <- c("label", "SA.axis_rank", "GAM.age.AdjRsq_BNC", "GAM.age.AdjRsq_WNC")
+atlas.BNC_WNC$GAM.age.AdjRsq_BNC <- as.numeric(atlas.BNC_WNC$GAM.age.AdjRsq_BNC)
+atlas.BNC_WNC$GAM.age.AdjRsq_WNC <- as.numeric(atlas.BNC_WNC$GAM.age.AdjRsq_WNC)
+atlas.BNC_WNC$SA.axis_rank <- as.integer(atlas.BNC_WNC$SA.axis_rank)
+
+
+cor.test(ordered_BNC.axis_gordon$GAM.age.AdjRsq, ordered_WNC.axis_gordon$GAM.age.AdjRsq)
+
+# so sensorimotor regions have a moderate positive correlation between the age effect of BNC and WNC, suggesting that the parcels that increase in BNC also tend to increase in WNC. but association regions have no significant correlation between the two (i.e. r= 0.1, p=N.S.). 
+cor.test(BNC.axis_gordon$GAM.age.AdjRsq, WNC.axis_gordon$GAM.age.AdjRsq)
+
+cor.test(BNC.axis_gordon$GAM.age.AdjRsq, WNC.axis_gordon$GAM.age.AdjRsq)
+
+
+(AgeEffect_figure <- ggplot(atlas.BNC_WNC, aes(x=GAM.age.AdjRsq_WNC, y=GAM.age.AdjRsq_BNC, fill = SA.axis_rank)) + 
+    geom_point(color = "gray", shape = 21, size=3.5) + 
+    scale_fill_gradient2(low="#006CA5FF",high = "#A0CEB6FF", mid = "#009BA8FF", midpoint = median(atlas.BNC_WNC$SA.axis_rank)) +
+      labs(fill = "SA Axis Rank", x="Age Effect of WNC", y="Age Effect of BNC") +
+      ggtitle("Age Effect of BNC vs. WNC") + 
+      geom_smooth(data = atlas.BNC_WNC, method='lm', se=TRUE, fill=alpha(c("gray70"),.9), col="black") +
+      theme(
+        axis.title.x=element_text(size=12, color = "black"),
+        axis.title.y=element_text(size=12, color = "black"),
+        axis.line = element_line(color = "black"),
+        axis.text=element_text(size=12, color = "black"),
+        panel.background=element_blank(),
+        legend.position = "right") + 
+    stat_cor(method = "pearson",size = 5))
 ```
 
  
- HHMI
-```{r}
-
-r_text_GBC.schaefer200 <- expression(paste(italic("r"), "= -0.73, ",  , italic(p[spin]), "< 0.0001"))
-(GBC_schaefer200 <- gam_figure_p.spin_Val(GBC.axis_schaefer200, "GBC", "Schaefer200", r_text_GBC.schaefer200, x_pos= 150, y_pos=0.09))
-
-GBC_schaefer200
-#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Figures/OHBM_2023/GBC_schaefer200_HBN.svg", dpi=300, width = 5, height = 4)
-#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/harmonization/HBN_GBCAgeEffect_Covbat.pdf", dpi=300, width = 5, height = 4)
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig4_GBCAgeEffect_HBN_Covbat.pdf", dpi=300, width = 5, height = 5)
-```
 
 
 ### DevTraj Centered
@@ -568,7 +626,7 @@ ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network
 metric = "GBC"
 for(i in c(1:length(atlases_GBC))){
   df_name <- paste0("gam.smooths.", atlases_GBC[i], ".", metric)
-  assign(df_name, make_gam.smooths_covbat(metric, atlases_GBC[i], dataset))
+  assign(df_name, make_gam.smooths(metric, atlases_GBC[i], dataset))
   print(df_name)
 } 
 
@@ -577,7 +635,7 @@ for(i in c(1:length(atlases_GBC))){
 metric = "BNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0("gam.smooths.", atlases[i], ".", metric)
-  assign(df_name, make_gam.smooths_covbat(metric, atlases[i], dataset))
+  assign(df_name, make_gam.smooths(metric, atlases[i], dataset))
   print(df_name)
 } 
  
@@ -585,10 +643,11 @@ for(i in c(1:length(atlases))){
 metric = "WNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0("gam.smooths.", atlases[i], ".", metric)
-  assign(df_name, make_gam.smooths_covbat(metric, atlases[i], dataset))
+  assign(df_name, make_gam.smooths(metric, atlases[i], dataset))
   print(df_name)
 } 
-   
+ 
+ 
 ```
 
 #### make devTraj df
@@ -599,17 +658,16 @@ for(i in c(1:length(atlases))){
 metric = "GBC"
 for(i in c(1:length(atlases_GBC))){
   df_name <- paste0("devTraj.centered.", atlases_GBC[i], ".", metric, "_df")
-  assign(df_name, make_gam.smooths_centered_covbat(metric, atlases_GBC[i], dataset)) #commenting out to prevent make_gam.smooths_centered from making new csv's each time you run code
+  #assign(df_name, make_gam.smooths_centered(metric, atlases_GBC[i], dataset)) #commenting out to prevent make_gam.smooths_centered from making new csv's each time you run code
   print(df_name)
 } 
-
-  
  
+    
 # BNC - makes devTraj.centered.gordon.BNC, devTraj.centered.schaefer200x7.BNC, devTraj.centered.schaefer200x17.BNC, devTraj.centered.schaefer400x7.BNC, devTraj.centered.schaefer400x17.BNC   
 metric = "BNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0("devTraj.centered.", atlases[i], ".", metric, "_df")
-  assign(df_name, make_gam.smooths_centered_covbat(metric, atlases[i], dataset))  
+  #assign(df_name, make_gam.smooths_centered(metric, atlases[i], dataset)) #commenting out to prevent make_gam.smooths_centered from making new csv's each run
   print(df_name)
 } 
  
@@ -617,10 +675,9 @@ for(i in c(1:length(atlases))){
 metric = "WNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0("devTraj.centered.", atlases[i], ".", metric, "_df")
-  assign(df_name, make_gam.smooths_centered_covbat(metric, atlases[i], dataset))  
+  #assign(df_name, make_gam.smooths_centered(metric, atlases[i], dataset)) #commenting out to prevent make_gam.smooths_centered from making new csv's each run
   print(df_name)
 } 
- 
   
 ```
 #### load devTraj df
@@ -630,19 +687,17 @@ for(i in c(1:length(atlases))){
 metric="GBC"
 for(i in c(1:length(atlases_GBC))){
   df_name <- paste0("devTraj.centered.", atlases_GBC[i], ".", metric, "_df")
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMsmoothfits.%2$s.age.%3$s_centered_covbat.csv", dataset, metric, atlases_GBC[i])))
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMsmoothfits.%2$s.age.%3$s_centered.csv", dataset, metric, atlases_GBC[i])))
   print(df_name)
 }
 
- 
 
- 
 atlases <- c("gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
 # devTraj.centered.gordon.BNC_df, devTraj.centered.schaefer200x7.BNC_df, devTraj.centered.schaefer200x17.BNC_df,  devTraj.centered.schaefer400x7.BNC_df, devTraj.centered.schaefer400x17.BNC_df
 metric="BNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0("devTraj.centered.", atlases[i], ".", metric, "_df")
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMsmoothfits.%2$s.age.%3$s_centered_covbat.csv", dataset, metric, atlases[i])))
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMsmoothfits.%2$s.age.%3$s_centered.csv", dataset, metric, atlases[i])))
   print(df_name)
 }
 
@@ -651,10 +706,11 @@ for(i in c(1:length(atlases))){
 metric="WNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0("devTraj.centered.", atlases[i], ".", metric, "_df")
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMsmoothfits.%2$s.age.%3$s_centered_covbat.csv", dataset, metric, atlases[i])))
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMsmoothfits.%2$s.age.%3$s_centered.csv", dataset, metric, atlases[i])))
   print(df_name)
 }
 
+ 
  
  
 ```
@@ -671,18 +727,41 @@ names(devTraj.centered.BNC) <- atlases
 #WNC
 devTraj.centered.WNC <- lapply(atlases, make_smooths_fig_centered, "WNC")
 names(devTraj.centered.WNC) <- atlases
+devTraj.centered.WNC$schaefer200x7
+
 ```
 
-#### **Figure 3D**: GBC Dev Trajectory  
+
+######(for bart)
+```{r}
+devTraj.centered.schaefer200x7.WNC_df1 <- devTraj.centered.schaefer200x7.WNC_df
+devTraj.centered.schaefer200x7.WNC_df <- devTraj.centered.schaefer200x7.WNC_df1[c(which(devTraj.centered.schaefer200x7.WNC_df1$SA.axis_rank == 119)),] # Networks_LH_Cont_Par_2
+make_smooths_fig_centered('schaefer200x7', 'WNC')
+schaefer200x7_SAaxis$region[c(which(schaefer200x7_SAaxis$SA.axis_rank==119))]
+ 
+ 
+ devTraj.centered.schaefer200x7.WNC_df <- devTraj.centered.schaefer200x7.WNC_df1[c(which(devTraj.centered.schaefer200x7.WNC_df1$SA.axis_rank == 111)),] # Networks_LH_Cont_Par_2
+make_smooths_fig_centered('schaefer200x7', 'WNC')
+ schaefer200x7_SAaxis$region[c(which(schaefer200x7_SAaxis$SA.axis_rank==111))] # Networks_LH_SalVentAttn_ParOper_2
+ 
+ 
+devTraj.centered.schaefer200x7.WNC_df <- devTraj.centered.schaefer200x7.WNC_df1[c(which(devTraj.centered.schaefer200x7.WNC_df1$SA.axis_rank > 160 & devTraj.centered.schaefer200x7.WNC_df1$SA.axis_rank < 180)),] # Networks_LH_Cont_Par_2
+make_smooths_fig_centered('schaefer200x7', 'WNC')
+schaefer200x7_SAaxis$region[c(which(schaefer200x7_SAaxis$SA.axis_rank==193))] # Networks_LH_Default_PFC_9, Networks_RH_Default_PFCdPFCm_2
+ 
+ 
+```
+
+#### **Figure 3B**: GBC Dev Trajectory  
 ```{r Fig7, fig.height= 10, fig.width= 12, warning=FALSE}
 
 (devTraj.centered.GBC_fig <- plot_grid(devTraj.centered.GBC$glasser, devTraj.centered.GBC$gordon, devTraj.centered.GBC$schaefer200, devTraj.centered.GBC$schaefer400, labels = "AUTO"))
 
 devTraj.centered.GBC$schaefer200
 #ggsave("/cbica/projects/network_replication/output/Figures/Flux/devTraj.centered.GBC_fig.svg", dpi=300)
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig3_New/Fig3_GBCDevTraj_HBN_covbat.pdf", dpi=1200, width = 5, height = 5)
- 
- 
+
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig3_New/Fig3_GBCDevTraj_NKI.pdf", dpi=1200, width = 5, height = 5)
+
 ```
 
 #### plot: BNC Dev Trajectory  
@@ -691,11 +770,8 @@ ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network
 (devTraj.centered.BNC_fig <- plot_grid(devTraj.centered.BNC$gordon, devTraj.centered.BNC$schaefer200x7, devTraj.centered.BNC$schaefer400x7, labels = "AUTO"))
 
  
-devTraj.centered.BNC$schaefer200x7
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/harmonization/HBN_BNCDevTraj_Covbat.pdf", dpi=300, width = 5, height = 4)
 #ggsave("/cbica/projects/network_replication/output/Figures/Flux/devTraj.centered.BNC_fig.svg", dpi=300)
 
-#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/harmonization/HBN_BNCDevTraj_noCovbat.pdf", dpi=300, width = 5, height = 4)
 ```
 
 #### plot: WNC Dev Trajectory  
@@ -706,11 +782,6 @@ ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network
 
 
 #ggsave("/cbica/projects/network_replication/output/Figures/Flux/devTraj.centered.WNC_fig.svg", dpi=300)
-
-devTraj.centered.WNC$schaefer200x7
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/harmonization/HBN_WNCDevTraj_Covbat.pdf", dpi=300, width = 5, height = 4)
-
-#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/harmonization/HBN_WNCDevTraj_noCovbat.pdf", dpi=300, width = 5, height = 4)
 ```
 
 
@@ -789,7 +860,7 @@ GBC.dev.traj_SAranked <- plot_grid(GBC_SM_devTraj.fig$glasser, GBC_middle.axis_d
           GBC_SM_devTraj.fig$gordon, GBC_middle.axis_devTraj.fig$gordon, GBC_assoc.pole_devTraj.fig$gordon, 
           GBC_SM_devTraj.fig$schaefer200, GBC_middle.axis_devTraj.fig$schaefer200, GBC_assoc.pole_devTraj.fig$schaefer200, 
           GBC_SM_devTraj.fig$schaefer400, GBC_middle.axis_devTraj.fig$schaefer400, GBC_assoc.pole_devTraj.fig$schaefer400, labels = "AUTO", ncol=3)
-GBC.dev.traj_SAranked
+ 
 #ggsave("/cbica/projects/network_replication/output/Figures/Flux/GBC.dev.traj_SAranked.svg", dpi=300)
 ```
 
@@ -827,7 +898,7 @@ WNC.dev.traj_SAranked
 
 #ggsave("/cbica/projects/network_replication/output/Figures/Flux/WNC.dev.traj_SAranked.svg", dpi=300) 
 #### start here - may want to figure out what's wrong with the parcel that only has half a trajcetory
-#save.image(file='HBN_devEffectFigures_environment.RData')
+#save.image(file='NKI_devEffectFigures_environment.RData')
 ```
 
  
@@ -894,8 +965,6 @@ for(i in 1:length(levels(as.factor(gordon_SAaxis_CommAffil$CommNames)))) {
   - want to look at changes in a given parcel's changes to every other parcel
   - maybe include a column to indicate whether a parcel is within-network so we can color the trajectories 
   - also include a column for SA_diff to color it a different way
-
- 
 
 #### Make representative parcels
 ```{r make_representative_parcels, warning=FALSE, cache=TRUE}
@@ -988,23 +1057,24 @@ names(schaefer200x7_attention) <- c("GBC", "BNC", "WNC")
 ```
  
  
-
-#### **Figure 3H, I, P**
+ 
+ 
+#### **Figure 3F, J, N**
 ```{r FigRepresentativeParcels_schaefer200x7_saveOut, fig.height=3, fig.width=3}
  
  
 
 schaefer200x7_SomMot$GBC
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig3_New/Fig3_GBCDevTrajRep_SM_HBN.pdf", dpi=1200, width = 5, height = 5)
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig3_New/Fig3_GBCDevTrajRep_SM_NKI.pdf", dpi=1200, width = 5, height = 5)
 
 schaefer200x7_attention$GBC
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig3_New/Fig3_GBCDevTrajRep_Attention_HBN.pdf", dpi=1200,width = 5, height = 5)
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig3_New/Fig3_GBCDevTrajRep_Attention_NKI.pdf", dpi=1200, width = 5, height = 5)
 
 schaefer200x7_default$GBC
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig3_New/Fig3_GBCDevTrajRep_Default_HBN.pdf", dpi=1200,width = 5, height = 5)
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig3_New/Fig3_GBCDevTrajRep_Default_NKI.pdf", dpi=1200, width = 5, height = 5)
 
 
-
+###
 #ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Figures/OHBM_2023/GBC_schaefer200_attention.svg", dpi=300, width = 4, height = 4)
 
 schaefer200x7_SomMot$WNC
@@ -1015,15 +1085,14 @@ schaefer200x7_default$WNC
  
  
 ```
-
  
+
 ```{r load_SAaxis_CommAffil, include=FALSE}
 gordon_SAaxis_CommAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/parcellations_masked/gordon_SAaxis_CommAffil.csv")
 gordon_SAaxis_CommAffil <- gordon_SAaxis_CommAffil[,-1]
  
 arrange(gordon_SAaxis_CommAffil, SA.axis_rank)
-
-devTraj.centered.gordon.GBC_df
+ 
 
 schaefer200x7_SAaxis_CommAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/parcellations_masked/schaefer200x7_SAaxis_CommAffil.csv")
 schaefer200x7_SAaxis_CommAffil <- schaefer200x7_SAaxis_CommAffil[,-1]
@@ -1037,13 +1106,10 @@ schaefer400x7_SAaxis_CommAffil <- schaefer400x7_SAaxis_CommAffil[,-1]
 
 schaefer400x17_SAaxis_CommAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/parcellations_masked/schaefer400x17_SAaxis_CommAffil.csv")
 schaefer400x17_SAaxis_CommAffil <- schaefer400x17_SAaxis_CommAffil[,-1]
- 
-devTraj.centered.glasser.GBC_df
-
+  
 glasser_SAaxis <- read.csv("/cbica/projects/network_replication/SAaxis/glasser_SAaxis_SNRmasked.csv")
 arrange(glasser_SAaxis, SA.axis_rank)$label
 ```
-
 
 
 
@@ -1053,10 +1119,10 @@ arrange(glasser_SAaxis, SA.axis_rank)$label
 
 # Region-wise GAM Fitted Value Predictions 
 # schaefer200 
-dataset="HBN"
-GBC.schaefer200.HBN <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/GBC/GBCschaefer200_demographics_finalsample_covbat.csv", dataset)) 
-names(GBC.schaefer200.HBN) <- gsub('X17Networks', "Networks", names(GBC.schaefer200.HBN))
-GBC.schaefer200.HBN$sex <- as.factor(GBC.schaefer200.HBN$sex)
+dataset="NKI"
+GBC.schaefer200.NKI <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/GBC/GBCschaefer200_demographics_finalsample.csv", dataset)) 
+names(GBC.schaefer200.NKI) <- gsub('X17Networks', "Networks", names(GBC.schaefer200.NKI))
+GBC.schaefer200.NKI$sex <- as.factor(GBC.schaefer200.NKI$gender)
 np <- 200
 gam.smooths.schaefer <- matrix(data=NA, ncol=7) 
 colnames(gam.smooths.schaefer) <- c("age","fitted","se","lower","upper","index","label")
@@ -1064,7 +1130,7 @@ colnames(gam.smooths.schaefer) <- c("age","fitted","se","lower","upper","index",
 
 for(row in c(1:nrow(schaefer200.parcel.labels))){ #for each schaefer region
   region <- schaefer200.parcel.labels$label[row] 
-  GAM.SMOOTH <- gam.smooth.predict(measure = "GBC", atlas = "schaefer200", dataset = "HBN", 
+  GAM.SMOOTH <- gam.smooth.predict(measure = "GBC", atlas = "schaefer200", dataset = "NKI", 
                                    region = region, smooth_var = "age", covariates = "sex + meanFD_avgSes", 
                                    knots = 3, set_fx = TRUE, increments = np) #run the gam.smooth.predict function
   preddata <- as.data.frame(GAM.SMOOTH[2]) #get predicted.smooth df from function output
@@ -1077,7 +1143,7 @@ for(row in c(1:nrow(schaefer200.parcel.labels))){ #for each schaefer region
 gam.smooths.schaefer <- gam.smooths.schaefer[-1,] #remove empty initialization row
 gam.smooths.schaefer$label <- as.character(gam.smooths.schaefer$label)
  
-write.csv(gam.smooths.schaefer,"/cbica/projects/network_replication/output/HBN/GBC/GBC_age_predictedfits_schaefer200.csv", row.names = F, quote = F) 
+write.csv(gam.smooths.schaefer,"/cbica/projects/network_replication/output/NKI/GBC/GBC_age_predictedfits_schaefer200.csv", row.names = F, quote = F) 
  
 gam.smooths.schaefer <- left_join(schaefer200_SAaxis, gam.smooths.schaefer, by="label", sort=F)
 # Correlate GBC fitted value predictions with S-A Axis
@@ -1085,6 +1151,7 @@ GBC.schaefer200.corr_values <- gam.smooths.schaefer %>%
   group_by(age) %>%    
   do(SAcorrelation = cor(as.numeric(.$SA.axis_rank), as.numeric(.$fitted), method=c("spearman"))) %>%  unnest(cols = c(SAcorrelation))
   
+
 ```
 
 ```{r plot_fittedGBC_correlation}
@@ -1103,8 +1170,12 @@ plot_fittedGBC_corr <- function(atlas_name, metric, dataset) {
   return(fig)
 }
 
-plot_fittedGBC_corr("schaefer200", "GBC", "HBN")
+plot_fittedGBC_corr("schaefer200", "GBC", "NKI")
 ```
+
+
+
+
 
 #### load GAM fitted values
 ```{r load_gam.fitted, include=FALSE, cache=TRUE}
@@ -1112,7 +1183,7 @@ plot_fittedGBC_corr("schaefer200", "GBC", "HBN")
 metric="GBC"
 for(i in c(1:length(atlases_GBC))){
   df_name <- paste0("gam.", metric, ".fitted.", atlases_GBC[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, df_name)))
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", dataset, metric, df_name)))
   print(df_name)
 } 
 
@@ -1121,7 +1192,7 @@ for(i in c(1:length(atlases_GBC))){
 metric = "BNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0("gam.", metric, ".fitted.", atlases[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, df_name)))
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", dataset, metric, df_name)))
   print(df_name)
 } 
  
@@ -1130,7 +1201,7 @@ for(i in c(1:length(atlases))){
 metric = "WNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0("gam.", metric, ".fitted.", atlases[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, df_name)))
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", dataset, metric, df_name)))
   print(df_name)
 } 
  
@@ -1142,11 +1213,11 @@ for(i in c(1:length(atlases))){
 ```{r load.edit_fits.SAaxis.posteriorcorrs, include=FALSE, eval=FALSE}
 
 atlases_GBC <- "schaefer200" # only doing schaefer200 for now
-metric="GBC"
+
 # load posterior derivative correlations to SA-axis (fits.SAaxis.posteriorcorrs_metric$atlas)
 load_posterior_fits <- function(atlas_name, metric){
   df_name <- paste0("fits.SAaxis.posteriorcorrs_",metric, ".", atlas_name)
-  assign(df_name, readRDS(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/SAaxis_posteriorfits_correlation_byage_%3$s_covbat.RData", dataset, metric, atlas_name)))
+  assign(df_name, readRDS(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/SAaxis_posteriorfits_correlation_byage_%3$s.RData", dataset, metric, atlas_name)))
   posteriorcorrs <- get(df_name)
   colnames(posteriorcorrs) <- sprintf("draw%s",seq(from = 1, to = ncol(posteriorcorrs)))
   gam.fits <- get(paste0("gam.", metric, ".fitted.", atlas_name))
@@ -1156,31 +1227,32 @@ load_posterior_fits <- function(atlas_name, metric){
   return(posteriorcorrs)
 }
  
- fits.SAaxis.posteriorcorrs_GBC <- lapply(atlases_GBC, load_posterior_fits, "GBC")
+ 
+fits.SAaxis.posteriorcorrs_GBC <- lapply(atlases_GBC, load_posterior_fits, "GBC")
 names(fits.SAaxis.posteriorcorrs_GBC) <- atlases_GBC
-saveRDS(fits.SAaxis.posteriorcorrs_GBC, "/cbica/projects/network_replication/output/HBN/GBC/GAM/fits.SAaxis.posteriorcorrs_GBC.RData")
+saveRDS(fits.SAaxis.posteriorcorrs_GBC, "/cbica/projects/network_replication/output/NKI/GBC/GAM/fits.SAaxis.posteriorcorrs_GBC.RData")
 
 
 # not doing BNC and WNC for now
 #fits.SAaxis.posteriorcorrs_BNC <- lapply(atlases, load_posterior_deriv, "BNC")
 #names(fits.SAaxis.posteriorcorrs_BNC) <- atlases 
-#saveRDS(fits.SAaxis.posteriorcorrs_BNC, "/cbica/projects/network_replication/output/HBN/BNC/GAM/fits.SAaxis.posteriorcorrs_BNC.RData")
+#saveRDS(fits.SAaxis.posteriorcorrs_BNC, "/cbica/projects/network_replication/output/NKI/BNC/GAM/fits.SAaxis.posteriorcorrs_BNC.RData")
 
 #fits.SAaxis.posteriorcorrs_WNC <- lapply(atlases, load_posterior_deriv, "WNC")
 #names(fits.SAaxis.posteriorcorrs_WNC) <- atlases 
-#saveRDS(fits.SAaxis.posteriorcorrs_WNC, "/cbica/projects/network_replication/output/HBN/WNC/GAM/fits.SAaxis.posteriorcorrs_WNC.RData")
- 
+#saveRDS(fits.SAaxis.posteriorcorrs_WNC, "/cbica/projects/network_replication/output/NKI/WNC/GAM/fits.SAaxis.posteriorcorrs_WNC.RData")
+   
 ```
 
 #### load posterior fits
 ```{r load_fits.SAaxis.posteriorcorrs, include=FALSE, cache=TRUE}
 
 
-fits.SAaxis.posteriorcorrs_GBC <- readRDS("/cbica/projects/network_replication/output/HBN/GBC/GAM/fits.SAaxis.posteriorcorrs_GBC.RData") 
+fits.SAaxis.posteriorcorrs_GBC <- readRDS("/cbica/projects/network_replication/output/NKI/GBC/GAM/fits.SAaxis.posteriorcorrs_GBC.RData") 
 
-#fits.SAaxis.posteriorcorrs_BNC <- readRDS("/cbica/projects/network_replication/output/HBN/BNC/GAM/fits.SAaxis.posteriorcorrs_BNC.RData")  
+#fits.SAaxis.posteriorcorrs_BNC <- readRDS("/cbica/projects/network_replication/output/NKI/BNC/GAM/fits.SAaxis.posteriorcorrs_BNC.RData")  
 
-#fits.SAaxis.posteriorcorrs_WNC <- readRDS("/cbica/projects/network_replication/output/HBN/WNC/GAM/fits.SAaxis.posteriorcorrs_WNC.RData" ) 
+#fits.SAaxis.posteriorcorrs_WNC <- readRDS("/cbica/projects/network_replication/output/NKI/WNC/GAM/fits.SAaxis.posteriorcorrs_WNC.RData" ) 
   
  
 ```
@@ -1213,34 +1285,35 @@ function_cor.credible.intervals_fits <- function(atlas_name, metric) {
  
 cor.credible.intervals_GBC <- lapply(atlases_GBC, function_cor.credible.intervals_fits, "GBC")
 names(cor.credible.intervals_GBC) <- atlases_GBC
-saveRDS(cor.credible.intervals_GBC, "/cbica/projects/network_replication/output/HBN/GBC/GAM/cor.credible.intervals_GBC_fitted.RData")
+saveRDS(cor.credible.intervals_GBC, "/cbica/projects/network_replication/output/NKI/GBC/GAM/cor.credible.intervals_GBC_fitted.RData")
 max(abs(cor.credible.intervals_GBC$schaefer200$SA.correlation))
  
 #cor.credible.intervals_BNC <- lapply(atlases, function_cor.credible.intervals, "BNC")
 #names(cor.credible.intervals_BNC) <- atlases
-#saveRDS(cor.credible.intervals_BNC, "/cbica/projects/network_replication/output/HBN/BNC/GAM/cor.credible.intervals_BNC_fitted.RData")
+#saveRDS(cor.credible.intervals_BNC, "/cbica/projects/network_replication/output/NKI/BNC/GAM/cor.credible.intervals_BNC_fitted.RData")
 
  
 
 #cor.credible.intervals_WNC <- lapply(atlases, function_cor.credible.intervals, "WNC")
 #names(cor.credible.intervals_WNC) <- atlases
-#saveRDS(cor.credible.intervals_WNC, "/cbica/projects/network_replication/output/HBN/WNC/GAM/cor.credible.intervals_WNC_fitted.RData")
+#saveRDS(cor.credible.intervals_WNC, "/cbica/projects/network_replication/output/NKI/WNC/GAM/cor.credible.intervals_WNC_fitted.RData")
 
 ```
 
  
 ```{r load_cor.credible.intervals, include=FALSE}
-cor.credible.intervals_GBC <- readRDS("/cbica/projects/network_replication/output/HBN/GBC/GAM/cor.credible.intervals_GBC_fitted.RData")
+cor.credible.intervals_GBC <- readRDS("/cbica/projects/network_replication/output/NKI/GBC/GAM/cor.credible.intervals_GBC_fitted.RData")
  
-#cor.credible.intervals_BNC <- readRDS("/cbica/projects/network_replication/output/HBN/BNC/GAM/cor.credible.intervals_BNC.fitted.RData")
+#cor.credible.intervals_BNC <- readRDS("/cbica/projects/network_replication/output/NKI/BNC/GAM/cor.credible.intervals_BNC.fitted.RData")
 
-#cor.credible.intervals_WNC <- readRDS("/cbica/projects/network_replication/output/HBN/WNC/GAM/cor.credible.intervals_WNC.fitted.RData")
+#cor.credible.intervals_WNC <- readRDS("/cbica/projects/network_replication/output/NKI/WNC/GAM/cor.credible.intervals_WNC.fitted.RData")
+ 
  
 ```
 
  
 
-
+#### **Figure 5B**: Fitted GBC correlation analysis 
 ```{r plot_cred.intervals, include=FALSE, cache=TRUE}
 atlases_GBC <- "schaefer200"
 plot_cred.intervals <- function(atlas_name, metric) {
@@ -1251,7 +1324,7 @@ plot_cred.intervals <- function(atlas_name, metric) {
     geom_line(size = .5) +
     geom_ribbon(alpha = .2, fill = c("grey60")) + geom_hline(yintercept=-0.6,linetype=2) + 
     labs(x="Age", y="Spatial Alignment of GBC to S-A Axis (r)") + 
-    theme_classic() + ylim(-0.62, 0.021) + 
+    theme_classic() + ylim(-0.62, 0) + 
     theme(axis.text = element_text(size = 24, 
                                    color = c("black")), 
           axis.title = element_text(size = 24, color = c("black")), 
@@ -1276,14 +1349,15 @@ SA_metric_corr_GBC
 
 
 
-#### **Figure 5D**: Fitted GBC correlation analysis  
+#### plot: Temporal sliding window correlation analysis - GBC
 ```{r Fig13, fig.height= 6, fig.width= 8, warning=FALSE, cache=TRUE}
 
 plot_grid(SA_metric_corr_GBC$schaefer200, labels = "AUTO")
 
 SA_metric_corr_GBC$schaefer200
-
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig7/Fig7_HBN_GBC_ageFittedValues.pdf", dpi=300, width = 6, height = 5)
+ 
+ 
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig7/Fig7_NKI_GBC_ageFittedValues.pdf", dpi=300, width = 6, height = 5)
 ```
 
 
@@ -1315,8 +1389,8 @@ for(i in c(1:length(atlases))){
   assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", dataset, metric, df_name)))
   print(df_name)
 } 
+  
  
-
 ```
 #### make sliding window Dfs
 ```{r make_slidingWindowDfs, include=FALSE, cache=TRUE}
@@ -1379,7 +1453,14 @@ sliding_window_WNC
 
 
 ### Temporal Window Analyses: Age-specific correlations between developmental change and the S-A Axis
+For each parcel, we take 1000 derivatives at 200 ages (and do this 10 times for total of 10k draws). So for each age, there are 1000 draws (200 ages * 1000 draws per age  * 200 parcels = 40 million total draws across the brain for schaefer200)
 
+Then take the correlation between parcel rank and derivative at each age for each draw. so every draw has 200 ages, and at each of those 200 ages, we have an SAcorrelation. The SAcorrelation is computed  by taking the correlation between parcel rank and parcel posterior derivative at a given draw and age. So for draw 1 of age 8, take the SAcorrelation for all the parcels (a correlation of 200 parcels). Then for draw 1 of age 8.067, again take the correlation of all the parcels. Etc. 
+Then produce a data frame of SA correlations across all parcels for a given draw and age.
+
+So the median (black line) is the median correlation across all draws at a specific age. But that correlation is done across all parcels. 
+
+ 
 #### Posterior derivative - sensorimotor-association axis correlations, N=10,000
 - derives the posterior derivative correlations to SA axis. Can load output in following chunk. 
 ```{r load.edit_deriv.SAaxis.posteriorcorrs, include=FALSE, eval=FALSE}
@@ -1400,15 +1481,15 @@ load_posterior_deriv <- function(atlas_name, metric){
  
 deriv.SAaxis.posteriorcorrs_GBC <- lapply(atlases_GBC, load_posterior_deriv, "GBC")
 names(deriv.SAaxis.posteriorcorrs_GBC) <- atlases_GBC
-#saveRDS(deriv.SAaxis.posteriorcorrs_GBC, "/cbica/projects/network_replication/output/HBN/GBC/GAM/deriv.SAaxis.posteriorcorrs_GBC.RData")
+#saveRDS(deriv.SAaxis.posteriorcorrs_GBC, "/cbica/projects/network_replication/output/NKI/GBC/GAM/deriv.SAaxis.posteriorcorrs_GBC.RData")
 
 deriv.SAaxis.posteriorcorrs_BNC <- lapply(atlases, load_posterior_deriv, "BNC")
 names(deriv.SAaxis.posteriorcorrs_BNC) <- atlases 
-#saveRDS(deriv.SAaxis.posteriorcorrs_BNC, "/cbica/projects/network_replication/output/HBN/BNC/GAM/deriv.SAaxis.posteriorcorrs_BNC.RData")
+#saveRDS(deriv.SAaxis.posteriorcorrs_BNC, "/cbica/projects/network_replication/output/NKI/BNC/GAM/deriv.SAaxis.posteriorcorrs_BNC.RData")
 
 deriv.SAaxis.posteriorcorrs_WNC <- lapply(atlases, load_posterior_deriv, "WNC")
 names(deriv.SAaxis.posteriorcorrs_WNC) <- atlases 
-#saveRDS(deriv.SAaxis.posteriorcorrs_WNC, "/cbica/projects/network_replication/output/HBN/WNC/GAM/deriv.SAaxis.posteriorcorrs_WNC.RData")
+#saveRDS(deriv.SAaxis.posteriorcorrs_WNC, "/cbica/projects/network_replication/output/NKI/WNC/GAM/deriv.SAaxis.posteriorcorrs_WNC.RData")
   
   
 ```
@@ -1417,13 +1498,13 @@ names(deriv.SAaxis.posteriorcorrs_WNC) <- atlases
 ```{r load_deriv.SAaxis.posteriorcorrs, include=FALSE, cache=TRUE}
 
 
-deriv.SAaxis.posteriorcorrs_GBC <- readRDS("/cbica/projects/network_replication/output/HBN/GBC/GAM/deriv.SAaxis.posteriorcorrs_GBC.RData") 
+deriv.SAaxis.posteriorcorrs_GBC <- readRDS("/cbica/projects/network_replication/output/NKI/GBC/GAM/deriv.SAaxis.posteriorcorrs_GBC.RData") 
 
-deriv.SAaxis.posteriorcorrs_BNC <- readRDS("/cbica/projects/network_replication/output/HBN/BNC/GAM/deriv.SAaxis.posteriorcorrs_BNC.RData")  
+deriv.SAaxis.posteriorcorrs_BNC <- readRDS("/cbica/projects/network_replication/output/NKI/BNC/GAM/deriv.SAaxis.posteriorcorrs_BNC.RData")  
 
-deriv.SAaxis.posteriorcorrs_WNC <- readRDS("/cbica/projects/network_replication/output/HBN/WNC/GAM/deriv.SAaxis.posteriorcorrs_WNC.RData" ) 
-  
-
+deriv.SAaxis.posteriorcorrs_WNC <- readRDS("/cbica/projects/network_replication/output/NKI/WNC/GAM/deriv.SAaxis.posteriorcorrs_WNC.RData" ) 
+ 
+ 
 ```
 
 #### Age of maximal sensorimotor-association axis correlation: posterior median value + 95% credible interval
@@ -1457,24 +1538,25 @@ function_age.max.corr <- function(atlas_name, metric) {
 
 age.max.stats_GBC <- lapply(atlases_GBC, function_age.max.corr, "GBC")
 names(age.max.stats_GBC) <- atlases_GBC
-#saveRDS(age.max.stats_GBC, "/cbica/projects/network_replication/output/HBN/GBC/GAM/age.max.stats_GBC.RData")
+#saveRDS(age.max.stats_GBC, "/cbica/projects/network_replication/output/NKI/GBC/GAM/age.max.stats_GBC.RData")
 
 age.max.stats_BNC <- lapply(atlases, function_age.max.corr, "BNC")
 names(age.max.stats_BNC) <- atlases 
-#saveRDS(age.max.stats_BNC, "/cbica/projects/network_replication/output/HBN/BNC/GAM/age.max.stats_BNC.RData")
+#saveRDS(age.max.stats_BNC, "/cbica/projects/network_replication/output/NKI/BNC/GAM/age.max.stats_BNC.RData")
 
 age.max.stats_WNC <- lapply(atlases, function_age.max.corr, "WNC")
 names(age.max.stats_WNC) <- atlases 
-#saveRDS(age.max.stats_WNC, "/cbica/projects/network_replication/output/HBN/WNC/GAM/age.max.stats_WNC.RData")
+#saveRDS(age.max.stats_WNC, "/cbica/projects/network_replication/output/NKI/WNC/GAM/age.max.stats_WNC.RData")
  
 ```
 
  
 ```{r load_age_maximum_corr_with_SAaxis, include=FALSE, cache=TRUE}
 
-age.max.stats_GBC <- readRDS("/cbica/projects/network_replication/output/HBN/GBC/GAM/age.max.stats_GBC.RData")
-age.max.stats_BNC <- readRDS("/cbica/projects/network_replication/output/HBN/BNC/GAM/age.max.stats_BNC.RData")
-age.max.stats_WNC <- readRDS("/cbica/projects/network_replication/output/HBN/WNC/GAM/age.max.stats_WNC.RData")
+age.max.stats_GBC <- readRDS("/cbica/projects/network_replication/output/NKI/GBC/GAM/age.max.stats_GBC.RData")
+age.max.stats_BNC <- readRDS("/cbica/projects/network_replication/output/NKI/BNC/GAM/age.max.stats_BNC.RData")
+age.max.stats_WNC <- readRDS("/cbica/projects/network_replication/output/NKI/WNC/GAM/age.max.stats_WNC.RData")
+ 
 ```
 
 
@@ -1506,13 +1588,19 @@ lapply(atlases_GBC, print_age.max.corr.CI, "GBC")
 lapply(atlases, print_age.max.corr.CI, "BNC")
 lapply(atlases, print_age.max.corr.CI, "WNC")
  
-age.max.stats_GBC$schaefer200
+
  
 ```
 
   
 
- 
+save out environment
+```{r save_out, include=FALSE, eval=FALSE}
+	
+#save.image(file='NKI_devEffectFigures_environment.RData')
+
+```
+
 
 #### Sensorimotor-association axis correlation value at each age: posterior median values + 95% credible interval
 - calculates credible intervals. Can load results in following chunk. 
@@ -1552,32 +1640,31 @@ cor.credible.intervals$zero.corr.window[cor.credible.intervals$zero.corr.window 
  
 cor.credible.intervals_GBC <- lapply(atlases_GBC, function_cor.credible.intervals, "GBC")
 names(cor.credible.intervals_GBC) <- atlases_GBC
-#saveRDS(cor.credible.intervals_GBC, "/cbica/projects/network_replication/output/HBN/GBC/GAM/cor.credible.intervals_GBC.RData")
- 
+#saveRDS(cor.credible.intervals_GBC, "/cbica/projects/network_replication/output/NKI/GBC/GAM/cor.credible.intervals_GBC.RData")
+cor.credible.intervals_GBC <- readRDS("/cbica/projects/network_replication/output/NKI/GBC/GAM/cor.credible.intervals_GBC.RData")
 max(abs(cor.credible.intervals_GBC$schaefer200$SA.correlation))
 
-cor.credible.intervals_GBC$schaefer200[c(which(cor.credible.intervals_GBC$schaefer200$SA.correlation < -0.69)),]
+cor.credible.intervals_GBC$schaefer200[c(which(cor.credible.intervals_GBC$schaefer200$SA.correlation < -0.54)),]
 
- 
 cor.credible.intervals_BNC <- lapply(atlases, function_cor.credible.intervals, "BNC")
 names(cor.credible.intervals_BNC) <- atlases
-#saveRDS(cor.credible.intervals_BNC, "/cbica/projects/network_replication/output/HBN/BNC/GAM/cor.credible.intervals_BNC.RData")
+#saveRDS(cor.credible.intervals_BNC, "/cbica/projects/network_replication/output/NKI/BNC/GAM/cor.credible.intervals_BNC.RData")
 
  
 
 cor.credible.intervals_WNC <- lapply(atlases, function_cor.credible.intervals, "WNC")
 names(cor.credible.intervals_WNC) <- atlases
-#saveRDS(cor.credible.intervals_WNC, "/cbica/projects/network_replication/output/HBN/WNC/GAM/cor.credible.intervals_WNC.RData")
+#saveRDS(cor.credible.intervals_WNC, "/cbica/projects/network_replication/output/NKI/WNC/GAM/cor.credible.intervals_WNC.RData")
 
 ```
 
  
 ```{r load_cor.credible.intervals, include=FALSE}
-cor.credible.intervals_GBC <- readRDS("/cbica/projects/network_replication/output/HBN/GBC/GAM/cor.credible.intervals_GBC.RData")
+cor.credible.intervals_GBC <- readRDS("/cbica/projects/network_replication/output/NKI/GBC/GAM/cor.credible.intervals_GBC.RData")
  
-cor.credible.intervals_BNC <- readRDS("/cbica/projects/network_replication/output/HBN/BNC/GAM/cor.credible.intervals_BNC.RData")
+cor.credible.intervals_BNC <- readRDS("/cbica/projects/network_replication/output/NKI/BNC/GAM/cor.credible.intervals_BNC.RData")
 
-cor.credible.intervals_WNC <- readRDS("/cbica/projects/network_replication/output/HBN/WNC/GAM/cor.credible.intervals_WNC.RData")
+cor.credible.intervals_WNC <- readRDS("/cbica/projects/network_replication/output/NKI/WNC/GAM/cor.credible.intervals_WNC.RData")
 ```
 
  
@@ -1641,83 +1728,5 @@ plot_grid(SA_metric_corr_WNC$gordon, SA_metric_corr_WNC$schaefer200x7, SA_metric
   
 ```
  
-  
-  
-
-### SA-axis Figure
-```{r Fig_SA.axis, fig.height= 10, fig.width= 17, warning=FALSE, include=FALSE}
-
-schaefer200_SAaxis <- read.csv("/cbica/projects/network_replication/SAaxis/schaefer200x7_SAaxis_SNRmasked.csv")
-schaefer200_SAaxis$SA.axis_rank <- as.numeric(schaefer200_SAaxis$SA.axis_rank)
-names(schaefer200_SAaxis)[3] <- "region"
-
  
-SAaxis_fig <- ggplot() + geom_brain(data=schaefer200_SAaxis, 
-                      atlas=schaefer7_200, 
-                      mapping=aes(fill=SA.axis_rank), 
-                      show.legend=TRUE) + paletteer::scale_fill_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(schaefer200_SAaxis$SA.axis_rank), max(schaefer200_SAaxis$SA.axis_rank)), oob = squish) + theme_void()
- 
-SAaxis_fig 
-#ggsave("/cbica/projects/network_replication/output/Figures/Flux/SAaxis_fig.svg", dpi=300)
-
- 
-###
-schaefer400_SAaxis <- read.csv("/cbica/projects/network_replication/SAaxis/schaefer400x17_SAaxis_SNRmasked.csv")
-schaefer400_SAaxis$SA.axis_rank <- as.numeric(schaefer400_SAaxis$SA.axis_rank)
-names(schaefer400_SAaxis)[3] <- "region"
-
-schaefer400_SAaxis$region<- gsub(x = schaefer400_SAaxis$region, pattern = "17Networks_RH_", replacement = "")
-schaefer400_SAaxis <- schaefer400_SAaxis[-which(grepl("17Networks_LH_", schaefer400_SAaxis$region)),]
-
- 
-
-SAaxis_fig <- ggplot() + geom_brain(data=schaefer400_SAaxis, 
-                      atlas=schaefer17_400, 
-                      mapping=aes(fill=SA.axis_rank), 
-                      show.legend=TRUE, 
-                      hemi = "right") + paletteer::scale_fill_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(schaefer400_SAaxis$SA.axis_rank), max(schaefer400_SAaxis$SA.axis_rank)), oob = squish) + theme_void()
- 
-SAaxis_fig 
-#ggsave("/cbica/projects/network_replication/output/Figures/Flux/SAaxis_fig.svg", dpi=300)
-
-
-SAaxis_fig <- ggplot() + geom_brain(data=schaefer400_SAaxis, 
-                      atlas=schaefer7_400, 
-                      mapping=aes(fill=SA.axis_rank), 
-                      show.legend=TRUE, 
-                      hemi = "right") + paletteer::scale_fill_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(schaefer400x7_SAaxis$SA.axis_rank), max(schaefer400x7_SAaxis$SA.axis_rank)), oob = squish) + theme_void()
- 
-
-###
-
-gordon_SAaxis <- read.csv("/cbica/projects/network_replication/SAaxis/gordon_SAaxis_SNRmasked.csv")
- 
-gordon_SAaxis$SA.axis_rank <- as.numeric(gordon_SAaxis$SA.axis_rank)
-names(gordon_SAaxis)[3] <- "region"
-
-gordon_SAaxis$region<- gsub(x = gordon_SAaxis$region, pattern = "17Networks_RH_", replacement = "")
-gordon_SAaxis <- gordon_SAaxis[-which(grepl("17Networks_LH_", gordon_SAaxis$region)),]
-
- 
-
-SAaxis_fig <- ggplot() + geom_brain(data=gordon_SAaxis, 
-                      atlas=gordon, 
-                      mapping=aes(fill=SA.axis_rank), 
-                      show.legend=TRUE, 
-                      hemi = "right") + paletteer::scale_fill_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(gordon_SAaxis$SA.axis_rank), max(gordon_SAaxis$SA.axis_rank)), oob = squish) + theme_void()
-
-
-
-schaefer_ggseg <- schaefer7_400$data$region[c(!is.na(schaefer7_400$data$region))]
-schaefer_ggseg <- schaefer_ggseg[-c(which(duplicated(schaefer7_400$data$region[c(!is.na(schaefer7_400$data$region))])))]
- 
-setdiff(schaefer_ggseg, gsub("Net", "7Net", schaefer400x7_SAaxis$label)) 
-schaefer_ggseg
-xcp <- read.csv('/cbica/projects/network_replication/atlases/parcellations/schaefer400_7Network_regionlist.csv', header=F)
-nrow(xcp)
-setdiff(xcp$V1, gsub("7Networks_", "",schaefer_ggseg))
-```
-
- 
-
 

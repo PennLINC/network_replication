@@ -1,7 +1,6 @@
 ---
 title: "PNC Figures"
 author: "Audrey Luo"
-date: "2023-01-04"
 output: html_document
 ---
 
@@ -338,7 +337,7 @@ names(ageEffect_WNC.fig) <- atlases
 ```
 
 
-#### **Figure**: GBC AgeEffect - Surface
+#### plot: GBC AgeEffect - Surface
 ```{r Fig.surface_ageEffect_GBC,fig.height= 10, fig.width= 12, warning=FALSE, cache=TRUE}
 
 plot_grid(ageEffect_GBC.fig$gordon, ageEffect_GBC.fig$schaefer200, ageEffect_GBC.fig$glasser,ageEffect_GBC.fig$schaefer400,labels = "AUTO")
@@ -349,13 +348,13 @@ ageEffect_GBC.fig$schaefer200
  
 ```
 
-#### **Figure**: BNC AgeEffect - Surface
+#### plot: BNC AgeEffect - Surface
 ```{r Fig.surface_ageEffect_BNC,fig.height= 10, fig.width= 12, warning=FALSE, cache=TRUE}
 plot_grid(ageEffect_BNC.fig$gordon, ageEffect_BNC.fig$schaefer200x7, ageEffect_BNC.fig$schaefer200x17, ageEffect_BNC.fig$schaefer400x7, ageEffect_BNC.fig$schaefer400x17, labels = "AUTO")
 
 ```
 
-#### **Figure**: WNC AgeEffect - Surface
+#### plot: WNC AgeEffect - Surface
 ```{r Fig.surface_ageEffect_WNC,fig.height= 10, fig.width= 12, warning=FALSE, cache=TRUE}
 plot_grid(ageEffect_WNC.fig$gordon, ageEffect_WNC.fig$schaefer200x7, ageEffect_WNC.fig$schaefer200x17, ageEffect_WNC.fig$schaefer400x7, ageEffect_WNC.fig$schaefer400x17, labels = "AUTO")
 
@@ -511,7 +510,7 @@ r_text_WNC.schaefer400x17 <- expression(paste(italic("r"), "= -0.44, ",  , itali
  
 ```
  
-#### **Figure**: GBC DevEffect 
+#### **Figure 4A**: GBC DevEffect 
 ```{r Fig1, fig.height= 8, fig.width= 16, warning=FALSE, cache=TRUE}
 
 plot_grid(GBC_glasser, GBC_gordon, GBC_schaefer200, GBC_schaefer400, labels = "AUTO")
@@ -535,7 +534,7 @@ ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network
 
 
 
-#### **Figure**: BNC DevEffect  
+#### **Figure 6A**: BNC DevEffect  
 ```{r Fig2, fig.height= 8, fig.width= 16, warning=FALSE, cache=TRUE}
 
 plot_grid(BNC_gordon, BNC_schaefer200x7, BNC_schaefer200x17, BNC_schaefer400x7, BNC_schaefer400x17, labels = "AUTO")
@@ -552,7 +551,7 @@ ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network
 
 
 
-#### **Figure**: WNC DevEffect  
+#### **Figure 6E**: WNC DevEffect  
 ```{r Fig3, fig.height= 8, fig.width= 16, warning=FALSE, cache=TRUE}
 
 plot_grid(WNC_gordon, WNC_schaefer200x7, WNC_schaefer200x17, WNC_schaefer400x7, WNC_schaefer400x17, labels = "AUTO")
@@ -570,8 +569,8 @@ ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network
 #ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/martins/Fig4_WNCAgeEffect_PNC_schaefer400x17.pdf", dpi=300, width = 5, height = 4)
 ```
 
-
-For Ted - HHMI
+ 
+ HHMI
 ```{r}
  
 r_text_GBC.schaefer200 <- expression(paste(italic("r"), "= -0.71, ",  , italic(p[spin]), "< 0.0001"))
@@ -724,7 +723,7 @@ devTraj.centered.WNC <- lapply(atlases, make_smooths_fig_centered, "WNC")
 names(devTraj.centered.WNC) <- atlases
 ```
 
-#### **Figure**: GBC Dev Trajectory  
+#### **Figure 3A**: GBC Dev Trajectory  
 ```{r Fig7, fig.height= 10, fig.width= 12, warning=FALSE}
 
 (devTraj.centered.GBC_fig <- plot_grid(devTraj.centered.GBC$glasser, devTraj.centered.GBC$gordon, devTraj.centered.GBC$schaefer200, devTraj.centered.GBC$schaefer400, labels = "AUTO"))
@@ -748,7 +747,7 @@ devTraj.centered.GBC$schaefer400
 ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Supplementary/FigS4_GBCDevTraj_PNC.schaefer400.pdf", dpi=300, width = 5.5, height = 5)
 ```
 
-#### **Figure**: BNC Dev Trajectory  
+#### plot: BNC Dev Trajectory  
 ```{r Fig8, fig.height= 10, fig.width= 12, warning=FALSE}
 
 (devTraj.centered.BNC_fig <- plot_grid(devTraj.centered.BNC$gordon, devTraj.centered.BNC$schaefer200x7, devTraj.centered.BNC$schaefer400x7, labels = "AUTO"))
@@ -760,7 +759,7 @@ devTraj.centered.BNC$schaefer400x17
 ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/martins/FigS4_BNCDevTraj_PNC.schaefer400x17.pdf", dpi=300, width = 5, height = 4)
 ```
 
-#### **Figure**: WNC Dev Trajectory  
+#### plot: WNC Dev Trajectory  
 ```{r Fig9, fig.height= 5, fig.width= 6, warning=FALSE}
 
 (devTraj.centered.WNC_fig <- plot_grid(devTraj.centered.WNC$gordon, devTraj.centered.WNC$schaefer200x7, devTraj.centered.WNC$schaefer400x7,  labels = "AUTO"))
@@ -839,7 +838,7 @@ names(WNC_assoc.pole_devTraj.fig) <- atlases
 ```
 
  
-#### **Figure**: GBC Dev Trajectory - by SA rank
+#### plot: GBC Dev Trajectory - by SA rank
  
 ```{r FigDevTraj1, fig.height= 9, fig.width= 11, warning=FALSE, cache=TRUE}
 
@@ -851,7 +850,7 @@ GBC.dev.traj_SAranked
 #ggsave("/cbica/projects/network_replication/output/Figures/Flux/GBC.dev.traj_SAranked.svg", dpi=300)
 ```
 
-#### **Figure**: BNC Dev Trajectory - by SA rank
+#### plot: BNC Dev Trajectory - by SA rank
 ```{r FigDevTraj2, fig.height= 7, fig.width= 11, warning=FALSE, cache=TRUE}
 
 
@@ -875,7 +874,7 @@ smooth_fits <- get(paste0(metric, "_SM.middle.assoc"))
 
 
 
-#### **Figure**: WNC Dev Trajectory - by SA rank
+#### plot: WNC Dev Trajectory - by SA rank
 ```{r FigDevTraj3, fig.height= 7, fig.width= 11, warning=FALSE, cache=TRUE} 
 
 WNC.dev.traj_SAranked <- plot_grid(WNC_SM_devTraj.fig$gordon, WNC_middle.axis_devTraj.fig$gordon, WNC_assoc.pole_devTraj.fig$gordon, 
@@ -942,7 +941,7 @@ for(i in 1:length(levels(as.factor(gordon_SAaxis_CommAffil$CommNames)))) {
  
 ```
  
- ** start here
+ 
 - extract smooths for representative parcels
   1) look at SA ranks and choose 3 parcels per third
   2) extract smooths from their respective devTraj.centered.atlas.metric_df 
@@ -953,7 +952,7 @@ for(i in 1:length(levels(as.factor(gordon_SAaxis_CommAffil$CommNames)))) {
   - maybe include a column to indicate whether a parcel is within-network so we can color the trajectories 
   - also include a column for SA_diff to color it a different way
 
-#### **Figure**: Make representative parcels
+#### Make representative parcels
 ```{r make_representative_parcels, warning=FALSE, cache=TRUE}
   
 # subsets gam.smooths (long_df) to extract specific parcels and creates a new dataframe (to make dev trajectory figures)
@@ -1045,7 +1044,7 @@ names(schaefer200x7_attention) <- c("GBC", "BNC", "WNC")
  
  
 
-
+#### **Figure 3E, I, M**
 ```{r FigRepresentativeParcels_schaefer200x7_saveOut, fig.height=3, fig.width=3}
  
 schaefer200x7_SomMot$GBC
@@ -1310,7 +1309,7 @@ cor.credible.intervals_GBC <- readRDS("/cbica/projects/network_replication/outpu
 
  
 
-
+#### **Figure 5A**
 ```{r plot_cred.intervals, include=FALSE, cache=TRUE}
 
 atlases_GBC <- "schaefer200"
@@ -1348,7 +1347,7 @@ SA_metric_corr_GBC
 
 
 
-#### **Figure**: Temporal sliding window correlation analysis - GBC
+#### plot: Temporal sliding window correlation analysis - GBC
 ```{r Fig13, fig.height= 6, fig.width= 8, warning=FALSE, cache=TRUE}
 
 plot_grid(SA_metric_corr_GBC$schaefer200, labels = "AUTO")
@@ -1425,7 +1424,7 @@ for(i in c(1:length(atlases))){
  
 ```
 
-#### **Figure**: Magnitude and Direction of Developmental Change - GBC
+#### plot: Magnitude and Direction of Developmental Change - GBC
 ```{r Fig10, fig.height= 9, fig.width= 12, warning=FALSE, cache=TRUE}
 
 sliding_window_GBC <- plot_grid(gam.GBC.derivatives.glasser.fig, gam.GBC.derivatives.gordon.fig, gam.GBC.derivatives.schaefer200.fig, gam.GBC.derivatives.schaefer400.fig, labels = "AUTO")
@@ -1436,7 +1435,7 @@ sliding_window_GBC
  
 ```
 
-#### **Figure**: Magnitude and Direction of Developmental Change - BNC
+#### plot: Magnitude and Direction of Developmental Change - BNC
 ```{r Fig11, fig.height= 9, fig.width= 9, warning=FALSE, cache=TRUE}
 sliding_window_BNC <- plot_grid(gam.BNC.derivatives.gordon.fig, gam.BNC.derivatives.schaefer200x7.fig, gam.BNC.derivatives.schaefer400x7.fig, labels = "AUTO")
  
@@ -1445,7 +1444,7 @@ sliding_window_BNC
 
 ```
 
-#### **Figure**: Magnitude and Direction of Developmental Change - WNC
+#### plot: Magnitude and Direction of Developmental Change - WNC
 ```{r Fig12, fig.height= 9, fig.width= 9, warning=FALSE, cache=TRUE}
 sliding_window_WNC <- plot_grid(gam.WNC.derivatives.gordon.fig, gam.WNC.derivatives.schaefer200x7.fig, gam.WNC.derivatives.schaefer400x7.fig, labels = "AUTO")   
  
@@ -1599,14 +1598,7 @@ lapply(atlases, print_age.max.corr.CI, "WNC")
 ```
 
   
-
-save out environment
-```{r save_out, include=FALSE, eval=FALSE}
-	
-#save.image(file='PNC_devEffectFigures_environment.RData')
-
-```
-
+ 
 
 #### Sensorimotor-association axis correlation value at each age: posterior median values + 95% credible interval
 - calculates credible intervals. Can load results in following chunk. 
@@ -1708,7 +1700,7 @@ names(SA_metric_corr_WNC) <- atlases
 
 
 
-#### **Figure**: Temporal sliding window correlation analysis - GBC
+#### plot: Temporal sliding window correlation analysis - GBC
 ```{r Fig13, fig.height= 6, fig.width= 8, warning=FALSE, cache=TRUE}
 
 plot_grid(SA_metric_corr_GBC$glasser, SA_metric_corr_GBC$gordon, SA_metric_corr_GBC$schaefer200, SA_metric_corr_GBC$schaefer400, labels = "AUTO")
@@ -1721,7 +1713,7 @@ ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network
 ```
 
 
-#### **Figure**: Temporal sliding window correlation analysis - BNC
+#### plot: Temporal sliding window correlation analysis - BNC
 ```{r Fig14, fig.height= 8, fig.width= 8, warning=FALSE}
 
 plot_grid( SA_metric_corr_BNC$gordon, SA_metric_corr_BNC$schaefer200x7, SA_metric_corr_BNC$schaefer400x7, labels = "AUTO")
@@ -1730,7 +1722,7 @@ plot_grid( SA_metric_corr_BNC$gordon, SA_metric_corr_BNC$schaefer200x7, SA_metri
 ```
 
 
-#### **Figure**: Temporal sliding window correlation analysis - WNC
+#### plot: Temporal sliding window correlation analysis - WNC
 ```{r Fig15, fig.height= 8, fig.width= 8, warning=FALSE}
 
 plot_grid(SA_metric_corr_WNC$gordon, SA_metric_corr_WNC$schaefer200x7, SA_metric_corr_WNC$schaefer400x7, labels = "AUTO")
@@ -1740,141 +1732,4 @@ plot_grid(SA_metric_corr_WNC$gordon, SA_metric_corr_WNC$schaefer200x7, SA_metric
  
  
  
-### Surface Plot
-```{r make_surface_dfs, include=FALSE, include=FALSE}
- 
-atlases <- c("glasser", "gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
- 
-# makes SA.diff_glasser, SA.diff_gordon, SA.diff_schaefer200x7, SA.diff_schaefer200x17, SA.diff_schaefer400x7, SA.diff_schaefer400x17 
-# gam.edge.age.glasser, gam.edge.age.gordon, gam.edge.age.schaefer200x7, gam.edge.age.schaefer200x17, gam.edge.age.schaefer400x7, gam.edge.age.schaefer400x17
-# age_SA.diff_glasser, age_SA.diff_gordon, age_SA.diff_schaefer200x7, age_SA.diff_schaefer200x17, age_SA.diff_schaefer400x7, age_SA.diff_schaefer400x17 
-# double_age_SA.diff_glasser, double_age_SA.diff_gordon, double_age_SA.diff_schaefer200x7, double_age_SA.diff_schaefer200x17, double_age_SA.diff_schaefer400x7, double_age_SA.diff_schaefer400x17
-
-for(i in c(1:length(atlases))){
-  SA.diff <- paste0("SA.diff", "_", atlases[i])
-  assign(SA.diff, read.csv(sprintf("/cbica/projects/network_replication/atlases/edge/SA.diff_%1$s.csv", atlases[i])))
-  SA.diff <- get(SA.diff)
-  
-  gam.edge.age <- paste0("gam.edge.age.", atlases[i])
-  assign(gam.edge.age, readRDS(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.%3$s.RData", dataset, "edge", atlases[i])))
-  gam.edge.age <- get(gam.edge.age)
-  
-  age_SA.diff <- paste0("age_SA.diff_", atlases[i])
-  assign(age_SA.diff, cbind(gam.edge.age, SA.diff))
-  age_SA.diff <- get(age_SA.diff)
-  age_SA.diff <- sig_parcels(age_SA.diff) 
-
-  # make a double df for symmetry - parcel1 and parcel2.SA.vec repeated in opposite ordering (see lines 500-510 in Adam's Edge-level-Age.md)
-  age_SA.diff2 <- paste0("age_SA.diff_", atlases[i], "2")
-  assign(age_SA.diff2, age_SA.diff)  
-  age_SA.diff2 <- get(age_SA.diff2)
-  age_SA.diff2$parcel1.SA.vec <- age_SA.diff$parcel2.SA.vec
-  age_SA.diff2$parcel2.SA.vec <- age_SA.diff$parcel1.SA.vec
-  
-  # "stacked" df
-  double_age_SA.diff <- paste0("double_age_SA.diff_", atlases[i])
-  assign(double_age_SA.diff, rbind(age_SA.diff2,age_SA.diff)) 
-  print(paste0("double_age_SA.diff_", atlases[i], " finished"))
-} 
- 
-  
-edge_gam <- readRDS(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.%3$s.RData", dataset, "edge", atlases[i]))
- 
-```
-
- 
-```{r model_surface, fig.height= 12, fig.width= 8}
-# model the surface
- 
-
-surface_plots <- lapply(atlases, make_surface_plot)
-names(surface_plots) <- atlases
- 
-plot_grid(surface_plots$glasser, surface_plots$gordon, surface_plots$schaefer200x7, surface_plots$schaefer400x7, labels = "AUTO")
-
-surface_plots$schaefer200x7
-
-#ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Fig6_New/Fig6_EdgeSurfacePlot_PNC.pdf", dpi=300, width = 5, height = 5)
-
-```
-
- 
-  
-
-### SA-axis Figure
-```{r Fig_SA.axis, fig.height= 10, fig.width= 17, warning=FALSE, include=FALSE}
-
-schaefer200_SAaxis <- read.csv("/cbica/projects/network_replication/SAaxis/schaefer200x7_SAaxis_SNRmasked.csv")
-schaefer200_SAaxis$SA.axis_rank <- as.numeric(schaefer200_SAaxis$SA.axis_rank)
-names(schaefer200_SAaxis)[3] <- "region"
-
- 
-SAaxis_fig <- ggplot() + geom_brain(data=schaefer200_SAaxis, 
-                      atlas=schaefer7_200, 
-                      mapping=aes(fill=SA.axis_rank), 
-                      show.legend=TRUE) + paletteer::scale_fill_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(schaefer200_SAaxis$SA.axis_rank), max(schaefer200_SAaxis$SA.axis_rank)), oob = squish) + theme_void()
- 
-SAaxis_fig 
-#ggsave("/cbica/projects/network_replication/output/Figures/Flux/SAaxis_fig.svg", dpi=300)
-
- 
-###
-schaefer400_SAaxis <- read.csv("/cbica/projects/network_replication/SAaxis/schaefer400x17_SAaxis_SNRmasked.csv")
-schaefer400_SAaxis$SA.axis_rank <- as.numeric(schaefer400_SAaxis$SA.axis_rank)
-names(schaefer400_SAaxis)[3] <- "region"
-
-schaefer400_SAaxis$region<- gsub(x = schaefer400_SAaxis$region, pattern = "17Networks_RH_", replacement = "")
-schaefer400_SAaxis <- schaefer400_SAaxis[-which(grepl("17Networks_LH_", schaefer400_SAaxis$region)),]
-
- 
-
-SAaxis_fig <- ggplot() + geom_brain(data=schaefer400_SAaxis, 
-                      atlas=schaefer17_400, 
-                      mapping=aes(fill=SA.axis_rank), 
-                      show.legend=TRUE, 
-                      hemi = "right") + paletteer::scale_fill_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(schaefer400_SAaxis$SA.axis_rank), max(schaefer400_SAaxis$SA.axis_rank)), oob = squish) + theme_void()
- 
-SAaxis_fig 
-#ggsave("/cbica/projects/network_replication/output/Figures/Flux/SAaxis_fig.svg", dpi=300)
-
-
-SAaxis_fig <- ggplot() + geom_brain(data=schaefer400_SAaxis, 
-                      atlas=schaefer7_400, 
-                      mapping=aes(fill=SA.axis_rank), 
-                      show.legend=TRUE, 
-                      hemi = "right") + paletteer::scale_fill_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(schaefer400x7_SAaxis$SA.axis_rank), max(schaefer400x7_SAaxis$SA.axis_rank)), oob = squish) + theme_void()
- 
-
-###
-
-gordon_SAaxis <- read.csv("/cbica/projects/network_replication/SAaxis/gordon_SAaxis_SNRmasked.csv")
- 
-gordon_SAaxis$SA.axis_rank <- as.numeric(gordon_SAaxis$SA.axis_rank)
-names(gordon_SAaxis)[3] <- "region"
-
-gordon_SAaxis$region<- gsub(x = gordon_SAaxis$region, pattern = "17Networks_RH_", replacement = "")
-gordon_SAaxis <- gordon_SAaxis[-which(grepl("17Networks_LH_", gordon_SAaxis$region)),]
-
- 
-
-SAaxis_fig <- ggplot() + geom_brain(data=gordon_SAaxis, 
-                      atlas=gordon, 
-                      mapping=aes(fill=SA.axis_rank), 
-                      show.legend=TRUE, 
-                      hemi = "right") + paletteer::scale_fill_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(gordon_SAaxis$SA.axis_rank), max(gordon_SAaxis$SA.axis_rank)), oob = squish) + theme_void()
-
-
-
-schaefer_ggseg <- schaefer7_400$data$region[c(!is.na(schaefer7_400$data$region))]
-schaefer_ggseg <- schaefer_ggseg[-c(which(duplicated(schaefer7_400$data$region[c(!is.na(schaefer7_400$data$region))])))]
- 
-setdiff(schaefer_ggseg, gsub("Net", "7Net", schaefer400x7_SAaxis$label)) 
-schaefer_ggseg
-xcp <- read.csv('/cbica/projects/network_replication/atlases/parcellations/schaefer400_7Network_regionlist.csv', header=F)
-nrow(xcp)
-setdiff(xcp$V1, gsub("7Networks_", "",schaefer_ggseg))
-```
-
- 
-
 
