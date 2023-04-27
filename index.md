@@ -257,6 +257,46 @@ To investigate how the development of edge-level connectivity differs across sen
 
 # Data Interpretation and Visualization 
  
+Model results and correspondence of developmenta effects to the S-A axis were computed and visualized in the following:
+
+1. [CombinedFigures.Rmd](https://github.com/PennLINC/network_replication/blob/main/CombinedFigures/CombinedFigures.Rmd)
+* Generates figures 1, 2, and 7 for manuscript 
+* Plots the cortical distribution of fitted GBC values at ages 8, 14 and 22
+* Quantifies spatial correlation of age effect of global brain connectivity between all datasets
+* Examines the cortical distribution of GBC age effect
+* Characterizes the distribution of edge-level connectivity age effect along the S-A axis in a topographical surface plot
+
+2. `/Rscripts/<dataset>)scripts/Analysis_scripts/3_<dataset>_devEffectFigures.Rmd`
+* Generates figures 3, 4, 5, 6 for manuscript 
+* Computes correlation between S-A axis rank and age effect of connectivity metrics and performs spin-based spatial permutation tests for significance testing
+* Calculates age smooths for each functional connectivity metric, and examines smooths for representative parcels from the somatomotor, attention, and default networks 
+* Examines the alignment of fitted GBC values with the S-A axis across 200 ages 
+
+  * PNC: [3_PNC_devEffectFigures.Rmd](https://github.com/PennLINC/network_replication/blob/main/PNC_scripts/Analysis_scripts/3_PNC_devEffectFigures.Rmd)
+  * NKI: [3_NKI_devEffectFigures.Rmd](https://github.com/PennLINC/network_replication/blob/main/NKI_scripts/Analysis_scripts/3_NKI_devEffectFigures.Rmd)
+  * HCP-D: [3_HCPD_devEffectFigures_withCovbat.Rmd](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/Analysis_scripts/3_HCPD_devEffectFigures_withCovbat.Rmd)
+  * HBN: [3_HBN_devEffectFigures_withCovbat.Rmd](https://github.com/PennLINC/network_replication/blob/main/HBN_scripts/Analysis_scripts/3_HBN_devEffectFigures_withCovbat.Rmd)
+
+
+### Figure 1. The spatial distribution of global brain connectivity is highly similar across all four datasets and is refined with age. 
+
+
+### Figure 2. Global brain connectivity developmental effects replicate across four large datasets. 
+
+
+### Figure 3. Global brain connectivity shows dissociable patterns of maturation across the sensorimotor-association axis.
+
+
+### Figure 4. Developmental change in global brain connectivity aligns with the sensorimotor-association axis. 
+
+
+### Figure 5. The spatial distribution of global brain connectivity increasingly aligns with the sensorimotor-association axis with age.  
+
+
+### Figure 6. Hierarchical developmental change in average between-network and within-network connectivity. 
+
+
+### Figure 7. Edge-level age effects confirm divergent connectivity refinement along the sensorimotor-association axis. 
 
 
 ### A note on sensitivity analyses
