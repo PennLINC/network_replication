@@ -215,9 +215,35 @@ Covbat was applied to GBC, BNC, WNC, and edges as part of
 
 
 ### 6. Fitting generalized additive models (GAMs) 
-GAMs were fit for GBC, BNC, WNC, and edge-level connectivity for each dataset. 
+GAMs were fit for GBC, BNC, WNC, and edge-level connectivity for each cortical region to examine age-dependent changes in each of these functional connectivity metrics. To fit GAMs, estimate GAM smooths, predict fitted GBC values, and compute alignment of fitted GBC values with the S-A axis across age, we used 
+```
+/Rscripts/<dataset>_scripts/Analysis_scripts/2_<dataset>_fitGAMs.Rmd
+``` 
+Note that this Rmd has some additional analyses that aren't reported in the paper (I will keep them in there until we are confident we won't need the code anymore).
+
+
+`/Rscripts/functions/main_analyses/GAM_functions.R` includes the set of functions to fit GAM models. This script includes:  
+* *gam.fit*: Function to fit a GAM (measure ~ s(smooth_var) + covariates)) per each region in atlas and save out statistics and derivative-based characteristics
+* *gam.predsmooth*: Function to fit GAM smooths based on model-predicted data
+* *gam.smooth.predict_posterior*: Function to predict fitted values of a measure based on a fitted GAM smooth (measure ~ s(smooth_var, k = knots, fx = set_fx) + covariates)) and a prediction df and for individual draws from the simulated posterior distribution
+
+`/Rscripts/functions/main_analyses/fitGAMs.R` contains functions for applying the above GAM functions across cortical regions.
+
+`2_<dataset>_fitGAMs.Rmd` consolidates functions from the two .R scripts above and applies them to each dataset. 
+
+* PNC: [2_PNC_fitGAMs.Rmd](https://github.com/PennLINC/network_replication/blob/main/PNC_scripts/Analysis_scripts/2_PNC_fitGAMs.Rmd)
+* NKI: [2_NKI_fitGAMs.Rmd](https://github.com/PennLINC/network_replication/blob/main/NKI_scripts/Analysis_scripts/2_NKI_fitGAMs.Rmd)
+* HCP-D: [2_HCPD_fitGAMs_withCovbat.Rmd](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/Analysis_scripts/2_HCPD_fitGAMs_withCovbat.Rmd)
+* HBN: [2_HBN_fitGAMs_withCovbat.Rmd](https://github.com/PennLINC/network_replication/blob/main/HBN_scripts/Analysis_scripts/2_HBN_fitGAMs_withCovbat.Rmd)
+
+Note that running GAMs for edges requires submitting a job on cubic since this process takes many hours. Rscript can be found at `/Rscripts/functions/main_analyses/edge_fitGAMs.R` and shell script found at `/Rscripts/<dataset>_scripts/Analysis_scripts/connMetrics_scripts/fitGAMs_edge_<dataset>.sh`.
 
 ### 7. Characterization of relationships between functional connectivity metrics, age, and the S-A axis
+
+We used Spearman’s rank correlations to quantify the association between S-A axis ranks and observed developmental effects. 
+
+To investigate how the development of edge-level connectivity differs across sensorimotor-association axis, we examined age-related changes in connectivity across edges by fitting a bivariate smooth interaction. The effect of S-A axis rank on edge-level age effects was modeled using a tensor product smooth. This analysis was performed in 
+
 
 
 <br>
