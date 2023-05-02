@@ -109,7 +109,13 @@ Links to the corresponding github code and descriptions of each final sample are
         2) Exclude participants with medical conditions affecting brain function, gross neurological abnormalities, and psychoactive medical medications: N=1413, 4136 scans 
         3) Include passing T1 QC: N=1374, 4041 scans
         4) Include meanFD < 0.3: N=1262, 3365 scans
-        5) Include scans with at least 7 minutes of scan time: N= 1207,  3310 scans (final sample), 646 females. Age: mean = 15, SD = 3.3. 
+        5) Include scans with at least 7 minutes of scan time: N= 1207,  3310 scans (final sample), 646 females. Age: mean = 15, SD = 3.3.
+                - range before: 3.60 to 33.25 min
+                - median before: 28.25 min
+                - range after: 8.35 to 33.25 min
+                - median after: 28.25 min 
+
+
 * NKI: [NKI_SampleSelection.Rmd](https://github.com/PennLINC/network_replication/blob/main/NKI_scripts/QC_scripts/NKI_SampleSelection.Rmd)
 
         1) Original sample: N=1268, ages 6-85, 6226 scans total
@@ -119,6 +125,10 @@ Links to the corresponding github code and descriptions of each final sample are
         4) Include meanFD < 0.3: N=386, 1816 scans
         5) Choose the session that has the most scans surviving the head motion exclusion: N=386, 998 scans
         6) Include scans with at least 7 minutes of scan time: N=381, 993 scans (final sample),  177 females. Age: mean=14.5, SD=4.4
+                - range before: 5.00000 to 24.10167 min
+                - median before: 24.10167 min
+                - range after: 7.75075 to 24.10167 min
+                - median after: 24.10167 min
 
 * HCP-D: [HCPD_SampleSelection.Rmd](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/QC_scripts/HCPD_SampleSelection.Rmd)
 
@@ -127,6 +137,10 @@ Links to the corresponding github code and descriptions of each final sample are
         3) Include passing T1 QC: all scans in dataset have survived T1 QC already 
         4) Include meanFD < 0.3: N=629, 5165 scans 
         5) Include scans with at least 7 minutes of scan time: N=625, 5159 scans (final sample), 337 females. Age: mean=14.5, SD=4.1
+                - range before: 2.24000 to 42.66667 min
+                - median before: 42.66667 min
+                - range after: 7.466667 to 42.66667 min
+                - median after: 42.666667 min
 
 * HBN: [HBN_SampleSelection.Rmd](https://github.com/PennLINC/network_replication/blob/main/HBN_scripts/QC_scripts/HBN_SampleSelection.Rmd)
 
@@ -135,6 +149,10 @@ Links to the corresponding github code and descriptions of each final sample are
         3) Include passing T1 QC: pending T1 QC from RBC
         4) Include meanFD < 0.3: N= 1649, 3964 scans 
         5) Include scans with at least 7 minutes of scan time: N= 1438, 3939 scans (final sample), 546 females
+                - range before: 3.333333 to 23.333333 min
+                - median before: 13.33333 min  
+                - range after: 8.333333 23.333333
+                - median after: 18.33333
         6) Exclude participants with missing data (i.e. age and sex): N= 1379, 3767 scans, 546 females. Age: mean=11.6, sd= 3.7
 
 ### 3. Constructing connectivity matrices for each dataset
