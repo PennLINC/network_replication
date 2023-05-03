@@ -42,11 +42,11 @@ schaefer200x17.parcel.labels <- read.csv("/cbica/projects/network_replication/at
 schaefer200.parcel.labels <- schaefer200x17.parcel.labels #gbc
  
 ## Function to calculate GAM Fitted Value Predictions alignment with S-A Axis
-#function to estimate npd posterior draw derivs for each region 
+#function to estimate npd posterior draw fitted GBC values for each region 
 #and compute the correlation between regional GBC fitted value and regional S-A axis rank at each age, for each draw
 #executed via rerun below
 
-np <- 200 #number of ages to get the deriv at
+np <- 200 #number of ages to get the fitted GBC values at
 npd <- 1000 #number of posterior draws for each run of rerun (repeated 10 times)
  
 
