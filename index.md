@@ -171,22 +171,29 @@ $ /usr/local/miniconda/bin/xcp_abcd inputs/data/fmriprep xcp participant --despi
 ```
 
 
-**Main analysis:**  
+**3a. Main analysis:**  
 Vertex-level fMRI timeseries were parcellated with fsLR surface atlases utilizing Connectome Workbench 1.5.0.19. This produced fMRI timeseries within individual cortical regions. The Schaefer200 atlas was used as the primary atlas and Schaefer 400, HCP-MMP, and Gordon atlases were used in sensitivity analyses. Next, parcellated rest and task fMRI timeseries were concatenated and the Pearson correlation between concatenated timeseries was computed for every pair of cortical regions. 
 
 *Data*: task and resting-state fMRI were concatenated using 
 ```
 /Rscripts/<dataset>_scripts/ConnMatrices_scripts/<dataset>_makeConnMatrices.R
 ```
+
 + PNC: [PNC_makeConnMatrices.R](https://github.com/PennLINC/network_replication/blob/main/PNC_scripts/ConnMatrices_scripts/PNC_makeConnMatrices.R)
 + NKI: [NKI_makeConnMatrices.R](https://github.com/PennLINC/network_replication/blob/main/NKI_scripts/ConnMatrices_scripts/NKI_makeConnMatrices.R)
 + HCP-D: [HCPD_makeConnMatrices.R](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/ConnMatrices_scripts/HCPD_makeConnMatrices.R)
 + HBN:  [HBN_makeConnMatrices.R](https://github.com/PennLINC/network_replication/blob/main/HBN_scripts/ConnMatrices_scripts/HBN_makeConnMatrices.R)
 
+The above Rscripts were submitted as individual jobs on CUBIC via the following (for each dataset and metric)
+```
+/Rscripts/<dataset>_scripts/Analysis_scripts/connMetrics_scripts/compute<metric>_<dataset>.sh
+```
+
+
 *Cortical parcellation*: [Schaefer 200 atlas](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_200Parcels_17Networks_order.dlabel.nii)
 + *Network solution*: [7 Network](https://github.com/ThomasYeoLab/CBIG/blob/6d1400a2d643261246f6b042e7ef5fbe417506cd/utilities/matlab/FC/CBIG_ReorderParcelIndex.m) 
 
-**Sensitivity analysis:** 
+**3b. Sensitivity analysis:** 
 
 To investigate whether our findings were driven by potentially confounding factors including use of task and rest scans and atlas used for cortical parcellation. Sensitivity analyses were performed with only resting state data while excluding fMRI acquired during task conditions. Datasets used in this rest-only sensitivity analysis include PNC, HCP-D, and HBN. Analyses for NKI were completed with resting-state fMRI only due to absence of task scans. We only included participants with at least 6 minutes of resting-state fMRI. We analyzed data from 998 participants (549 females) from PNC, 611 participants (328 females) from HCP-D, and 1039 participants (426 females). The total scan time for fully acquired resting-state scans was 11 minutes and 12 seconds (224 volumes) for PNC, 25 minutes and 30 seconds (1912 volumes) for HCP-D, and 10 minutes and 9 seconds (750 volumes) for HBN. 
 
@@ -195,13 +202,21 @@ Second, analyses were also evaluated using additional cortical parcellations. Ou
 *Data*: resting-state fMRI only was used to construct conn matrices using 
 ```
 /Rscripts/<dataset>_scripts/ConnMatrices_scripts/<dataset>_makeConnMatrices_restOnly.R
-``` 
+```
 
+ 
 
 * PNC: [PNC_makeConnMatrices_restOnly.R](https://github.com/PennLINC/network_replication/blob/main/PNC_scripts/ConnMatrices_scripts/PNC_makeConnMatrices_restOnly.R)
 * NKI: no sensitivity analyses done with resting-state only since NKI only has resting-state to begin with! 
 * HCP-D: [HCPD_makeConnMatrices_restOnly.R](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/ConnMatrices_scripts/HCPD_makeConnMatrices_restOnly.R)
 * HBN:  [HBN_makeConnMatrices_restOnly.R](https://github.com/PennLINC/network_replication/blob/main/HBN_scripts/ConnMatrices_scripts/HBN_makeConnMatrices_restOnly.R)
+
+
+The above Rscripts were submitted as individual jobs on CUBIC via the following (for each dataset and metric)
+```
+/Rscripts/HBN_scripts/Analysis_scripts/connMetrics_scripts/sensitivity_compute<metric>_<dataset>_restOnly.sh
+```
+
 
 *Cortical parcellation*: [Schaefer 400](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_400Parcels_17Networks_order.dlabel.nii), [HCP multimodal](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/glasser_space-fsLR_den-32k_desc-atlas.dlabel.nii), [Gordon](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/gordon_space-fsLR_den-32k_desc-atlas.dlabel.nii)
 * *Network solution*: 7 Network and 17 Network (Schaefer atlases)
@@ -211,7 +226,7 @@ Second, analyses were also evaluated using additional cortical parcellations. Ou
 
 Global brain connectivity (GBC) was calculated for each cortical parcel by averaging its timeseries correlation with all other parcels. Hence, global brain connectivity represents the mean edge strength of a given region with all other regions, without thresholding. Average between-network connectivity (BNC) was defined as the mean edge strength (Pearson correlation) of a given region and all other regions not in that region’s network. Average within-network connectivity (WNC) was defined as the mean edge strength (Pearson correlation) of a given region and all other regions within that region’s network. We also examined functional connectivity at the edge level by extracting the Pearson correlation between timeseries for each pair of regions. 
 
-GBC, BNC, WNC, and edge-level connectivity were computed or extracted using 
+Computations for GBC, BNC, WNC, and edge-level connectivity are summarized in the following Rmds (but were actually performed via individual jobs, as described above)
 ```
 /Rscripts/<dataset>_scripts/Analysis_scripts/1_<dataset>_computeConnMetrics.Rmd
 ```
@@ -224,12 +239,17 @@ GBC, BNC, WNC, and edge-level connectivity were computed or extracted using
 
 [Correcting Covariance Batch Effects (CovBat)](https://onlinelibrary.wiley.com/doi/10.1002/hbm.25688) was used to harmonize multi-site MRI data to ensure the imaging measures were comparable across sites. CovBat was applied to functional connectivity metrics for multi-site dataset (HCP-D and HBN) using the [ComBatFamily R package](https://github.com/andy1764/ComBatFamily). Sex and in-scanner motion were included as covariates with age modeled as a smooth term via a [generalized additive model](https://www.sciencedirect.com/science/article/pii/S1053811919310419?via%3Dihub) using the ‘covfam’ function, which enables flexible covariate modeling with penalized splines.  
 
-Covbat was applied to GBC, BNC, WNC, and edges as part of 
+Covbat was applied to GBC, BNC, WNC, and edges in the following Rmd file:
 ```
 /Rscripts/<dataset>_scripts/Analysis_scripts/1_<dataset>_computeConnMetrics.Rmd
 ```
 + HCP-D: [1_HCPD_computeConnMetrics.Rmd (L187-377)](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/Analysis_scripts/1_HCPD_computeConnMetrics.Rmd#L187-L377)
 + HBN: [1_HBN_computeConnMetrics.Rmd (L188-427)](https://github.com/PennLINC/network_replication/blob/main/HBN_scripts/Analysis_scripts/1_HBN_computeConnMetrics.Rmd#L188-L427)
+
+Harmonization of edge-level data had to be submitted as as job on CUBIC due to the large amount of edges to be harmonized. The RScript can be found at `/Rscripts/functions/main_analyses/covbat_edges.R`. The bash scripts used to submit this as indivdiual jobs are located at
+```
+/Rscripts/<dataset>_scripts/Analysis_scripts/connMetrics_scripts/covbat_edges_<dataset>.sh
+```
 
 
 ### 6. Fitting generalized additive models (GAMs) 
