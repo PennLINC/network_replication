@@ -1,9 +1,11 @@
 <br>
 <br>
 
-# Functional Connectivity Development Aligns with the Sensorimotor-Association Cortical Axis in Four Independent Datasets 
+# Development of Functional Connectivity Aligns with the Cortical Hierarchy in Four Datasets 
 
-Cortical maturation has been posited to be organized along the sensorimotor-association axis, a hierarchical axis of brain organization that spans from unimodal sensorimotor cortices to transmodal association cortices. In this preregistered study, we used four large-scale datasets to investigate whether the development of functional connectivity reliably varies along the sensorimotor-association axis during childhood through adolescence. To do so, we examined four datasets that included youth ages 5-22: the Philadelphia Neurodevelopmental Cohort (N=1207), Nathan Kline Institute-Rockland (N=381), Human Connectome Project: Development (N=625), and Healthy Brain Network (N=1379). Across all datasets, the spatial patterning of connectivity at region aligned with the S-A axis through development. Specifically, global connectivity in sensorimotor regions increased, whereas global connectivity declined in association cortices. Convergent findings across four independent datasets robustly establish that the sensorimotor-association axis is not only a major axis of brain organization, but also encodes the dominant pattern of functional connectivity development.
+Cortical maturation has been posited to be organized along the sensorimotor-association (S-A) axis, a hierarchical axis of brain organization that spans from unimodal sensorimotor cortices to transmodal association cortices. Here, we investigate the hypothesis that the development of functional connectivity varies along the cortical hierarchy defined by the S-A axis of brain organization during childhood through adolescence. In this preregistered study, we leveraged four large-scale, independent datasets (total n = 3,651; ages 5-22 years): the Philadelphia Neurodevelopmental Cohort (n = 1,207), Nathan Kline Institute-Rockland (n = 381), Human Connectome Project: Development (n = 625), and Healthy Brain Network (n = 1379). Across all datasets, the development of functional connectivity aligned with the S-A axis. Connectivity in sensorimotor regions increased, whereas connectivity declined in association cortices, refining and reinforcing the cortical hierarchy. Together, these robust and generalizable results establish that the sensorimotor-association axis of brain organization also encodes the dominant pattern of functional connectivity development.   
+
+*Note*: Global brain connectivity (GBC) and functional connectivity (FC) strength are used interchangeably in this documentation. 
 
 ### Project Lead
 Audrey Luo
@@ -289,7 +291,22 @@ We used Spearman’s rank correlations to quantify the association between S-A a
 
 To investigate how the development of edge-level connectivity differs across sensorimotor-association axis, we examined age-related changes in connectivity across edges by fitting a bivariate smooth interaction. The effect of S-A axis rank on edge-level age effects was modeled using a tensor product smooth. This analysis was performed for all datasets together in [/Rscripts/CombinedFigures/CombinedFigures.Rmd](https://github.com/PennLINC/network_replication/blob/main/CombinedFigures/CombinedFigures.Rmd#L413-L519). 
 
+### 8. Age-resolved analysis
+Lastly, we performed an age-resolved analysis to examine how the spatial distribution of FC strength aligns with the S-A axis across the broad age range studied. This analysis was performed to gain insight into whether the spatial patterning of functional connectivity across the cortical mantle becomes increasingly hierarchical through development. 
 
+ We first computed smooth functions from the GAM model for each region as described above. We then calculated the model-predicted FC strength at approximately 1-month intervals between age 5 and 22 years (as available per dataset), which corresponds to 200 unique ages. The values of FC strength across the cortex at each age was then correlated with the S-A axis rank of each brain region, quantifying the relationship between a region’s FC strength and its position on the S-A axis  and yielding age-specific correlations across the entire age window. 
+
+To determine a point estimate and 95% credible interval for age-specific correlation values, we used a Bayesian approach. In this approach, we first created multivariate normal distribution based on the normal distributions of each covariate’s coefficients. We then sampled from this posterior distribution 10,000 times to estimate uncertainty around the model parameters, fitted FC strength values, and ultimately the FC strength-to-SA-axis correlation value to generate credible intervals at each age. Specifically, using the posterior distribution of each region’s fitted GAM, we took 10,000 draws to generate 10,000 simulated age smooth functions and fitted values of FC strength for each region. For each draw, we correlated the fitted value of FC strength with S-A axis rank at each of the 200 ages. This generated a distribution of correlation values at each age, which was then used to determine the median correlation value and 95% credible interval of the correlation values for each age. 
+
+Region-wise Predicted Fitted GBC (FC strength) values Correlation with SA Axis was documented in `/Rscripts/<dataset>_scripts/Analysis_scripts/2_<dataset>_fitGAMs.Rmd` but actually computed via an Rscript and submitted as individual jobs:
+Rscript can be found at
+```
+/Rscripts/functions/main_analyses/fittedGBC_analysis.R
+```
+Bash scripts for individual jobs for each dataset can be found at
+```
+/Rscripts/<dataset>_scripts/Analysis_scripts/connMetrics_scripts/fittedGBC_analysis_<dataset>.sh
+``` 
 
 <br>
 
