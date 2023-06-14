@@ -1,4 +1,4 @@
 #!/bin/bash
 
-Rscript --save /cbica/projects/network_replication/adapted_Rscripts/NKI_scripts/Rscripts/NKI_makeConnMatrices.R
+Rscript --save /cbica/projects/network_replication/Rscripts/NKI_scripts/ConnMatrices_scripts/NKI_makeConnMatrices.R
 

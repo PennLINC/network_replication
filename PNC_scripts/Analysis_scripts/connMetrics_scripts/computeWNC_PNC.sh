@@ -1,3 +1,3 @@
 #!/bin/bash
 
-Rscript --save /cbica/projects/network_replication/adapted_Rscripts/computeWNC.R "PNC"
+Rscript --save /cbica/projects/network_replication/Rscripts/functions/main_analyses/computeWNC.R "PNC"

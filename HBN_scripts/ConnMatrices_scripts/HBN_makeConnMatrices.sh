@@ -1,3 +1,3 @@
 #!/bin/bash
 
-Rscript --save /cbica/projects/network_replication/adapted_Rscripts/HBN_scripts/ConnMatrices_scripts/HBN_makeConnMatrices.R
+Rscript --save /cbica/projects/network_replication/Rscripts/HBN_scripts/ConnMatrices_scripts/HBN_makeConnMatrices.R

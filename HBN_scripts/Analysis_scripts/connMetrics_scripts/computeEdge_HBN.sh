@@ -1,3 +1,3 @@
 #!/bin/bash
 
-Rscript --save /cbica/projects/network_replication/adapted_Rscripts/computeEdge.R "HBN"
+Rscript --save /cbica/projects/network_replication/Rscripts/functions/main_analyses/computeEdge.R "HBN"
