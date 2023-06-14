@@ -318,8 +318,8 @@ length(which(final_dem_df$gender=="F")) # 177 females
 NKI_FinalSample_withCUBIDS <- readRDS("/cbica/projects/network_replication/input/NKI/sample_selection/NKI_FinalSample_withCUBIDS_20221219.RData")  
 CUBIDS_files <- read.csv("/cbica/projects/network_replication/input/NKI/CUBIDS_csvs/NKI_with_orientation_files.csv")
 
-which(NKI_FinalSample_withCUBIDS[[1]]$sub == "A00027439")
-```
+#which(NKI_FinalSample_withCUBIDS[[1]]$sub == "A00027439")
+ 
 # 316 normal participants
 length(unique(NKI_FinalSample_withCUBIDS[[1]]$sub[c(which(!str_detect(NKI_FinalSample_withCUBIDS[[1]]$KeyParamGroup, "VARIANT")))]))
 #824 scans

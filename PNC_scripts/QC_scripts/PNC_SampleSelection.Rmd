@@ -410,7 +410,6 @@ length(unique(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(!is.na(PNC_FinalSample
 #1153 scans
 length(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(!is.na(PNC_FinalSample_withCUBIDS[[1]]$Variant)))])
  
-```
 # singleband: sub-1000393599
 # 1004 participants, 1004 scans
 PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "singleband")))]

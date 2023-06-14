@@ -53,7 +53,7 @@ library(ggpubr)
 
 ## 1) original sample
 - HBN T1 only has 384 HBN participants
-- need to double check sessions - seems like there were multiple scans per type of scan 
+
 ```{r qc_setup}
 demographics <- read.table("/cbica/projects/network_replication/input/HBN/sample_selection/participants.tsv", header=T)
 demographics <- dplyr::rename(demographics, sub = participant_id) # 2611 total
