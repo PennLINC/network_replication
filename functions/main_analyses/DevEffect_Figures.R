@@ -537,15 +537,13 @@ make_SM.middle.assoc.fig_centered <- function(atlas, metric, SA_position){
 }
 
 ## FIGURE: developmental trajectories for representative parcels
-# @param atlas A character string of atlas name 
 # @param metric A character string of connectivity metric (i.e. "GBC")
+# @param atlas A character string of atlas name 
 # @param parcels A character string of parcel(s) whose trajectory you want to plot (i.e. "SomMot", "visual")
 # @param color_hexcode A character string for color of geom_line
-# @param SA_rank A numeric for mean SA rank of parcels
-# @param ggseg_atlas A character for 
 make_repParcel.fig <- function(metric, atlas, parcels, color_hexcode) {
   df <- get(paste0("repParcels_", atlas))
-  smooth_fits <- df[[metric]][[parcels]]
+  smooth_fits <- df[[parcels]]
   main.plot <- ggplot(smooth_fits,aes(age,est,group=SA.axis_rank)) + 
     geom_line(data = smooth_fits, size=1.5, alpha = .6,  colour=color_hexcode) + ylim(-0.035, 0.055) + xlim(min(smooth_fits$age), max(smooth_fits$age)) + 
     #ylab("Global Brain Connectivity \n(Zero-Centered)") + xlab("Age") + 

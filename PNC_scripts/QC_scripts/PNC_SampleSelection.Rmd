@@ -101,7 +101,7 @@ demographics$age <- demographics$ageAtClinicalAssess1/12
 
  
 
-## 2) exclude participants with medical conditions affecting brain function, gross neurological abnormalities, and psychoactive medical medication (healthExcludev2)
+## 2) exclude participants with medical conditions affecting brain function, and gross neurological abnormalities (healthExcludev2)
 ```{r medical_exclusion}
 PNC_healthExclude <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/n1601_health_20170421.csv")
 medical_exclusion <- PNC_healthExclude$bblid[c(which(PNC_healthExclude$healthExcludev2==1))] #fyi, bblid in PNC_healthExclude corresponds to rbcid in demographics 
@@ -114,7 +114,7 @@ length(unique(collated_PNC.xcp_medExclusion$sub)) # N=1413, 4136 scans
 nrow(collated_PNC.xcp_medExclusion)
 ```
 
-## 3) include passing T1 QC (PNC dataset only includes scans that passed T1 QC)
+## 3) include passing T1 QC 
 ## 4) include meanFD < 0.3
 ```{r meanFD, cache=TRUE}
 

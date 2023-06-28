@@ -12,7 +12,7 @@ output: html_document
 schaefer200x7.parcel.labels <- read.csv("/cbica/projects/network_replication/software/rotate_parcellation/Schaefer2018_200Parcels_7Networks_order_FSLMNI152_1mm.Centroid_RAS.csv", header=TRUE)
 schaefer200x7.parcel.labels <- data.frame(schaefer200x7.parcel.labels$ROI.Name)
 names(schaefer200x7.parcel.labels) <- "label"
-#write.csv(schaefer200x7.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_regionlist.csv")
+write.csv(schaefer200x7.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_regionlist.csv")
 
 schaefer200x17.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x17_regionlist.csv", header = T)
 
@@ -23,19 +23,19 @@ schaefer200x7_reordered <- schaefer200x7.parcel.labels$label[index_schaefer200x7
 as.matrix(cbind(schaefer200x7_reordered, schaefer200x17.parcel.labels))
 schaefer200x7_reordered <- data.frame(schaefer200x7_reordered)
 names(schaefer200x7_reordered) <- "label"
-#write.csv(schaefer200x7_reordered, "/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_regionlist_reordered.csv")
+write.csv(schaefer200x7_reordered, "/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_regionlist_reordered.csv")
 
 # reorder community affiliation
 schaefer200x7_communityAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer200x7CommunityAffiliation.1D.csv", header=F)
 schaefer200x7_communityAffil_reordered <-schaefer200x7_communityAffil$V1[index_schaefer200x7to17$V1]
 as.matrix(cbind(schaefer200x7_communityAffil_reordered, schaefer200x7_communityAffil))
-#write.csv(schaefer200x7_communityAffil_reordered, "/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer200x7CommunityAffiliation.1D_reordered.csv")
+write.csv(schaefer200x7_communityAffil_reordered, "/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer200x7CommunityAffiliation.1D_reordered.csv")
 
 
 # reorder spherical coordinates
 schaefer200x7_coords <- read.csv("/cbica/projects/network_replication/software/rotate_parcellation/Schaefer2018_200Parcels_7Networks_order_FSLMNI152_1mm.Centroid_RAS.csv", header=TRUE)
 schaefer200x7_coords_reordered <-schaefer200x7_coords[index_schaefer200x7to17$V1,]
-#write.csv(schaefer200x7_coords_reordered, "/cbica/projects/network_replication/software/rotate_parcellation/Schaefer2018_200Parcels_7Networks_order_FSLMNI152_1mm.Centroid_RAS_reordered.csv")
+write.csv(schaefer200x7_coords_reordered, "/cbica/projects/network_replication/software/rotate_parcellation/Schaefer2018_200Parcels_7Networks_order_FSLMNI152_1mm.Centroid_RAS_reordered.csv")
 
  
 ```
@@ -47,7 +47,7 @@ schaefer200x7_coords_reordered <-schaefer200x7_coords[index_schaefer200x7to17$V1
 schaefer400x7.parcel.labels <- read.csv("/cbica/projects/network_replication/software/rotate_parcellation/Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.Centroid_RAS.csv", header=TRUE)
 schaefer400x7.parcel.labels <- data.frame(schaefer400x7.parcel.labels$ROI.Name)
 names(schaefer400x7.parcel.labels) <- "label"
-#write.csv(schaefer400x7.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/schaefer400x7_regionlist.csv")
+write.csv(schaefer400x7.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/schaefer400x7_regionlist.csv")
 
 schaefer400x17.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer400x17_regionlist.csv", header = T)
 
@@ -58,19 +58,19 @@ schaefer400x7_reordered <- schaefer400x7.parcel.labels$label[index_schaefer400x7
 as.matrix(cbind(schaefer400x7_reordered, schaefer400x17.parcel.labels))
 schaefer400x7_reordered <- data.frame(schaefer400x7_reordered)
 names(schaefer400x7_reordered) <- "label"
-#write.csv(schaefer400x7_reordered, "/cbica/projects/network_replication/atlases/parcellations/schaefer400x7_regionlist_reordered.csv")
+write.csv(schaefer400x7_reordered, "/cbica/projects/network_replication/atlases/parcellations/schaefer400x7_regionlist_reordered.csv")
 
 # reorder community affiliation
 schaefer400x7_communityAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer400x7CommunityAffiliation.1D.csv", header=F)
 schaefer400x7_communityAffil_reordered <-schaefer400x7_communityAffil$V1[index_schaefer400x7to17$V1]
 as.matrix(cbind(schaefer400x7_communityAffil_reordered, schaefer400x7_communityAffil))
-#write.csv(schaefer400x7_communityAffil_reordered, "/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer400x7CommunityAffiliation.1D_reordered.csv")
+write.csv(schaefer400x7_communityAffil_reordered, "/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer400x7CommunityAffiliation.1D_reordered.csv")
 
 
 # reorder spherical coordinates
 schaefer400x7_coords <- read.csv("/cbica/projects/network_replication/software/rotate_parcellation/Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.Centroid_RAS.csv", header=TRUE)
 schaefer400x7_coords_reordered <-schaefer400x7_coords[index_schaefer400x7to17$V1,]
-#write.csv(schaefer400x7_coords_reordered, "/cbica/projects/network_replication/software/rotate_parcellation/Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.Centroid_RAS_reordered.csv")
+write.csv(schaefer400x7_coords_reordered, "/cbica/projects/network_replication/software/rotate_parcellation/Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.Centroid_RAS_reordered.csv")
 schaefer400x7_reordered[107]
  
 ```
@@ -81,36 +81,36 @@ schaefer400x7_reordered[107]
 glasser.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/glasser360_regionlist.csv")
 glasser.parcel.labels <- data.frame(glasser.parcel.labels$x)
 names(glasser.parcel.labels) <- "label"
-#write.csv(glasser.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/glasser360_regionlist_final.csv", row.names = FALSE)
+write.csv(glasser.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/glasser360_regionlist_final.csv", row.names = FALSE)
  
 gordon.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/gordon_regionlist_xcp.csv", header=F)
 names(gordon.parcel.labels) <- "label"
-#write.csv(gordon.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/gordon_regionlist_final.csv", row.names = FALSE)
+write.csv(gordon.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/gordon_regionlist_final.csv", row.names = FALSE)
  
 schaefer200x7.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_regionlist_reordered.csv")
 schaefer200x7.parcel.labels <- data.frame(schaefer200x7.parcel.labels$label)
 names(schaefer200x7.parcel.labels) <- "label"
 schaefer200x7.parcel.labels$label <-  gsub('7Networks', "Networks", schaefer200x7.parcel.labels$label)
-#write.csv(schaefer200x7.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_regionlist_final.csv", row.names = FALSE)
+write.csv(schaefer200x7.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_regionlist_final.csv", row.names = FALSE)
  
 schaefer200x17.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x17_regionlist.csv")
 schaefer200x17.parcel.labels <- data.frame(schaefer200x17.parcel.labels$x)
 names(schaefer200x17.parcel.labels) <- "label"
 schaefer200x17.parcel.labels$label <- gsub("17Network", "Network", schaefer200x17.parcel.labels$label)
-#write.csv(schaefer200x17.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/schaefer200x17_regionlist_final.csv", row.names = FALSE)
+write.csv(schaefer200x17.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/schaefer200x17_regionlist_final.csv", row.names = FALSE)
  
 
 schaefer400x7.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer400x7_regionlist_reordered.csv")
 schaefer400x7.parcel.labels <- data.frame(schaefer400x7.parcel.labels$label)
 names(schaefer400x7.parcel.labels) <- "label"
 schaefer400x7.parcel.labels$label <-  gsub("7Networks", "Networks", schaefer400x7.parcel.labels$label)
-#write.csv(schaefer400x7.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/schaefer400x7_regionlist_final.csv", row.names = FALSE)
+write.csv(schaefer400x7.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/schaefer400x7_regionlist_final.csv", row.names = FALSE)
 
 schaefer400x17.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer400x17_regionlist.csv")
 schaefer400x17.parcel.labels <- data.frame(schaefer400x17.parcel.labels$x)
 names(schaefer400x17.parcel.labels) <- "label"
 schaefer400x17.parcel.labels$label <- gsub("17Network", "Network", schaefer400x17.parcel.labels$label)
-#write.csv(schaefer400x17.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/schaefer400x17_regionlist_final.csv", row.names = FALSE)
+write.csv(schaefer400x17.parcel.labels, "/cbica/projects/network_replication/atlases/parcellations/schaefer400x17_regionlist_final.csv", row.names = FALSE)
 ```
 
 
@@ -118,28 +118,28 @@ schaefer400x17.parcel.labels$label <- gsub("17Network", "Network", schaefer400x1
 ```{r}
 gordon_communityAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Gordon333_Network/gordon333CommunityAffiliation.1D.csv", header=F)
 names(gordon_communityAffil) <- "CommAffil"
-#write.csv(gordon_communityAffil, "/cbica/projects/network_replication/atlases/parcellations/Gordon333_Network/gordon333CommunityAffiliation_final.csv")
+write.csv(gordon_communityAffil, "/cbica/projects/network_replication/atlases/parcellations/Gordon333_Network/gordon333CommunityAffiliation_final.csv")
 
 schaefer200x7_communityAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer200x7CommunityAffiliation.1D_reordered.csv")
 schaefer200x7_communityAffil <- data.frame(schaefer200x7_communityAffil$x)
 names(schaefer200x7_communityAffil) <- "CommAffil"
-#write.csv(schaefer200x7_communityAffil, "/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer200x7CommunityAffiliation_final.csv")
+write.csv(schaefer200x7_communityAffil, "/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer200x7CommunityAffiliation_final.csv")
 
 
 schaefer200x17_communityAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Schaefer_17Network/schaefer200x17CommunityAffiliation.1D .csv", header=F)
 names(schaefer200x17_communityAffil) <- "CommAffil"
-#write.csv(schaefer200x17_communityAffil, "/cbica/projects/network_replication/atlases/parcellations/Schaefer_17Network/schaefer200x17CommunityAffiliation_final.csv")
+write.csv(schaefer200x17_communityAffil, "/cbica/projects/network_replication/atlases/parcellations/Schaefer_17Network/schaefer200x17CommunityAffiliation_final.csv")
 
 
 schaefer400x7_communityAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer400x7CommunityAffiliation.1D_reordered.csv")
 schaefer400x7_communityAffil <- data.frame(schaefer400x7_communityAffil$x)
 names(schaefer400x7_communityAffil) <- "CommAffil"
-#write.csv(schaefer400x7_communityAffil, "/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer400x7CommunityAffiliation_final.csv")
+write.csv(schaefer400x7_communityAffil, "/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer400x7CommunityAffiliation_final.csv")
 
 
 schaefer400x17_communityAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Schaefer_17Network/schaefer400x17CommunityAffiliation.1D .csv", header=F)
 names(schaefer400x17_communityAffil) <- "CommAffil"
-#write.csv(schaefer400x17_communityAffil, "/cbica/projects/network_replication/atlases/parcellations/Schaefer_17Network/schaefer400x17CommunityAffiliation_final.csv")
+write.csv(schaefer400x17_communityAffil, "/cbica/projects/network_replication/atlases/parcellations/Schaefer_17Network/schaefer400x17CommunityAffiliation_final.csv")
 
 
 ```

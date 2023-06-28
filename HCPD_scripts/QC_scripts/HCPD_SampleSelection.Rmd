@@ -50,14 +50,16 @@ participants <- gsub("HCD", "sub-", demographics$src_subject_id)
 collated_HCPD.xcp <- read.csv("/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_xcp_qc.csv")
 collated_HCPD.xcp$sub <- paste0("sub-", collated_HCPD.xcp$sub)
  
+
+
 # identify variants -- will eventually be removed due to short scan time. 
 # variants: sub-0577358 and sub-1529756 have different number of volumes for their runs (253 instead of 478 -- less than 6 minutes of scan time) and missing task scans. keep variants.
 #which(collated_HCPD.xcp$sub == "motionDVCorrFinal") 
 #which(collated_HCPD.xcp$sub == "0577358") 
 #which(collated_HCPD.xcp$sub == "1529756")
 #  sub-0577358 and sub-1529756: c(2280:2297, 6078:6101)
+  
  
-collated_HCPD.xcp[c(2280:2297, 6078:6101),]
 # fix variants' formatting
 for (i in c(1:nrow(collated_HCPD.xcp))) {
   if (str_detect(collated_HCPD.xcp$dir[i], "VARIANT")) { 
@@ -71,7 +73,10 @@ for (i in c(1:nrow(collated_HCPD.xcp))) {
 }
 collated_HCPD.xcp <- collated_HCPD.xcp[-c(2287, 2289, 2291, 2293, 2295, 2297,6079,6081,6083, 6085, 6087, 6089, 6091, 6093, 6095, 6097, 6099, 6101),]
   
-  
+ 
+which(str_detect(collated_HCPD.xcp$dir, "VARIANT"))
+collated_HCPD.xcp[c(2287:2290),]
+
 toDelete <- seq(2, nrow(collated_HCPD.xcp), 2)
 collated_HCPD.xcp <- collated_HCPD.xcp[-c(toDelete),]
  
@@ -150,6 +155,7 @@ length(unique(collated_HCPD.xcp_headMotion$sub)) # 2 additional participants exc
 nrow(collated_HCPD.xcp_headMotion) #5165 scans
 
 # write.csv(collated_HCPD.xcp_headMotion, "/cbica/projects/network_replication/input/HCPD/sample_selection/collated_HCPD.xcp_headMotion_20221224.csv")
+ 
 ```
 
 
@@ -161,16 +167,16 @@ nrow(collated_HCPD.xcp_headMotion) #5165 scans
 CUBIDS_summary <- read.csv("/cbica/projects/network_replication/input/HCPD/CUBIDS_csvs/HCPD_summary_20221201.csv")
 CUBIDS_summary <- CUBIDS_summary[,-c(1:4)]
 
-fMRIinclude <- collated_HCPD.xcp_headMotion %>% mutate(KeyGroup = paste0("datatype-func_direction-", dir, "_run-0", run, "_suffix-bold_task-", task))
+fMRIinclude <- collated_HCPD.xcp_headMotion %>% mutate(KeyGroup = paste0("datatype-func_direction-", dir, "_run-", run, "_suffix-bold_task-", task))
 
 # edit KeyGroup for variants
 fMRIinclude$KeyGroup[c(which(str_detect(fMRIinclude$sub, "0577358")))] <- paste0("acquisition-VARIANTNumVolumes_",fMRIinclude$KeyGroup[c(which(str_detect(fMRIinclude$sub, "0577358")))])
 fMRIinclude$KeyGroup[c(which(str_detect(fMRIinclude$sub, "1529756")))] <- paste0("acquisition-VARIANTNumVolumes_",fMRIinclude$KeyGroup[c(which(str_detect(fMRIinclude$sub, "1529756")))])
   
 fMRIinclude_CUBIDS <- merge(fMRIinclude, CUBIDS_summary[,c(2, 17, 22)], by ="KeyGroup")
-  
+fMRIinclude_CUBIDS
  
-
+ 
 fMRIinclude_CUBIDS <- fMRIinclude_CUBIDS %>% arrange(sub) %>% mutate(ScanTimeMinutes = NumVolumes*RepetitionTime/60) # sort dataframe by subject
 fMRIinclude_CUBIDS_ScanTime <- fMRIinclude_CUBIDS %>% group_by(sub) %>% summarise(ScanTime_Total = sum(ScanTimeMinutes))
 
