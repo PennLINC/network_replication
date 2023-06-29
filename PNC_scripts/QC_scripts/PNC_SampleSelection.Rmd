@@ -58,7 +58,7 @@ T1_QA <- T1_QA[, -c(which(names(T1_QA) == "bblid.y"))]
 names(T1_QA)[c(which(names(T1_QA) == "bblid.x"))] <- "bblid"
  
 # load and concatenate xcp QC information for all subjects
-collated_PNC.xcp <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_xcp_qc_20220103.csv")
+collated_PNC.xcp <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_xcp_qc_20230103.csv")
 collated_PNC.xcp$sub <- paste0("sub-", collated_PNC.xcp$sub)
  
  
