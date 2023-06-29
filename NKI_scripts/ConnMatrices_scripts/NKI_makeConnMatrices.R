@@ -11,12 +11,11 @@ library(magrittr, lib.loc="/cbica/home/luoau/Rlibs")
 print("This script 1) creates a list of ciftis to extract timeseries data from, and 2) concatenates timeseries and makes connectivity matrices ")
 
 # get subjects and filepaths
-NKI_filepaths  <- readRDS("/cbica/projects/network_replication/input/NKI/sample_selection/NKI_FinalSample_withCUBIDS_20221219.RData") 
+NKI_filepaths  <- readRDS("/cbica/projects/network_replication/input/NKI/sample_selection/NKI_FinalSample_withCUBIDS_20230629.RData") 
 participants <- unique(NKI_filepaths[[1]]$sub)
-demographics <- read.csv("/cbica/projects/network_replication/input/NKI/sample_selection/NKI_demographics_finalsample_20221219.csv")
-participants <- participants[which(participants %in% demographics$subject)]
-participants <- paste0("sub-", participants)
-NKI_CIFTIfiles <- NKI_filepaths[[2]][c(which(NKI_filepaths[[2]]$subject_namesDF %in% participants)),] # number of scans x number of atlases = 993 * 4 = 3972
+demographics <- read.csv("/cbica/projects/network_replication/input/NKI/sample_selection/NKI_demographics_finalsample_20230629.csv")
+participants <- participants[which(participants %in% demographics$sub)]
+NKI_CIFTIfiles <- NKI_filepaths[[2]][c(which(NKI_filepaths[[2]]$subject_namesDF %in% participants)),] # number of scans x number of atlases = 1031 * 4 = 4124
 
  
 # set up functions
