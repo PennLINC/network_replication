@@ -25,11 +25,8 @@ unzip -j "$file" "xcp_abcd/$sub/ses-*/func/*rest_acq-*_space-fsLR_atlas*Schaefer
 
 #get processed timeseries residuals
 mkdir /cbica/projects/network_replication/input/NKI/nki_xcp/qc_files/$sub
-unzip -j "$file" "xcp_abcd/$sub/ses-*/func/*_task-rest*fsLR*qc*.csv" -d /cbica/projects/network_replication/input/NKI/nki_xcp/qc_files/$sub  ###this unzips just the one file you want and puts it in the -d director
+unzip -j "$file" "xcp_abcd/$sub/ses-*/func/*_task-rest*fsLR*qc*.csv" -d /cbica/projects/network_replication/input/NKI/nki_xcp/qc_files  ###this unzips just the one file you want and puts it in the -d director
 
 datalad drop $file   ###drop the zip
 fi
-done
-
-#cd /cbica/projects/network_replication/input/NKI/nki_xcp/qc_files --description concatenated all the qc files into a csv
-#cat */*.csv > NKI_xcp_qc.csv
+done 

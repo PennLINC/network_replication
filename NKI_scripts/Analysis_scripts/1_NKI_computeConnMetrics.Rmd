@@ -17,7 +17,7 @@ knitr::opts_chunk$set(include = FALSE, eval = TRUE, echo = FALSE, warning = FALS
 ```{r loadParticipants}
 # load participants
  
-demographics <- read.csv("/cbica/projects/network_replication/input/NKI/sample_selection/NKI_demographics_finalsample_20221219.csv")
+demographics <- read.csv("/cbica/projects/network_replication/input/NKI/sample_selection/NKI_demographics_finalsample_20230629.csv")
 participants <- demographics$subject 
 
  
