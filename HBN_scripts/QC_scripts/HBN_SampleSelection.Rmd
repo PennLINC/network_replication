@@ -392,6 +392,8 @@ HBN_qc_filenames_atlases_restOnly <- list(HBN_FinalSample_CUBIDS[c(which(HBN_Fin
 
 saveRDS(HBN_qc_filenames_atlases, "/cbica/projects/network_replication/input/HBN/sample_selection/HBN_FinalSample_withCUBIDS_20230629.RData")
 saveRDS(HBN_qc_filenames_atlases_restOnly, "/cbica/projects/network_replication/input/HBN/sample_selection/fMRIinclude_CUBIDS_restOnly_20230629.RData")
+
+length(unique(HBN_qc_filenames_atlases_restOnly[[1]]$sub))
 ```
 
 

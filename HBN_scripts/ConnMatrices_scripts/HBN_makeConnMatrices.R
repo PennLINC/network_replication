@@ -12,7 +12,7 @@ library(tidyr, lib.loc="/cbica/home/luoau/Rlibs")
 print("This script 1) creates a list of ciftis to extract timeseries data from, and 2) concatenates timeseries and makes connectivity matrices ")
 
 # get subjects and filepaths
-HBN_CIFTI_summary  <- readRDS("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_FinalSample_withCUBIDS_20230223.RData") 
+HBN_CIFTI_summary  <- readRDS("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_FinalSample_withCUBIDS_20230629.RData") 
 participants <- unique(HBN_CIFTI_summary[[1]]$sub) 
 
 
