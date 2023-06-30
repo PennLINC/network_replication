@@ -15,7 +15,7 @@ datalad get sub*/*/*/*space-fsLR_den-91k_qc.csv -J 3 # double check this file
 
 for file in sub* ; do  ###for every subject zip file
 sub=${file%_*}  ###get just the sub-id (extract from the sub-number from the entire file name)
-if ! [ -d /cbica/projects/network_replication/input/HBN/HBN_xcp/qc_files/$sub ] ###if I have not already extracted the output and put it in this folder....
+if ! [ -d /cbica/projects/network_replication/input/HBN/HBN_xcp/$sub ] ###if I have not already extracted the output and put it in this folder....
 then
 
 #datalad get $file  ###get the subject folder
@@ -34,10 +34,9 @@ datalad drop $sub/*/*/*Schaefer217*ptseries.nii
 
 cp $sub/*/*/*Schaefer417*ptseries.nii /cbica/projects/network_replication/input/HBN/HBN_xcp/$sub
 datalad drop sub*/*/*/*Schaefer417*ptseries.nii  
+ 
 
-mkdir /cbica/projects/network_replication/input/HBN/HBN_xcp/qc_files/$sub
-
-cp $sub/*/*/*space-fsLR_den-91k_qc.csv /cbica/projects/network_replication/input/HBN/HBN_xcp/qc_files/$sub
+cp $sub/*/*/*space-fsLR_den-91k_qc.csv /cbica/projects/network_replication/input/HBN/HBN_xcp/qc_files/
 datalad drop $sub/*/*/*fsLR_den-91k_qc.csv
 
 echo ${sub}
@@ -45,12 +44,8 @@ fi
 done
 
 cd /cbica/projects/network_replication/input/HBN/HBN_xcp/
-rm -rf sub*/*peer* #didn't realize peer wasn't needed until after all files were copied over!
+rm -rf sub*/*peer* # peer isn't needed  
 
 cd qc_files
 rm -f sub*/*peer*
-
-# cd /cbica/projects/network_replication/input/HBN/qc_files --description concatenated all the qc files into a csv
-# cat sub*/*space-fsLR_den-91k_qc.csv > /cbica/projects/network_replication/input/HBN/sample_selection/HBN_xcp_qc.csv
-
  

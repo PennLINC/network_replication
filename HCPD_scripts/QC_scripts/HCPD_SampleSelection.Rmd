@@ -85,8 +85,6 @@ length(unique(collated_HCPD.xcp$sub)) # 652 participants before head motion QC
 
 ## 2) exclude participants with medical conditions affecting brain function, gross neurological abnormalities
 ```{r medical_exclusion}
-
-
 # cancer/leukemia
 cancer <- demographics$src_subject_id[c(which(demographics$medhis_2e == 1))] # HCD0641341
 
