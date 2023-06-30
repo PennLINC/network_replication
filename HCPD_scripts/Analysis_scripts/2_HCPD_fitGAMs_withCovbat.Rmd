@@ -7,11 +7,12 @@ output: html_document
 ```{r setup, include=FALSE}
 
 library(dplyr)
-source("/cbica/projects/network_replication/adapted_Rscripts/GAM_functions.R")
-source("/cbica/projects/network_replication/adapted_Rscripts/fitGAMs.R")
+source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/GAM_functions.R")
+source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/fitGAMs.R")
  
 dataset = "HCPD"
 knitr::opts_chunk$set(include = FALSE, eval = TRUE, echo = FALSE, warning = FALSE, message = FALSE) 
+ 
 ```
 
 # make connectivityMetric-demographics .csv's
@@ -395,64 +396,10 @@ gam.WNC.fitted.schaefer400x17 <- dev_fitted_covbat(schaefer400x17.parcel.labels,
 
  
 # Calculate Region-wise Predicted Fitted GBC values Correlation with SA Axis for Schaefer200 only 
-
+- submitted this as job on cubic due to heavy computation. See /HCPD_scripts/Analysis_scripts/connMetrics_scripts/fittedGBC_analysis_HCPD.sh
 ```{r}
 
 fits.SAaxis.posteriorcor_schaefer200.GBC <- make_fits.SAaxis.posteriorcor_covbat("GBC", "schaefer200", dataset)
 
 ```
 
-
-# Calculate Region-wise Developmental Derivatives
-```{r}
-
-# GBC GAMs age derivatives
-gam.GBC.derivatives.glasser <- dev_derivatives_covbat(glasser.parcel.labels, "GBC", "glasser", dataset)
-gam.GBC.derivatives.gordon <- dev_derivatives_covbat(gordon.parcel.labels, "GBC", "gordon", dataset)
-gam.GBC.derivatives.schaefer200 <- dev_derivatives_covbat(schaefer200x17.parcel.labels, "GBC", "schaefer200", dataset)
-gam.GBC.derivatives.schaefer400 <- dev_derivatives_covbat(schaefer400x17.parcel.labels, "GBC", "schaefer400", dataset)
-
- 
-# BNC GAMs age derivatives
-gam.BNC.derivatives.gordon <- dev_derivatives_covbat(gordon.parcel.labels, "BNC", "gordon", dataset)
-gam.BNC.derivatives.schaefer200x7 <- dev_derivatives_covbat(schaefer200x7.parcel.labels, "BNC", "schaefer200x7", dataset)
-gam.BNC.derivatives.schaefer200x17 <- dev_derivatives_covbat(schaefer200x17.parcel.labels, "BNC", "schaefer200x17", dataset)
-gam.BNC.derivatives.schaefer400x7 <- dev_derivatives_covbat(schaefer400x7.parcel.labels, "BNC", "schaefer400x7", dataset)
-gam.BNC.derivatives.schaefer400x17 <- dev_derivatives_covbat(schaefer400x17.parcel.labels, "BNC", "schaefer400x17", dataset)
-
-# WNC GAMs age derivatives
-gam.WNC.derivatives.gordon <- dev_derivatives_covbat(gordon.parcel.labels, "WNC", "gordon", dataset)
-gam.WNC.derivatives.schaefer200x7 <- dev_derivatives_covbat(schaefer200x7.parcel.labels, "WNC", "schaefer200x7", dataset)
-gam.WNC.derivatives.schaefer200x17 <- dev_derivatives_covbat(schaefer200x17.parcel.labels, "WNC", "schaefer200x17",dataset)
-gam.WNC.derivatives.schaefer400x7 <- dev_derivatives_covbat(schaefer400x7.parcel.labels, "WNC", "schaefer400x7", dataset)
-gam.WNC.derivatives.schaefer400x17 <- dev_derivatives_covbat(schaefer400x17.parcel.labels, "WNC", "schaefer400x17", dataset)
-  
-```
-
-
-
-# Calculate Region-wise Posterior Smooth Derivatives Correlation with SA Axis (computationally heavy - can compute on cluster)
-
-```{r}
-# GBC - Region-wise Posterior Smooth Derivatives Correlation with SA Axis
-deriv.SAaxis.posteriorcor_glasser.GBC <- make_deriv.SAaxis.posteriorcor_covbat("GBC", "glasser", dataset)
-deriv.SAaxis.posteriorcor_gordon.GBC <- make_deriv.SAaxis.posteriorcor_covbat("GBC", "gordon", dataset)
-deriv.SAaxis.posteriorcor_schaefer200.GBC <- make_deriv.SAaxis.posteriorcor_covbat("GBC", "schaefer200", dataset)
-deriv.SAaxis.posteriorcor_schaefer400.GBC <- make_deriv.SAaxis.posteriorcor_covbat("GBC", "schaefer400", dataset)
-
-# BNC - Region-wise Posterior Smooth Derivatives Correlation with SA Axis
-deriv.SAaxis.posteriorcor_gordon.BNC <- make_deriv.SAaxis.posteriorcor_covbat("BNC", "gordon", dataset)
-deriv.SAaxis.posteriorcor_schaefer200x7.BNC <- make_deriv.SAaxis.posteriorcor_covbat("BNC", "schaefer200x7", dataset)
-deriv.SAaxis.posteriorcor_schaefer400x7.BNC <- make_deriv.SAaxis.posteriorcor_covbat("BNC", "schaefer400x7", dataset)
-deriv.SAaxis.posteriorcor_schaefer200x17.BNC <- make_deriv.SAaxis.posteriorcor_covbat("BNC", "schaefer200x17", dataset)
-deriv.SAaxis.posteriorcor_schaefer400x17.BNC <- make_deriv.SAaxis.posteriorcor_covbat("BNC", "schaefer400x17", dataset)
-
-
-# WNC - Region-wise Posterior Smooth Derivatives Correlation with SA Axis
-deriv.SAaxis.posteriorcor_gordon.WNC <- make_deriv.SAaxis.posteriorcor_covbat("WNC", "gordon", dataset)
-deriv.SAaxis.posteriorcor_schaefer200x7.WNC <- make_deriv.SAaxis.posteriorcor_covbat("WNC", "schaefer200x7", dataset)
-deriv.SAaxis.posteriorcor_schaefer400x7.WNC <- make_deriv.SAaxis.posteriorcor_covbat("WNC", "schaefer400x7", dataset)
-deriv.SAaxis.posteriorcor_schaefer200x17.WNC <- make_deriv.SAaxis.posteriorcor_covbat("WNC", "schaefer200x17", dataset)
-deriv.SAaxis.posteriorcor_schaefer400x17.WNC <- make_deriv.SAaxis.posteriorcor_covbat("WNC", "schaefer400x17", dataset)
- 
-```
