@@ -4,26 +4,32 @@ author: "Audrey Luo"
 date: "2022-12-27"
 output: html_document
 ---
-
 # Sample Selection process
 1) original sample: N=1559, 4546 scans total, ages 8-22
-2) exclude participants with medical conditions affecting brain function, gross neurological abnormalities, and psychoactive medical medications: N=1413, 4136 scans 
-3) include passing T1 QC: N=1374, 4041 scans
-4) include meanFD < 0.3: N=1262, 3365 scans
-5) include scans with at least 7 minutes of scan time: N= 1207,  3310 scans (final sample), 646 females.
-Age: mean = 15, SD = 3.3
+2) exclude participants with medical conditions affecting brain function, gross neurological abnormalities, and psychoactive medical medications:  N=1413, 4136 scans 
+3) include passing T1 QC: N=1401, 4102 scans
+4) include meanFD < 0.3: N=1270, 3374 scans
+5) include scans with at least 7 minutes of scan time: N= 1213,  3317 scans (final sample), 647 females.
+
+range before: 3.60 to 33.25 min
+median before: 28.25 min
+mode before: 28.25 min
+
+range after: 8.35 to 33.25 min
+median after: 28.25 min
+
+Age: mean = 15.4, SD = 3.4
  
 Race
--  white = 551 - 45.7%
--  asian = 11 - 0.9%
--  black = 513 - 42.5%
--  other (native american) = 5 - 0.4%
--  missing = 0
--  mixed = 127 - 10.5%
- 
+- white = 554 - 45.7%
+- black = 517 - 42.6%
+- other (native american + hawaiian pi) = 4 + 1 - 0.41%
+- asian = 11 - 0.9%
+- missing = 0
+- mixed = 126 - 10.4%
  
 # Sample Selection for sensitivity analysis (rest only)
-5) include scans with at least 6 minutes of rest-only scan time (lowered threshold due to fewer total scans available after selecting for rest-only): N= 998, 1060 scans, 549 females 
+5) include scans with at least 6 minutes of rest-only scan time (lowered threshold due to fewer total scans available after selecting for rest-only): N= 1000, 1061 scans, 550 females 
 
 Notes:
 - mean FD is averaged across the scans in a given session
@@ -37,71 +43,70 @@ library(reshape)
 library(reshape2)
 library(MASS)
 library(stargazer)
-library(cifti)
 library(ggplot2)
 library(ggpubr)
+library(reticulate) 
+# reticulate::py_install("pandas") # install pandas for python code
+# reticulate::py_install("glob2")  # install glob2 for python code
   
 ```
 
-## 1) original sample: N=1559, 4546 scans, ages 8-22
+
+## Concatenate xcp qc files
+```{python}
+import pandas as pd
+import glob2 as glob
+import sys
+import os
+  
+path = "/cbica/projects/network_replication/input/PNC/pnc_xcp/qc_files"  
+all_files = glob.glob(os.path.join(path, "*.csv")) # load all qc csv filenames 
+
+df_from_each_file = (pd.read_csv(f, header=0) for f in all_files) # read csv's
+concatenated_df = pd.concat(df_from_each_file, ignore_index=True) # concatenate csv's
+
+path=r'/cbica/projects/network_replication/input/PNC/pnc_xcp/qc_files/'
+concatenated_df.to_csv(os.path.join(path,r'PNC_xcp_qc_concat_20230628.csv'),index=False) # save out concatenated qc files
+
+```
+
+
+
+
+## 1) original sample: N=1559, 4546 scans, ages 8-23
 ```{r qc_setup}
+# load concatenated qc files
+collated_PNC.xcp <- read.csv("/cbica/projects/network_replication/input/PNC/pnc_xcp/qc_files/PNC_xcp_qc_concat_20230628.csv")
+collated_PNC.xcp$sub <- paste0("sub-", collated_PNC.xcp$sub)
+length(unique(collated_PNC.xcp$sub)) # 1559 participants before head motion QC  
+nrow(collated_PNC.xcp) #4546 scans
+
+# make list of participant ID's to merge with demographics in this chunk  
+scanned_participants <- data.frame(unique(collated_PNC.xcp$sub))
+names(scanned_participants) <- "sub"
+
+# load T1 QA (updated file from Nathalia Esper 6/30/2023)
+T1_QA <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/T1_QA_PNC_NathaliaEsper_20230630.csv")
+T1_QA <- T1_QA %>% dplyr::rename(sub=ID)  
+T1_QA_PNC <- T1_QA[which(T1_QA$sub %in% collated_PNC.xcp$sub), ]
+
+# load demographics (updated file from informatics 6/7/2023)
+
 demographics <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/n1601_demographics_go1_20161212.csv")
 bblid_scanid <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/bblid_scanid_sub.csv")
 demographics <- merge(demographics, bblid_scanid, by ="scanid")
 demographics <- demographics %>% relocate(bblid, rbcid)
- 
-# load T1 QA
-T1_QA <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_t1qa_bertolero.csv")
-T1_QA <- merge(T1_QA, bblid_scanid, by ="scanid")
-T1_QA <- T1_QA %>% relocate(rbcid)
-T1_QA <- T1_QA[, -c(which(names(T1_QA) == "bblid.y"))]
-names(T1_QA)[c(which(names(T1_QA) == "bblid.x"))] <- "bblid"
- 
-# load and concatenate xcp QC information for all subjects
-collated_PNC.xcp <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_xcp_qc_20230103.csv")
-collated_PNC.xcp$sub <- paste0("sub-", collated_PNC.xcp$sub)
- 
- 
-# identify variants  
-#which(collated_PNC.xcp$meanFD == "91k") 
+demographics <- dplyr::rename(demographics, sub = rbcid) %>% mutate(age = ageAtScan1/12)
+demographics$sub <- paste0("sub-", demographics$sub)
 
-toDelete <- seq(2, nrow(collated_PNC.xcp), 2)
-collated_PNC.xcp <- collated_PNC.xcp[-c(toDelete),]
- 
-# fix variants' formatting
-for (i in c(1:nrow(collated_PNC.xcp))) {
-  if (collated_PNC.xcp$meanFD[i] == "91k") { 
-    collated_PNC.xcp$Variant[i] <-  collated_PNC.xcp$space[i]
-    collated_PNC.xcp$space[i] <- collated_PNC.xcp$den[i]
-    collated_PNC.xcp$den[i] <- collated_PNC.xcp$meanFD[i]
-    collated_PNC.xcp$meanFD[i] <- collated_PNC.xcp$relMeansRMSMotion[i]
-    collated_PNC.xcp$relMeansRMSMotion[i] <- collated_PNC.xcp$relMaxRMSMotion[i]
-    collated_PNC.xcp$relMaxRMSMotion[i] <- collated_PNC.xcp$meanDVInit[i]
-    collated_PNC.xcp$meanDVInit[i] <- collated_PNC.xcp$meanDVFinal[i]
-    collated_PNC.xcp$meanDVFinal[i] <- collated_PNC.xcp$nVolCensored[i]
-    collated_PNC.xcp$nVolCensored[i] <- collated_PNC.xcp$nVolsRemoved[i]
-    collated_PNC.xcp$nVolsRemoved[i] <- collated_PNC.xcp$motionDVCorrInit[i]
-    collated_PNC.xcp$motionDVCorrInit[i] <- collated_PNC.xcp$motionDVCorrFinal[i]
-    collated_PNC.xcp$motionDVCorrFinal[i] <- collated_PNC.xcp$X[i]
-    
-    #collated_PNC.xcp[i, 1] <- paste0(collated_PNC.xcp[i, 1], "VARIANT")
-  } else {
-    collated_PNC.xcp$Variant[i] <- "Non-Variant"
-  }
-}
-collated_PNC.xcp <- collated_PNC.xcp[,-c(which(names(collated_PNC.xcp) == "X"))]
-  
-length(unique(collated_PNC.xcp$sub)) # 1559 participants before head motion QC  
-
-# include only those that had usable BOLD data from fmriPREP
-demographics <- demographics[c(which(demographics$rbcid %in% gsub("sub-", "", unique(collated_PNC.xcp$sub)))),]
-participants <- demographics$rbcid
-demographics$age <- demographics$ageAtClinicalAssess1/12
+# include only kids who got scanned 
+demographics <- merge(scanned_participants, demographics, by = "sub")
+nrow(demographics) #1559 total 
+range(demographics$age, na.rm=TRUE) # age 8-23
 ```
-
  
-
-## 2) exclude participants with medical conditions affecting brain function, and gross neurological abnormalities (healthExcludev2)
+  
+## 2) exclude participants with medical conditions affecting brain function and gross neurological abnormalities (healthExcludev2)
 ```{r medical_exclusion}
 PNC_healthExclude <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/n1601_health_20170421.csv")
 medical_exclusion <- PNC_healthExclude$bblid[c(which(PNC_healthExclude$healthExcludev2==1))] #fyi, bblid in PNC_healthExclude corresponds to rbcid in demographics 
@@ -114,143 +119,157 @@ length(unique(collated_PNC.xcp_medExclusion$sub)) # N=1413, 4136 scans
 nrow(collated_PNC.xcp_medExclusion)
 ```
 
-## 3) include passing T1 QC 
+
+## 3) include passing T1 QC  
 ## 4) include meanFD < 0.3
 ```{r meanFD, cache=TRUE}
 
-t1_exclusion <- T1_QA$rbcid[c(which(T1_QA$t1Exclude ==1))]
-collated_PNC.xcp_T1Exclusion <- collated_PNC.xcp_medExclusion[-c(which(gsub("sub-", "", collated_PNC.xcp_medExclusion$sub) %in% t1_exclusion)),]
-length(unique(collated_PNC.xcp_T1Exclusion$sub)) # N=1374, 4041 scans
-nrow(collated_PNC.xcp_T1Exclusion)
+# exclude T1 based on `tri.nary_score_without_rater.2`==0
+# note that trinary score == 2 means good, == 0 means bad, == 1 means in between. 
+T1_QA_PNC <- T1_QA_PNC %>% mutate(T1_exclude = ifelse(tri.nary_score_without_rater.2==0, 1, 0))
+collated_PNC.xcp_T1Exclusion <- merge(collated_PNC.xcp_medExclusion, dplyr::select(T1_QA_PNC, sub, tri.nary_score_without_rater.2, T1_exclude), by = "sub")
+collated_PNC.xcp_T1Exclusion <- collated_PNC.xcp_T1Exclusion[-c(which(collated_PNC.xcp_T1Exclusion$T1_exclude==1)),]
+
+length(unique(collated_PNC.xcp_T1Exclusion$sub)) # N=1401 after excluding participants with failed T1
+nrow(collated_PNC.xcp_T1Exclusion) # 4102 scans
+
+
+collated_PNC.xcp_headMotion <- collated_PNC.xcp_T1Exclusion[c(which(collated_PNC.xcp_T1Exclusion$meanFD < 0.3)),]
+length(unique(collated_PNC.xcp_headMotion$sub)) # N=1270 after excluding meanFD >= 0.3  
+nrow(collated_PNC.xcp_headMotion) #3374 scans  
  
-collated_PNC.xcp_headMotion <- collated_PNC.xcp_T1Exclusion %>% filter(meanFD < 0.3) 
-
-length(unique(collated_PNC.xcp_headMotion$sub)) # after excluding meanFD >= 0.3, 112 additional participants excluded. N=1262, 3365 scans
-nrow(collated_PNC.xcp_headMotion) 
-
-# write.csv(collated_PNC.xcp_headMotion, "/cbica/projects/network_replication/input/PNC/sample_selection/collated_PNC.xcp_headMotion_20220103.csv")
+write.csv(collated_PNC.xcp_headMotion, "/cbica/projects/network_replication/input/PNC/sample_selection/collated_PNC.xcp_headMotion_20230629.csv")
 ```
+
 
 
 ## 5) include scans with at least 7 minutes of scan time
 ```{r scan_time}
 # Calculate scan time for each subject 
-collated_PNC.xcp_headMotion <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/collated_PNC.xcp_headMotion_20220103.csv")
+collated_PNC.xcp_headMotion <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/collated_PNC.xcp_headMotion_20230629.csv")
 # load cubids summary and files csv
 CUBIDS_summary <- read.csv("/cbica/projects/network_replication/input/PNC/CUBIDS_csvs/PNC_FINAL_summary.csv")
 CUBIDS_summary <- CUBIDS_summary[,-c(1:4)]
 CUBIDS_files <- read.csv("/cbica/projects/network_replication/input/PNC/CUBIDS_csvs/PNC_FINAL_files.csv")
 
-
+# filter only for fMRI
 CUBIDS_files_func <- CUBIDS_files[-c(which(str_detect(CUBIDS_files$FilePath, "dwi")), which(str_detect(CUBIDS_files$FilePath, "anat")), which(str_detect(CUBIDS_files$FilePath, "fmap"))),]
-#unique(CUBIDS_files_func$KeyGroup) 
-CUBIDS_files_func <- CUBIDS_files_func %>% mutate(sub=str_extract(FilePath, "sub-[0-9]*")) %>% mutate(task =
-ifelse(str_detect(FilePath, "rest"), gsub("acq-", "", gsub("task-", "", str_extract(FilePath, "task-rest_acq-[a-z0-9]*"))), gsub("task-", "", str_extract(FilePath, "task-[a-z0-9]*"))))
  
-                                                         
-CUBIDS_files_func <- CUBIDS_files_func %>% mutate(sub_task=paste0(sub, "_", task))
-collated_PNC.xcp_headMotion <- collated_PNC.xcp_headMotion %>%  mutate(sub_task= ifelse(str_detect(task, "rest"), paste0(sub, "_", task, "_", str_extract(Variant, "singleband|100")), paste0(sub, "_", task)))
+# make columns for subject ID, site, task 
+CUBIDS_files_func <- CUBIDS_files_func %>% 
+  mutate(sub=str_extract(FilePath, "sub-[0-9]*")) %>% 
+  mutate(task =ifelse(str_detect(FilePath, "rest"),  # if the task is a rest scan, the filename looks like task-rest_acq-*
+                      gsub("acq-", "", gsub("task-", "", str_extract(FilePath, "task-rest_acq-[a-z0-9]*"))), 
+                      gsub("task-", "", str_extract(FilePath, "task-[a-z0-9]*"))))
  
+CUBIDS_files_func <- CUBIDS_files_func %>% 
+  mutate(sub_task=paste0(sub, "_", task))
+collated_PNC.xcp_headMotion <- collated_PNC.xcp_headMotion %>%  
+  mutate(sub_task= ifelse(str_detect(task, "rest"), paste0(sub, "_", task, "_", str_extract(acq, "singleband|100")), paste0(sub, "_", task)))
  
- 
-fMRIinclude_CUBIDS <- merge(collated_PNC.xcp_headMotion, CUBIDS_files_func[,c(16, 21, 30)], by ="sub_task")
-
-fMRIinclude_CUBIDS <- fMRIinclude_CUBIDS %>% arrange(sub) %>% mutate(ScanTimeMinutes = NumVolumes*RepetitionTime/60) # sort dataframe by subject
+  
+fMRIinclude_CUBIDS <- merge(collated_PNC.xcp_headMotion, dplyr::select(CUBIDS_files_func, NumVolumes, RepetitionTime, sub_task), by ="sub_task")
+  
+# sort dataframe by subject and calculate scan time
+fMRIinclude_CUBIDS <- fMRIinclude_CUBIDS %>% arrange(sub) %>% mutate(ScanTimeMinutes = NumVolumes*RepetitionTime/60) 
 fMRIinclude_CUBIDS_ScanTime <- fMRIinclude_CUBIDS %>% group_by(sub) %>% summarise(ScanTime_Total = sum(ScanTimeMinutes))
  
  
-range(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total)
+range(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) # 3.60 to 33.25
+median(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) # 28.25 min
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+getmode(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) #28.25 min
   
-###
-subject_scanTime_exclude <- fMRIinclude_CUBIDS_ScanTime$sub[c(which(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total < 7))] # exclude participants with less than 7 min of scan time
+# exclude participants with less than 7 min of scan time
+subject_scanTime_exclude <- fMRIinclude_CUBIDS_ScanTime$sub[c(which(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total < 7))] 
   
-fMRIinclude_CUBIDS_scanTime <- fMRIinclude_CUBIDS[-c(which(fMRIinclude_CUBIDS$sub %in% subject_scanTime_exclude)),]  
-PNC_FinalSample_CUBIDS <- fMRIinclude_CUBIDS_scanTime
-length(unique(PNC_FinalSample_CUBIDS$sub)) # N=1207 (excluded 55 participants)
-nrow(PNC_FinalSample_CUBIDS) # 3310 scans
+fMRIinclude_CUBIDS<- fMRIinclude_CUBIDS[-c(which(fMRIinclude_CUBIDS$sub %in% subject_scanTime_exclude)),]  
 
-# saveRDS(PNC_FinalSample_CUBIDS, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_20230103.RData")
+length(unique(fMRIinclude_CUBIDS$sub)) # N=1213  
+nrow(fMRIinclude_CUBIDS) # 3317 scans
 
-fMRIinclude_CUBIDS <- readRDS("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_20230103.RData")
- 
+
 fMRIinclude_CUBIDS_ScanTime <- fMRIinclude_CUBIDS %>% group_by(sub) %>% summarise(ScanTime_Total = sum(ScanTimeMinutes))
  
 max(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) # 33 minutes and 15 seconds
+range(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) # 8.35 33.25
+median(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) # 28.25
+
 fMRIinclude_CUBIDS_NumVols <- fMRIinclude_CUBIDS %>% group_by(sub) %>% summarise(NumVols_Total = sum(NumVolumes))
 max(fMRIinclude_CUBIDS_NumVols$NumVols_Total) # 665 volumes
+
+saveRDS(fMRIinclude_CUBIDS, "/cbica/projects/network_replication/input/PNC/sample_selection/fMRIinclude_CUBIDS_20230629.RData")
+# saveRDS(PNC_FinalSample_CUBIDS, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_20230103.RData") # OLD
+ 
 ```
  
 
 # Final Demographics Dataframe
 ```{r final_participant_list}
 
-PNC_FinalSample_CUBIDS <- readRDS("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_20230103.RData")
-demographics$sub <- paste0("sub-", demographics$rbcid)
-final_participants <- data.frame(unique(PNC_FinalSample_CUBIDS$sub))
+fMRIinclude_CUBIDS <- readRDS("/cbica/projects/network_replication/input/PNC/sample_selection/fMRIinclude_CUBIDS_20230629.RData")
+final_participants <- data.frame(unique(fMRIinclude_CUBIDS$sub))
 names(final_participants) <- "sub"  
 final_demographics <- merge(demographics, final_participants, by = "sub")
  
-
 ## include average of relMeansRMSMotion and meanFD across the acquisitions included in calculating connectivity matrix 
 # for each subject, take average relMeansRMSMotion and meanFD
 subject <- c()
 ses <- c()
-avg_relMeansRMSMotion_vec <- c()
 avg_meanFD_vec <- c()
-for(i in c(1:length(unique(PNC_FinalSample_CUBIDS$sub)))){
-  indices <- which(PNC_FinalSample_CUBIDS$sub == unique(PNC_FinalSample_CUBIDS$sub)[i])
-  avg_RMS <- mean(as.numeric(PNC_FinalSample_CUBIDS$relMeansRMSMotion[indices]))
-  avg_meanFD <- mean(as.numeric(PNC_FinalSample_CUBIDS$meanFD[indices]))
-  subject <- append(subject, unique(PNC_FinalSample_CUBIDS$sub)[i])
-  ses <- append(ses,PNC_FinalSample_CUBIDS$ses[indices[1]])
-  avg_relMeansRMSMotion_vec <- append(avg_relMeansRMSMotion_vec, avg_RMS)
+for(i in c(1:length(unique(fMRIinclude_CUBIDS$sub)))){
+  indices <- which(fMRIinclude_CUBIDS$sub == unique(fMRIinclude_CUBIDS$sub)[i])
+  avg_meanFD <- mean(as.numeric(fMRIinclude_CUBIDS$meanFD[indices]))
+  subject <- append(subject, unique(fMRIinclude_CUBIDS$sub)[i])
+  ses <- append(ses,fMRIinclude_CUBIDS$ses[indices[1]])
   avg_meanFD_vec <- append(avg_meanFD_vec, avg_meanFD)
 }  
 
-PNC_avgMotion <- data.frame(cbind(subject, ses, avg_meanFD_vec, avg_relMeansRMSMotion_vec))
-names(PNC_avgMotion) <- c("sub", "ses", "meanFD_avgSes", "relMeansRMSMotion_avgSes")
+PNC_avgMotion <- data.frame(cbind(subject, ses, avg_meanFD_vec))
+names(PNC_avgMotion) <- c("sub", "ses", "meanFD_avgSes")
 PNC_avgMotion$meanFD_avgSes <- as.numeric(PNC_avgMotion$meanFD_avgSes)
-PNC_avgMotion$relMeansRMSMotion_avgSes <- as.numeric(PNC_avgMotion$relMeansRMSMotion_avgSes)
 final_dem_df <- merge(final_demographics, PNC_avgMotion, by="sub")
    
-# write.csv(final_dem_df, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_20230103.csv")
-  
-length(which(final_dem_df$sex=="2"))
 
-final_dem_df_pnc <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_20230103.csv")
- 
-unique(final_dem_df_pnc$race)
+length(which(final_dem_df$sex=="3")) # 647 females 
+
+unique(final_dem_df$race)
 #"1= White; 
 # 2= BlackBlack/African American; 
 # 3= US_India/Alaska Native;
 # 4=Asian; 
 # 5=More Than One Race; 
-# 6=Hawaiian/Pacific; 
-# 9=Unknown/Unreported"
+# 6=Hawaiian/Pacific;  
  
-length(which(final_dem_df_pnc$race==5))/nrow(final_dem_df_pnc)
-# white = 551 - 45.7%
+length(which(final_dem_df$race==6))/nrow(final_dem_df)
+# white = 554 - 45.7%
+# black = 517 - 42.6%
+# other (native american + hawaiian pi) = 4 + 1 - 0.41%
 # asian = 11 - 0.9%
-# black = 513 - 42.5%
-# other (native american) = 5 - 0.4%
 # missing = 0
-# mixed = 127 - 10.5%
+# mixed = 126 - 10.4%
 
-sd(final_dem_df_pnc$age) # mean = 15, SD = 3.3
+mean(final_dem_df$age) # mean = 15.4, SD = 3.4
+
+write.csv(final_dem_df, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_20230629.csv")
+
+# write.csv(final_dem_df, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_20230103.csv")
 ```
 
 
 # Final CIFTI File list (for creating connectivity matrices)
 ```{r ciftiFile_list, include=FALSE, cache=TRUE}
   
-PNC_FinalSample_CUBIDS <- readRDS("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_20230103.RData")
+fMRIinclude_CUBIDS <- readRDS("/cbica/projects/network_replication/input/PNC/sample_selection/fMRIinclude_CUBIDS_20230629.RData")
  
+# extract name of .nii.gz file
 CUBIDS_files_func <- CUBIDS_files_func %>% mutate(filenames = str_extract(FilePath, "sub-[0-9]*_.*"))
 
-PNC_FinalSample_CUBIDS <- merge(PNC_FinalSample_CUBIDS, CUBIDS_files_func[,c(30,31)], by="sub_task")
+fMRIinclude_CUBIDS <- merge(fMRIinclude_CUBIDS, CUBIDS_files_func[,c(30,31)], by="sub_task")
 
-#PNC_FinalSample_CUBIDS$Variant <- gsub("Non-Variant", NA, PNC_FinalSample_CUBIDS$Variant)
- 
 atlases <- c("Glasser", "Gordon", "Schaefer217", "Schaefer417")
 subject_list <- list()
 ptseries_filenames <- list()
@@ -259,21 +278,21 @@ atlas_list <- list()
 variant_list <- list()
 task_scanInfo_list <- list()
  
-for (i in c(1:nrow(PNC_FinalSample_CUBIDS))) {
+for (i in c(1:nrow(fMRIinclude_CUBIDS))) {
   for (j in c(1:length(atlases))){
   atlas <- atlases[j]
-  subject <- PNC_FinalSample_CUBIDS$sub[i]
-  task <- PNC_FinalSample_CUBIDS$task[i]
-  task_scanInfo <- gsub("[0-9]_", "", str_extract(PNC_FinalSample_CUBIDS$sub_task[i], "[0-9]_.*"))
-  variant <- PNC_FinalSample_CUBIDS$Variant[i]
-  #file <- PNC_FinalSample_CUBIDS$filenames[i]
+  subject <- fMRIinclude_CUBIDS$sub[i]
+  task <- fMRIinclude_CUBIDS$task[i]
+  task_scanInfo <- gsub("[0-9]_", "", str_extract(fMRIinclude_CUBIDS$sub_task[i], "[0-9]_.*"))
+  variant <- fMRIinclude_CUBIDS$acq[i]
+  #file <- fMRIinclude_CUBIDS$filenames[i]
   
   atlas_list <- append(atlas, atlas_list)
   subject_list <- append(subject, subject_list)
   task_list <- append(task, task_list)
   variant_list <- append(variant, variant_list)
   task_scanInfo_list <- append(task_scanInfo, task_scanInfo_list)
-  if (is.na(variant)) {
+  if (variant == "") {
     file <- paste0(subject, "_ses-PNC1_task-", task, "_space-fsLR_atlas-", atlas, "_den-91k_bold.ptseries.nii")
   ptseries_filenames <- append(file, ptseries_filenames)
     
@@ -283,7 +302,7 @@ for (i in c(1:nrow(PNC_FinalSample_CUBIDS))) {
   }
   
   }
-  print(paste(subject, "done", i, "/", nrow(PNC_FinalSample_CUBIDS)))
+  print(paste(subject, "done", i, "/", nrow(fMRIinclude_CUBIDS)))
 }
 
  
@@ -296,29 +315,32 @@ variant_namesDF <- as.data.frame(do.call(rbind, variant_list))
 atlas_namesDF <- as.data.frame(do.call(rbind, atlas_list))
   
 file_paths <- as.data.frame(cbind(subject_namesDF, task_namesDF, task_scanInfo_namesDF, atlas_namesDF, variant_namesDF, filenamesDF))
-names(file_paths) <- c("subject", "task", "task_scanInfo","atlas", "Variant", "filenames")
+names(file_paths) <- c("subject", "task", "task_scanInfo","atlas", "acq", "filenames")
  
- 
-file_paths <- file_paths %>% mutate(path = paste0("/cbica/projects/network_replication/input/PNC/pnc_xcp/", subject, "/", filenames)) %>% mutate(sub_task= ifelse(str_detect(task, "rest"), paste0(subject, "_", task, "_", str_extract(Variant, "singleband|100")), paste0(subject, "_", task)))
+# make file paths (note that "singleband" and "100" will appear in filenames)
+file_paths <- file_paths %>% mutate(path = paste0("/cbica/projects/network_replication/input/PNC/pnc_xcp/", subject, "/", filenames)) %>% mutate(sub_task= ifelse(str_detect(task, "rest"), paste0(subject, "_", task, "_", str_extract(acq, "singleband|100")), paste0(subject, "_", task)))
    
 file_paths_restOnly <- file_paths[which(file_paths$task == "rest"),] 
 
-file_paths_FINAL <- merge(file_paths, PNC_FinalSample_CUBIDS[, c(1, 2)], by = "sub_task") 
-file_paths_restOnly_FINAL <- merge(file_paths_restOnly, PNC_FinalSample_CUBIDS[, c(1, 2)], by = "sub_task") 
+file_paths_FINAL <- merge(file_paths, fMRIinclude_CUBIDS[, c(1, 2)], by = "sub_task") 
+file_paths_restOnly_FINAL <- merge(file_paths_restOnly, fMRIinclude_CUBIDS[, c(1, 2)], by = "sub_task") 
  
-length(unique(file_paths_FINAL$sub_task)) # 3310 scans 
-length(unique(file_paths_FINAL$subject)) #N=1207
-length(unique(file_paths_restOnly_FINAL$sub_task)) # 1068 scans
+length(unique(file_paths_FINAL$sub_task)) # 3317 scans 
+length(unique(file_paths_FINAL$subject)) #N=1213
+length(unique(file_paths_restOnly_FINAL$sub_task)) # 1069 scans
   
-PNC_qc_filenames_atlases <- list(PNC_FinalSample_CUBIDS, file_paths_FINAL) 
+PNC_qc_filenames_atlases <- list(fMRIinclude_CUBIDS, file_paths_FINAL) 
 which(!file.exists(PNC_qc_filenames_atlases[[2]]$path))
-PNC_qc_filenames_atlases_restOnly <- list(PNC_FinalSample_CUBIDS[c(which(PNC_FinalSample_CUBIDS$task=="rest")),], file_paths_restOnly_FINAL) 
+
+
+PNC_qc_filenames_atlases_restOnly <- list(fMRIinclude_CUBIDS[c(which(fMRIinclude_CUBIDS$task=="rest")),], file_paths_restOnly_FINAL) 
  
+saveRDS(PNC_qc_filenames_atlases, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_CIFTI_20230629.RData")
+saveRDS(PNC_qc_filenames_atlases_restOnly, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_CIFTI_20230629.RData")
+
 # saveRDS(PNC_qc_filenames_atlases, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_CIFTI_20230103.RData")
 # saveRDS(PNC_qc_filenames_atlases_restOnly, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_CIFTI_restOnly_20230103.RData")
 
-
- 
 ```
 
 
@@ -327,14 +349,14 @@ PNC_qc_filenames_atlases_restOnly <- list(PNC_FinalSample_CUBIDS[c(which(PNC_Fin
 - include participants with at least 6 minutes of rest-only scan time
 ```{r}
 
-PNC_qc_filenames_atlases_restOnly <- readRDS("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_CIFTI_restOnly_20230103.RData")
+PNC_qc_filenames_atlases_restOnly <- readRDS("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_CIFTI_20230629.RData")
 
 ### Include participants with >= 7 minutes of resting state fMRI
 fMRIinclude_CUBIDS_ScanTime_restOnly <- PNC_qc_filenames_atlases_restOnly[[1]] %>% group_by(sub) %>% summarise(ScanTime_Total = sum(ScanTimeMinutes))
  
 range(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total)
 fMRIinclude_CUBIDS_ScanTime_restOnly$sub[c(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total < 6))]
-length(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total >= 6)) # 998
+length(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total >= 6)) #1000
 
 max(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total) #11.2 minutes
 
@@ -351,297 +373,42 @@ PNC_FinalSample_CUBIDS_restOnly <- merge(PNC_FinalSample_CUBIDS_restOnly, final_
 names(PNC_qc_filenames_atlases_restOnly[[2]])[2] <- "sub"
 PNC_qc_filenames_atlases_restOnly_final <- merge(PNC_qc_filenames_atlases_restOnly[[2]], final_participants_restOnly)
 PNC_qc_filenames_atlases_restOnly_final <- list(PNC_FinalSample_CUBIDS_restOnly, PNC_qc_filenames_atlases_restOnly_final)
-dim(PNC_qc_filenames_atlases_restOnly_final[[1]]) #1060 scans
+dim(PNC_qc_filenames_atlases_restOnly_final[[1]]) #1061 scans
+
+saveRDS(PNC_qc_filenames_atlases_restOnly_final,"/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_restOnly_20230629.RData")
+
 #saveRDS(PNC_qc_filenames_atlases_restOnly_final,"/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_restOnly_20230203.RData")
  
  
-demographics <- demographics %>% mutate(sub = paste0("sub-", rbcid))
 final_demographics_restOnly <- merge(demographics, final_participants_restOnly, by = "sub")
  
-
 ## include average of relMeansRMSMotion and meanFD across the acquisitions included in calculating connectivity matrix 
 # for each subject, take average relMeansRMSMotion and meanFD
 subject <- c()
 ses <- c()
-avg_relMeansRMSMotion_vec <- c()
 avg_meanFD_vec <- c()
 for(i in c(1:length(unique(PNC_FinalSample_CUBIDS_restOnly$sub)))){
   indices <- which(PNC_FinalSample_CUBIDS_restOnly$sub == unique(PNC_FinalSample_CUBIDS_restOnly$sub)[i])
-  avg_RMS <- mean(as.numeric(PNC_FinalSample_CUBIDS_restOnly$relMeansRMSMotion[indices]))
   avg_meanFD <- mean(as.numeric(PNC_FinalSample_CUBIDS_restOnly$meanFD[indices]))
   subject <- append(subject, unique(PNC_FinalSample_CUBIDS_restOnly$sub)[i])
   ses <- append(ses,PNC_FinalSample_CUBIDS_restOnly$ses[indices[1]])
-  avg_relMeansRMSMotion_vec <- append(avg_relMeansRMSMotion_vec, avg_RMS)
   avg_meanFD_vec <- append(avg_meanFD_vec, avg_meanFD)
 }  
  
 
-PNC_avgMotion <- data.frame(cbind(subject, ses, avg_meanFD_vec, avg_relMeansRMSMotion_vec))
-names(PNC_avgMotion) <- c("sub", "ses", "meanFD_avgSes", "relMeansRMSMotion_avgSes")
+PNC_avgMotion <- data.frame(cbind(subject, ses, avg_meanFD_vec))
+names(PNC_avgMotion) <- c("sub", "ses", "meanFD_avgSes")
 PNC_avgMotion$meanFD_avgSes <- as.numeric(PNC_avgMotion$meanFD_avgSes)
-PNC_avgMotion$relMeansRMSMotion_avgSes <- as.numeric(PNC_avgMotion$relMeansRMSMotion_avgSes)
 final_dem_restOnly_df <- merge(final_demographics_restOnly, PNC_avgMotion, by="sub")
-   
+  
+length(unique(final_dem_restOnly_df$sub)) # N=1000
+length(which(final_dem_restOnly_df$sex==2)) #550
+
+write.csv(final_dem_restOnly_df, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_restOnly_20230629.csv")
+ 
 # write.csv(final_dem_restOnly_df, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_restOnly_20230103.csv")
- 
-#forgot to include age -- adding age
-final_dem_restOnly_df <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_restOnly_20230103.csv")
-final_dem_df <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_20230103.csv")
-final_dem_df_age <- data.frame(cbind(final_dem_df$sub, final_dem_df$age))
-names(final_dem_df_age) <- c("sub", "age")
-final_dem_restOnly_df<- merge(final_dem_restOnly_df, final_dem_df_age, by="sub")
-#write.csv(final_dem_restOnly_df, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_restOnly_20230103.csv")
-
-length(which(final_dem_restOnly_df$sex==2)) #549
 
 ```
 
-
-# Variants
-```{r}
-
-PNC_FinalSample_withCUBIDS <- readRDS("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_CIFTI_20230103.RData")  
-CUBIDS_files <- read.csv("/cbica/projects/network_replication/input/PNC/CUBIDS_csvs/PNC_with_orientation_files.csv")
-unique(PNC_FinalSample_withCUBIDS[[1]]$Variant)
-
-
-# 1035 normal participants
-length(unique(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(!is.na(PNC_FinalSample_withCUBIDS[[1]]$Variant)))]))
-#1153 scans
-length(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(!is.na(PNC_FinalSample_withCUBIDS[[1]]$Variant)))])
- 
-# singleband: sub-1000393599
-# 1004 participants, 1004 scans
-PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "singleband")))]
-length(unique(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "singleband")))])) # 48 participants  
-length(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "singleband")))]) # 48 scans 
-PNC_FinalSample_withCUBIDS[[1]][c(which(PNC_FinalSample_withCUBIDS[[1]]$sub == "sub-1000393599")),]
-
- 
-# singlebandVARIANTNumVolumes: sub-1039936647
-# 15 participants, 15 scans 
-PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "singlebandVARIANTNumVolumes")))]
-length(unique(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "singlebandVARIANTNumVolumes")))])) # 15 participants  
-length(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "singlebandVARIANTNumVolumes")))]) # 15 scans 
-PNC_FinalSample_withCUBIDS[[1]][c(which(PNC_FinalSample_withCUBIDS[[1]]$sub == "sub-1039936647")),]
-
-# 100 (seems like number of volumes): sub-1057423710
-# 64 participants, 64 scans
-PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "100")))]
-length(unique(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "100")))])) # 64 participants  
-length(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "100")))]) # 64 scans 
-PNC_FinalSample_withCUBIDS[[1]][c(which(PNC_FinalSample_withCUBIDS[[1]]$sub == "sub-1057423710")),]
-
-# VARIANTNoFmap: sub-1060668554
-# 26 participants, 63 scans
-PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "VARIANTNoFmap")))]
-length(unique(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "VARIANTNoFmap")))])) # 26 participants  
-length(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "VARIANTNoFmap")))]) # 63 scans 
-PNC_FinalSample_withCUBIDS[[1]][c(which(PNC_FinalSample_withCUBIDS[[1]]$sub == "sub-1060668554")),]
-
-# singlebandVARIANTNoFmap: sub-1060668554
-# 15 participants, 15 scans
-PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "singlebandVARIANTNoFmap")))]
-length(unique(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "singlebandVARIANTNoFmap")))])) # 15 participants  
-length(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "singlebandVARIANTNoFmap")))]) # 15 scans 
-PNC_FinalSample_withCUBIDS[[1]][c(which(PNC_FinalSample_withCUBIDS[[1]]$sub == "sub-1060668554")),]
-
-# 100VARIANTNoFmap: sub-1110356321
-# 2 participants, 2 scans
-PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "100VARIANTNoFmap")))]
-length(unique(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "100VARIANTNoFmap")))])) # 2 participants  
-length(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "100VARIANTNoFmap")))]) # 2 scans 
-PNC_FinalSample_withCUBIDS[[1]][c(which(PNC_FinalSample_withCUBIDS[[1]]$sub == "sub-1110356321")),]
-
-# VARIANTNumVolumes: sub-1039936647
-# 52 participants, 53 scans
-PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "VARIANTNumVolumes")))]
-length(unique(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "VARIANTNumVolumes")))])) # 52 participants  
-length(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "VARIANTNumVolumes")))]) # 53 scans 
-PNC_FinalSample_withCUBIDS[[1]][c(which(PNC_FinalSample_withCUBIDS[[1]]$sub == "sub-1039936647")),]
-
-# VARIANTNumVolumesNoFmap: sub-1228855311
-# 6 participants, 7 scans
-PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "VARIANTNumVolumesNoFmap")))]
-length(unique(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "VARIANTNumVolumesNoFmap")))])) # 6 participants  
-length(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "VARIANTNumVolumesNoFmap")))]) # 7 scans 
-PNC_FinalSample_withCUBIDS[[1]][c(which(PNC_FinalSample_withCUBIDS[[1]]$sub == "sub-1228855311")),]
-
-# VARIANTObliquity: sub-2544376434
-# 1 participant, 2 scans
-PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "VARIANTObliquity")))]
-length(unique(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "VARIANTObliquity")))])) # 1 participant
-length(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "VARIANTObliquity")))]) # 2 scans 
-PNC_FinalSample_withCUBIDS[[1]][c(which(PNC_FinalSample_withCUBIDS[[1]]$sub == "sub-2544376434")),]
-
-# singlebandVARIANTObliquity: sub-2544376434
- PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "singlebandVARIANTObliquity")))]
-length(unique(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "singlebandVARIANTObliquity")))])) # 1 participant
-length(PNC_FinalSample_withCUBIDS[[1]]$sub[c(which(str_detect(PNC_FinalSample_withCUBIDS[[1]]$Variant, "singlebandVARIANTObliquity")))]) # 1 scans 
-PNC_FinalSample_withCUBIDS[[1]][c(which(PNC_FinalSample_withCUBIDS[[1]]$sub == "sub-2544376434")),]
-
- 
- 
-# T1 variants
-CUBIDS_files <- read.csv("/cbica/projects/network_replication/input/PNC/CUBIDS_csvs/PNC_FINAL_files.csv")
-CUBIDS_files_anat <- CUBIDS_files[c(which(str_detect(CUBIDS_files$FilePath, "anat"))),]
-
- 
-unique(CUBIDS_files_anat$KeyParamGroup)
-
-# acquisition-refacedVARIANTEchoTimeRepetitionTime_datatype-anat_suffix-T1w__1: sub-2450905343
-# 1 participant
-filepaths <- CUBIDS_files_anat$FilePath[c(which(str_detect(CUBIDS_files_anat$KeyParamGroup, "refacedVARIANTEchoTimeRepetitionTime_datatype")))]
-sub <- str_extract(filepaths, "sub-[0-9]+")
-subs_t1_variant <- sub[c(which(sub %in% PNC_FinalSample_withCUBIDS[[1]]$sub))]
-length(which(sub %in% PNC_FinalSample_withCUBIDS[[1]]$sub)) # 1 participant
-length(which(PNC_FinalSample_withCUBIDS[[1]]$sub %in% subs_t1_variant)) #  3 scans
-
-# acquisition-refacedVARIANTObliquity_datatype-anat_suffix-T1w__1: sub-3321849919
-filepaths <- CUBIDS_files_anat$FilePath[c(which(str_detect(CUBIDS_files_anat$KeyParamGroup, "refacedVARIANTObliquity_datatype")))]
-sub <- str_extract(filepaths, "sub-[0-9]+")
-subs_t1_variant <- sub[c(which(sub %in% PNC_FinalSample_withCUBIDS[[1]]$sub))]
-length(which(sub %in% PNC_FinalSample_withCUBIDS[[1]]$sub)) # 1 participant
-length(which(PNC_FinalSample_withCUBIDS[[1]]$sub %in% subs_t1_variant)) #  3 scans
- 
-```
-
-
-
-# Extras
-
-## Figures
-Distribution of scan time per participant (N=629) -- before excluding for scan time
-```{r numVolumes_fig_setup, include=FALSE, cache=TRUE, fig.height=6, fig.width=6}
-
-  
-length(which(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total == max(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total))) #58
-length(which(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total < max(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) & fMRIinclude_CUBIDS_ScanTime$ScanTime_Total >= 20)) # 971
-length(which(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total < 20 & fMRIinclude_CUBIDS_ScanTime$ScanTime_Total >= 15)) # 91
-length(which(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total < 15 & fMRIinclude_CUBIDS_ScanTime$ScanTime_Total >= 10)) # 84
-length(which(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total < 10)) # 57
-length(which(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total == min(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total))) # 1
- 
- 
-ScanTime_fig_PNC <- ggplot(fMRIinclude_CUBIDS_ScanTime, aes(x=ScanTime_Total)) +
-  geom_histogram(position="identity", alpha=0.5, bins=40, colour = "#24A6A8FF", fill = "#24A6A8FF") + 
-  theme_classic(base_size=16) +  
-  annotate(geom="text", x=7, y=800, label="Total N = 1262", color="black", fontface="bold", size=5, hjust=0) + 
-  annotate(geom="text", x=7, y=750, label="Tasks: idemo, nback, rest \nTR = 3000ms", color="black", fontface="bold", size=5, hjust=0) +
-  annotate(geom="text", x=7, y=700, label="Max Scan Time 33.25 min: N = 58", color="black", size=5, hjust=0) + 
-  annotate(geom="text", x=7, y=650, label="20 min <= Scan Time < 33.25 min: N = 971", color="black", size=5, hjust=0) +
-  annotate(geom="text", x=7, y=600, label="15 min <= Scan Time < 20 min: N = 91", color="black", size=5, hjust=0) +
-  annotate(geom="text", x=7, y=550, label="10 min <= Scan Time < 15 min: N = 84", color="black", size=5, hjust=0) +
-  annotate(geom="text", x=7, y=500, label="Scan Time < 10 min: N = 57", color="black", size=5, hjust=0) + 
-  annotate(geom="text", x=7, y=450, label="Minimum Scan Time 3.6 min: N = 1", color="black", size=5 , hjust=0) + 
-  ggtitle("Histogram of Total Scan Time (in Minutes): \n PNC")
- ScanTime_fig_PNC
-
-
- 
- 
-#rest only
-fMRIinclude_CUBIDS_restOnly <- fMRIinclude_CUBIDS %>% filter(task=="rest")
-fMRIinclude_CUBIDS_ScanTime_restOnly <- fMRIinclude_CUBIDS_restOnly %>% group_by(sub) %>% summarise(ScanTime_Total = sum(ScanTimeMinutes))
-length(unique(fMRIinclude_CUBIDS_restOnly$sub))
-
-length(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total == max(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total))) #62
-length(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total < max(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total) & fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total >= 7)) # 8
-length(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total < 7 & fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total >= 6)) # 973
-length(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total < 6)) # 8
-length(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total == min(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total))) #1
-
- 
-ScanTime_fig_PNC_restOnly <- ggplot(fMRIinclude_CUBIDS_ScanTime_restOnly, aes(x=ScanTime_Total)) +
-  geom_histogram(position="identity", alpha=0.5, bins=25, colour = "#24A6A8FF", fill = "#24A6A8FF") + 
-  theme_classic(base_size=16) +  
-  annotate(geom="text", x=7, y=800, label="Total N = 1051", color="black", fontface="bold", size=5, hjust=0) + 
-  annotate(geom="text", x=7, y=750, label="Rest Only \nTR = 3000ms", color="black", fontface="bold", size=5, hjust=0) +
-  annotate(geom="text", x=7, y=700, label="Max Scan Time 11.2 min: N = 62", color="black", size=5, hjust=0) + 
-  annotate(geom="text", x=7, y=650, label="7 min <= Scan Time < 11.2 min: N = 8", color="black", size=5, hjust=0) +
-  annotate(geom="text", x=7, y=600, label="6 min <= Scan Time < 7 min: N = 973", color="black", size=5, hjust=0) +
-  annotate(geom="text", x=7, y=550, label="Scan Time < 6 min: N = 8", color="black", size=5, hjust=0) + 
-  annotate(geom="text", x=7, y=500, label="Minimum Scan Time 3.1 min: N = 1", color="black", size=5 , hjust=0) + 
-  ggtitle("Histogram of Total Scan Time \nRest Only (in Minutes): \nPNC")
- 
-
-### not finished with number of task and rest runs 
- 
-# number of participants with all task and rest runs -- 2 guessing, 2 carit, 1 emotion, 4 rest
-length(which(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total > 42)) # Participants with all task and rest runs available: N = 454 
- 
-fMRIinclude_scans <- fMRIinclude_CUBIDS %>% group_by(sub) %>% count(task, sort=TRUE)
-
-# need to count up how many people are missing rest, carit, guessing, and emotion
- 
- 
-missing_rest_scans <- setdiff(unique(fMRIinclude_scans$sub), fMRIinclude_scans$sub[which(fMRIinclude_scans$task == "rest")])
-missing_rest_rows <- cbind(missing_rest_scans, rep("rest", length(missing_rest_scans)), rep(0, length(missing_rest_scans)))
-
-missing_carit_scans <- setdiff(unique(fMRIinclude_scans$sub), fMRIinclude_scans$sub[which(fMRIinclude_scans$task == "carit")])
-missing_carit_rows <- cbind(missing_carit_scans, rep("carit", length(missing_carit_scans)), rep(0, length(missing_carit_scans)))
-
-
-missing_guessing_scans <- setdiff(unique(fMRIinclude_scans$sub), fMRIinclude_scans$sub[which(fMRIinclude_scans$task == "guessing")])
-missing_guessing_rows <- cbind(missing_guessing_scans, rep("guessing", length(missing_guessing_scans)), rep(0, length(missing_guessing_scans)))
-
-missing_emotion_scans <- setdiff(unique(fMRIinclude_scans$sub), fMRIinclude_scans$sub[which(fMRIinclude_scans$task == "emotion")])
-missing_emotion_rows <- cbind(missing_emotion_scans, rep("emotion", length(missing_emotion_scans)), rep(0, length(missing_emotion_scans)))
-
-
-
-fMRIinclude_scans_ALL <- as.data.frame(rbind(missing_rest_rows, missing_carit_rows, missing_guessing_rows, missing_emotion_rows))
-names(fMRIinclude_scans_ALL) <- names(fMRIinclude_scans)
-fMRIinclude_scans_ALL$n <- as.integer(fMRIinclude_scans_ALL$n)
-
-fMRIinclude_scans_ALL <- rbind(fMRIinclude_scans, fMRIinclude_scans_ALL)
- 
-scans_per_task_fig <- ggplot(fMRIinclude_scans_ALL, aes(x=n, color=task, fill=task)) +
-  geom_bar(alpha=0.5, position="dodge", bins=5, width=0.5) + 
-  theme_classic() +
-  ggtitle("Numbers of task or rest runs per participant") +
-  annotate(geom="text", x=2, y=650, label="Total scans for carit and guessing = 2 \n Total scans for emotion = 1 \n Total scans for rest = 4", color="black", fontface="bold") +
-  ylim(0, 750)
-# most people have the right number of scans 
-```
-
-```{r ScanTime_fig_PNC, cache=TRUE, fig.height=5, fig.width=5}
-
-ScanTime_fig_PNC
-```
-
-```{r ScanTime_fig_restOnly_PNC, cache=TRUE, fig.height=4, fig.width=5}
- 
-ScanTime_fig_PNC_restOnly
-
-```
- 
-
-```{r scatterplot_meanFD_RMSmotion, fig.height=3, fig.width=3}
- 
-ggplot(collated_PNC.xcp, aes(x=as.numeric(meanFD), y=as.numeric(relMeansRMSMotion))) + 
-  geom_point(alpha = 0.7, size = 2, color = '#88419D') + 
-  theme(axis.text.x=element_text(size=32), axis.title.x=element_text(size=28), axis.title.y=element_text(size=28)) + 
-  ggtitle("MeanFD vs relMeansRMSMotion in PNC") + 
-  labs(x="MeanFD", y="RelMeansRMSMotion", shape = "", color = "") + 
-  theme_classic() +
-  stat_cor(method = "spearman",size = 4, r.digits = 3)
-```
-
- 
-
- 
-
-```{r scans_per_task_fig, include=FALSE, cache=TRUE}
-(scans_per_task_fig <- ggplot(fMRIinclude_scans_ALL, aes(x=n, color=task, fill=task)) +
-  geom_bar(alpha=0.5, position="dodge", bins=5, width=0.5) + 
-  theme_classic() +
-  ggtitle("PNC: Numbers of task or rest runs per participant") +
-  annotate(geom="text", x=2, y=650, label="Total scans for carit and guessing = 2 \n Total scans for emotion = 1 \n Total scans for rest = 4", color="black", fontface="bold") +
-  ylim(0, 750))
-
-```
-
-  
 
  

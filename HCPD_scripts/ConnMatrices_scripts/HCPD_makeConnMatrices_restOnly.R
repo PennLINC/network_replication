@@ -50,14 +50,15 @@ listCifti <- function(subject, list_filepath, ciftiFiles_df){
   index_filepath <- which(str_detect(list_filepath, subject))
   atlas <- gsub("atlas-", "", str_extract(list_filepath[index_filepath], "atlas-[a-zA-Z0-9]+"))
   task <- gsub("task-", "", str_extract(list_filepath[index_filepath], "task-[a-z]+"))
+  run <- gsub("_", "", str_extract(list_filepath[index_filepath], "_run-[0-9]{2}")) # need to add "run" since HCP-D has multiple runs per rest scan for some participants
   direction <- gsub("dir-", "", str_extract(list_filepath[index_filepath], "dir-[A-Z]{2}"))
+  
   cifti_list <- lapply(list_filepath[index_filepath], read_cifti) # creates list of cifti files in atlas order for each participant
-  cifti_names <- as.data.frame(cbind(subject, atlas, task, direction))
-  cifti_names <- cifti_names %>% mutate(ciftiList_names = paste0(subject, "_", task, "_", direction, "_", atlas))
+  cifti_names <- as.data.frame(cbind(subject, atlas, task, direction, run))
+  cifti_names <- cifti_names %>% mutate(ciftiList_names = paste0(subject, "_", task, "_", run,  "_", direction, "_", atlas))
   names(cifti_list) <- cifti_names$ciftiList_names
   print(paste(which(participants == subject), "/", length(participants), "Cifti list done for", subject))
-  saveRDS(cifti_list, paste0("/cbica/projects/network_replication/input/HCPD/connMatricesData/cifti_lists_restOnly/", subject, "_timeseriesTask_Rest.RData"))
-  
+  saveRDS(cifti_list, paste0("/cbica/projects/network_replication/input/HCPD/connMatricesData/cifti_lists/", subject, "_timeseriesTaskandRest.RData"))
   
   if(length(cifti_list) == 0){
     print(paste(subject, "missing cifti_list"))

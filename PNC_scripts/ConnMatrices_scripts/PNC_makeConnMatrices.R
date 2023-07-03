@@ -14,9 +14,7 @@ print("This script 1) creates a list of ciftis to extract timeseries data from, 
 # get subjects and filepaths
 PNC_CIFTI_summary  <- readRDS("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_CIFTI_20230103.RData") 
 participants <- unique(PNC_CIFTI_summary[[1]]$sub)
-#demographics <- read.csv("/cbica/projects/network_replication/input/PNC/PNC_demographics.csv")
-
-
+ 
 # paths to all the cifti files (task idemo, frac2back, rest for each atlas)
 PNC_CIFTI_filepaths <- PNC_CIFTI_summary[[2]]$path
 

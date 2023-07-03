@@ -7,29 +7,28 @@ output: html_document
 # Sample Selection process
 1) original sample: N=2255, ages 5-21, 6915 scans total
 2) exclude participants with medical conditions affecting brain function, gross neurological abnormalities: no medical exclusion in HBN
-3) include passing T1 QC: N=1662, 5090 scans
-4) include meanFD < 0.3: N=1311, 3275 scans 
-
-5) include scans with at least 7 minutes of scan time: N=1122, 3086 scans (final sample), 438 females
+3) include passing T1 QC: N=1669, 5111 scans
+4) include meanFD < 0.3: N=1315, 3283 scans
+5) include scans with at least 7 minutes of scan time: N=1126, 3094 scans (final sample), 439 females
  
-range before: 3.333333 to 23.333333 min
-median before: 13.33333 min  
+range before: 3.33 to 23.33 min
+median before: 13.33 min  
 
-range after: 8.333333 23.333333
-median after: 18.33333
+range after: 8.33 to 23.33
+median after: 18.33 
 
 Race
-- White = 498 - 44.4%
-- Asian = 33 - 2.9%%
-- Black = 139 - 12.4%
+- White = 498 - 44.2%
+- Asian = 33 - 2.93%
+- Black = 139 - 12.34%
 - Other (native american, hawaiin pacific islander) = 29 - 2.6%
-- missing = 6 + 141 = 147 - 13.1% +  (unknown and NA)
-- Mixed = 167 - 14.9%
+- missing = 6 + 143 = 149 - 13.2% +  (unknown and blank)
+- Mixed = 169 - 15.0%
 - Hispanic = 109 - 9.7%
 
 
 # Sample Selection for sensitivity analysis (rest only)
-5) include scans with at least 6 minutes of rest-only scan time (lowered threshold due to fewer total scans available after selecting for rest-only): N=841 , 1475 scans, 342 females 
+5) include scans with at least 6 minutes of rest-only scan time (lowered threshold due to fewer total scans available after selecting for rest-only): N=842 , 1477 scans, 342 females 
 
 Notes:
 - mean FD is averaged across the scans in a given session
@@ -73,7 +72,6 @@ concatenated_df.to_csv(os.path.join(path,r'HBN_xcp_qc_concat_20230628.csv'),inde
  
 ## 1) Original sample
 ```{r qc_setup}
-
 # load concatenated qc files
 collated_HBN.xcp <- read.csv("/cbica/projects/network_replication/input/HBN/HBN_xcp/qc_files/HBN_xcp_qc_concat_20230628.csv")
 collated_HBN.xcp$sub <- paste0("sub-", collated_HBN.xcp$sub)
@@ -81,37 +79,11 @@ length(unique(collated_HBN.xcp$sub)) # 2255 participants before head motion QC
 nrow(collated_HBN.xcp) #6915 scans
  
 
-# load T1 QA (updated file from informatics 6/28/2023)
-T1_QA <- read.delim("/cbica/projects/network_replication/input/HBN/sample_selection/study-HBN_desc-T1_qc.tsv")
-T1_QA <- T1_QA %>% dplyr::rename(sub=participant_id) 
+# load T1 QA (updated file from Nathalia Esper 6/30/2023)
+T1_QA <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/T1_QA_HBN_NathaliaEsper_20230630.csv")
+T1_QA <- T1_QA %>% dplyr::rename(sub=ID)  
 T1_QA_HBN <- T1_QA[which(T1_QA$sub %in% collated_HBN.xcp$sub), ]
-T1_QA_HBN <- T1_QA_HBN %>% mutate(T1_exclude = ifelse(qc_determination=="Fail", 1, 0))
 
-# Check and remove duplicates from T1 QA: they are either identical, or one is "Artifact" and the other is "Fail" (in which case, we exclude)
-subs <- c() # vector of duplicated subjects
-concordance <- c() # vector indicating whether the T1_exclusion status are identical between two duplicates
-qc_rating <- c() # vector containing the qc_determination of each duplicate 
-
-T1_duplicates <- T1_QA_HBN[c(which(duplicated(T1_QA_HBN$sub))),]  
-for (i in 1:nrow(T1_duplicates)) {
-  qc_statuses <- T1_QA_HBN$T1_exclude[c(which(T1_QA_HBN$sub==T1_duplicates$sub[i]))]
-  subs <- append(subs, T1_duplicates$sub[i])
-  qc_rating <- rbind(qc_rating,T1_QA_HBN$qc_determination[c(which(T1_QA_HBN$sub==T1_duplicates$sub[i]))])
-  if (length(unique(qc_statuses)) == 1) {
-    concordance <- append(concordance, "Identical")
-  } else {
-    concordance <- append(concordance, "Different")
-  }
-}
-duplicated_T1 <- data.frame(cbind(subs, concordance, qc_rating))
-# redo T1 exclusion status to be 0 for duplicated subjects that have one "Artifact" and one "Fail" qc_determination (i.e. all the duplicates that have different qc_determination statuses)
-exclude_due_to_fail_artifact <- duplicated_T1$subs[c(which(duplicated_T1$concordance=="Different"))] 
-T1_QA_HBN$T1_exclude[c(which(T1_QA_HBN$sub %in% exclude_due_to_fail_artifact))] <- 1
-
-# remove T1 duplicates
-T1_QA_HBN <- T1_QA_HBN[!duplicated(T1_QA_HBN$sub), ] 
-nrow(T1_QA_HBN) # 1765 unique participants with T1 rating
- 
 # load demographics (updated file from informatics 6/7/2023)
 demographics <- read.table("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_Demographics.tsv", sep="\t", header=TRUE)
 demographics <- dplyr::rename(demographics, sub = participant_id) # 2611 total
@@ -129,16 +101,19 @@ collated_HBN.xcp_medExclusion <- collated_HBN.xcp
 ## 4) include meanFD < 0.3
 ```{r meanFD, cache=TRUE}
 
-collated_HBN.xcp_T1Exclusion <- merge(collated_HBN.xcp_medExclusion, dplyr::select(T1_QA_HBN, sub, qc_determination, T1_exclude), by = "sub")
+# exclude T1 based on `tri.nary_score_without_rater.2`==0
+# note that trinary score == 2 means good, == 0 means bad, == 1 means in between. 
+T1_QA_HBN <- T1_QA_HBN %>% mutate(T1_exclude = ifelse(tri.nary_score_without_rater.2==0, 1, 0))
+collated_HBN.xcp_T1Exclusion <- merge(collated_HBN.xcp_medExclusion, dplyr::select(T1_QA_HBN, sub, tri.nary_score_without_rater.2, T1_exclude), by = "sub")
 collated_HBN.xcp_T1Exclusion <- collated_HBN.xcp_T1Exclusion[-c(which(collated_HBN.xcp_T1Exclusion$T1_exclude==1)),]
 
-length(unique(collated_HBN.xcp_T1Exclusion$sub)) # N=1662 after excluding participants with failed T1
-nrow(collated_HBN.xcp_T1Exclusion) # 5090 scans
+length(unique(collated_HBN.xcp_T1Exclusion$sub)) # N=1669 after excluding participants with failed T1
+nrow(collated_HBN.xcp_T1Exclusion) # 5111 scans
 
 
 collated_HBN.xcp_headMotion <- collated_HBN.xcp_T1Exclusion[c(which(collated_HBN.xcp_T1Exclusion$meanFD < 0.3)),]
-length(unique(collated_HBN.xcp_headMotion$sub)) # N=1311 after excluding meanFD >= 0.3  
-nrow(collated_HBN.xcp_headMotion) #3275 scans  
+length(unique(collated_HBN.xcp_headMotion$sub)) # N=1315 after excluding meanFD >= 0.3  
+nrow(collated_HBN.xcp_headMotion) #3283 scans  
  
 write.csv(collated_HBN.xcp_headMotion, "/cbica/projects/network_replication/input/HBN/sample_selection/collated_HBN.xcp_headMotion_20230629.csv")
 ```
@@ -220,8 +195,8 @@ median(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) #  13.33333 min
 subject_scanTime_exclude <- fMRIinclude_CUBIDS_ScanTime$sub[c(which(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total < 7))] # exclude participants with less than 7 min of scan time
   
 fMRIinclude_CUBIDS <- fMRIinclude_CUBIDS[-c(which(fMRIinclude_CUBIDS$sub %in% subject_scanTime_exclude)),]  
-length(unique(fMRIinclude_CUBIDS$sub)) # N=1122
-nrow(fMRIinclude_CUBIDS) # 3086 scans  
+length(unique(fMRIinclude_CUBIDS$sub)) # N=1126
+nrow(fMRIinclude_CUBIDS) # 3094 scans  
 
 saveRDS(fMRIinclude_CUBIDS, "/cbica/projects/network_replication/input/HBN/sample_selection/fMRIinclude_CUBIDS_20230629.RData")
     
@@ -274,21 +249,21 @@ final_dem_df <- merge(dplyr::select(final_demographics, sub, study_site, age, se
  
  write.csv(final_dem_df, "/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_202230629.csv")
 
-final_dem_df <- final_dem_df_hbn[-c(which(is.na(final_dem_df$age))),]
-#unique(final_dem_df$race) 
-length(which(final_dem_df$race=="Hispanic"))/nrow(final_dem_df)
-# White = 498 - 44.4%
-# Asian = 33 - 2.9%%
-# Black = 139 - 12.4%
+ 
+unique(final_dem_df$race) 
+length(which(final_dem_df$race==""))/nrow(final_dem_df)
+# White = 498 - 44.2%
+# Asian = 33 - 2.93%
+# Black = 139 - 12.34%
 # Other (native american, hawaiin pacific islander) = 29 - 2.6%
-# missing = 6 + 141 = 147 - 13.1% +  (unknown and NA)
-# Mixed = 167 - 14.9%
+# missing = 6 + 143 = 149 - 13.2% +  (unknown and blank)
+# Mixed = 169 - 15.0%
 # Hispanic = 109 - 9.7%
 
 mean(final_dem_df$age) # mean = 11.6
 sd(final_dem_df$age) # sd= 3.6
 
-length(which(final_dem_df$sex=="Female")) # 438 females
+length(which(final_dem_df$sex=="Female")) # 439 females
 length(which(final_dem_df$sex=="Female"))/nrow(final_dem_df) # 39.0%
  
 ```
@@ -379,12 +354,12 @@ file_paths_FINAL <- merge(file_paths, HBN_FinalSample_CUBIDS[, c(2, ncol(HBN_Fin
 file_paths_restOnly_FINAL <- merge(file_paths_restOnly, HBN_FinalSample_CUBIDS[, c(2, ncol(HBN_FinalSample_CUBIDS))], by = "sub_site_task_run")
  
 # main analysis final N's
-length(unique(file_paths_FINAL$sub_site_task_run)) # 3086 scans 
-length(unique(file_paths_FINAL$subject)) #N=1122
+length(unique(file_paths_FINAL$sub_site_task_run)) # 3094 scans 
+length(unique(file_paths_FINAL$subject)) #N=1126
   
 # sensitivity analysis final N's
-length(unique(file_paths_restOnly_FINAL$sub_site_task_run)) # 1622 scans
-length(unique(file_paths_restOnly_FINAL$subject)) #N=988
+length(unique(file_paths_restOnly_FINAL$sub_site_task_run)) # 1626 scans
+length(unique(file_paths_restOnly_FINAL$subject)) #N=991
   
 HBN_qc_filenames_atlases <- list(HBN_FinalSample_CUBIDS, file_paths_FINAL) 
 HBN_qc_filenames_atlases_restOnly <- list(HBN_FinalSample_CUBIDS[c(which(HBN_FinalSample_CUBIDS$task=="rest")),], file_paths_restOnly_FINAL) 
@@ -393,7 +368,7 @@ HBN_qc_filenames_atlases_restOnly <- list(HBN_FinalSample_CUBIDS[c(which(HBN_Fin
 saveRDS(HBN_qc_filenames_atlases, "/cbica/projects/network_replication/input/HBN/sample_selection/HBN_FinalSample_withCUBIDS_20230629.RData")
 saveRDS(HBN_qc_filenames_atlases_restOnly, "/cbica/projects/network_replication/input/HBN/sample_selection/fMRIinclude_CUBIDS_restOnly_20230629.RData")
 
-length(unique(HBN_qc_filenames_atlases_restOnly[[1]]$sub))
+HBN_qc_filenames_atlases <- readRDS("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_FinalSample_withCUBIDS_20230629.RData")
 ```
 
 
@@ -409,7 +384,7 @@ fMRIinclude_CUBIDS_ScanTime_restOnly <- HBN_qc_filenames_atlases_restOnly[[1]] %
  
 range(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total)
 fMRIinclude_CUBIDS_ScanTime_restOnly$sub[c(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total < 6))]
-length(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total >= 6)) # 841
+length(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total >= 6)) # 842
 
 
 final_participants_restOnly <- data.frame(fMRIinclude_CUBIDS_ScanTime_restOnly$sub[c(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total >= 6))])
@@ -427,7 +402,7 @@ HBN_FinalSample_CUBIDS_restOnly <- merge(HBN_FinalSample_CUBIDS_restOnly, final_
  
 HBN_qc_filenames_atlases_restOnly_final <- merge(HBN_qc_filenames_atlases_restOnly[[2]], final_participants_restOnly, by= "sub")
 HBN_qc_filenames_atlases_restOnly_final <- list(HBN_FinalSample_CUBIDS_restOnly, HBN_qc_filenames_atlases_restOnly_final)
-nrow(HBN_qc_filenames_atlases_restOnly_final[[1]]) #1475 scans
+nrow(HBN_qc_filenames_atlases_restOnly_final[[1]]) #1477 scans
  
 saveRDS(HBN_qc_filenames_atlases_restOnly_final,"/cbica/projects/network_replication/input/HBN/sample_selection/HBN_FinalSample_withCUBIDS_restOnly_20230629.RData")
  
@@ -456,8 +431,8 @@ HBN_avgMotion$meanFD_avgSes <- as.numeric(HBN_avgMotion$meanFD_avgSes)
 final_dem_restOnly_df <- merge(final_demographics_restOnly, HBN_avgMotion, by="sub")
    
 length(which(final_dem_restOnly_df$sex=="Female")) # 342 females
-length(unique(final_dem_restOnly_df$sub)) # 841 participants
-nrow(HBN_qc_filenames_atlases_restOnly_final[[1]]) #1475 scans
+length(unique(final_dem_restOnly_df$sub)) # 842 participants
+nrow(HBN_qc_filenames_atlases_restOnly_final[[1]]) #1477 scans
 
 write.csv(final_dem_restOnly_df, "/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_restOnly_20230629.csv")
 ```
