@@ -247,7 +247,7 @@ HBN_avgMotion$meanFD_avgSes <- as.numeric(HBN_avgMotion$meanFD_avgSes)
 final_dem_df <- merge(dplyr::select(final_demographics, sub, study_site, age, sex, race), HBN_avgMotion, by="sub")
    
  
- write.csv(final_dem_df, "/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_202230629.csv")
+ write.csv(final_dem_df, "/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_20230629.csv")
 
  
 unique(final_dem_df$race) 

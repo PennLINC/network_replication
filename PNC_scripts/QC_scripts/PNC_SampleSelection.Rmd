@@ -336,7 +336,7 @@ which(!file.exists(PNC_qc_filenames_atlases[[2]]$path))
 PNC_qc_filenames_atlases_restOnly <- list(fMRIinclude_CUBIDS[c(which(fMRIinclude_CUBIDS$task=="rest")),], file_paths_restOnly_FINAL) 
  
 saveRDS(PNC_qc_filenames_atlases, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_CIFTI_20230629.RData")
-saveRDS(PNC_qc_filenames_atlases_restOnly, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_CIFTI_20230629.RData")
+saveRDS(PNC_qc_filenames_atlases_restOnly, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_restOnly_20230629.RData")
 
 # saveRDS(PNC_qc_filenames_atlases, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_CIFTI_20230103.RData")
 # saveRDS(PNC_qc_filenames_atlases_restOnly, "/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_CIFTI_restOnly_20230103.RData")

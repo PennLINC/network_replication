@@ -3,19 +3,18 @@ source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/com
 args <- commandArgs(trailingOnly = TRUE) 
 dataset = args[1]
 
- 
 if (dataset == "NKI"){
   participants <- read.csv("/cbica/projects/network_replication/input/NKI/sample_selection/NKI_demographics_finalsample_20230629.csv")
-  participants <- participants$subject
+  participants <- participants$subject 
 } else if (dataset=="HCPD") {
   participants <- read.csv("/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_demographics_finalsample_20221226.csv")
   participants <- gsub("HCD", "sub-", participants$src_subject_id)
   
 } else if (dataset=="PNC") {
-  participants <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_20230103.csv")
+  participants <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_20230629.csv")
   participants <- paste0("sub-", participants$rbcid)
 } else if (dataset == "HBN") {
-  participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_202230226.csv")
+  participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_20230629.csv")
   participants <- participants$sub
 } else {
   participants <- NA

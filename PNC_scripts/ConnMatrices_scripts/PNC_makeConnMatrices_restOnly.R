@@ -12,10 +12,8 @@ library(magrittr, lib.loc="/cbica/home/luoau/Rlibs")
 print("This script 1) creates a list of ciftis to extract timeseries data from, and 2) concatenates timeseries and makes connectivity matrices ")
 
 # get subjects and filepaths
-PNC_CIFTI_summary  <- readRDS("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_restOnly_20230203.RData") 
-participants <- unique(PNC_CIFTI_summary[[1]]$sub)
-#demographics <- read.csv("/cbica/projects/network_replication/input/PNC/PNC_demographics.csv")
-
+PNC_CIFTI_summary  <- readRDS("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_restOnly_20230629.RData") 
+participants <- unique(PNC_CIFTI_summary[[1]]$sub) 
 
 # paths to all the cifti files (task idemo, frac2back, rest for each atlas)
 PNC_CIFTI_filepaths <- PNC_CIFTI_summary[[2]]$path
