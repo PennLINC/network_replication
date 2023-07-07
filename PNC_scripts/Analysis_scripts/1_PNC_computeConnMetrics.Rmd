@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 
 library(dplyr)
-source("/cbica/projects/network_replication/adapted_Rscripts/computeConnectivityMetrics.R")
+source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/computeConnectivityMetrics.R") # note that this line may need to be commented out for running through this Rmd file. computeConnectivityMetrics.R is optimized for cubic job submission and has lib.loc specified for R packages. Lib.loc will throw an error if running this Rmd file locally. 
 
 knitr::opts_chunk$set(include = FALSE, eval = TRUE, echo = FALSE, warning = FALSE, message = FALSE) 
 ```
@@ -16,14 +16,21 @@ knitr::opts_chunk$set(include = FALSE, eval = TRUE, echo = FALSE, warning = FALS
 
 ```{r loadParticipants}
 # load participants
- 
-demographics <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_20230103.csv")
-participants <- paste0("sub-", demographics$rbcid)
+participants <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_20230629.csv")
+participants <- participants$sub
 
  
 ```
 
 
+
+# GBC, BNC, WNC, and edge-level connectivity were computed on cubic as jobs. The following code chunks consolidate all the steps that were executed. I've consolidated them here for documentation and easy reference.
+For computeGBC, /cbica/projects/network_replication/Rscripts/PNC_scripts/Analysis_scripts/connMetrics_scripts/computeGBC_PNC.sh was submitted as a job. This shell script uses the following Rscript to execute R code: /cbica/projects/network_replication/Rscripts/functions/main_analyses/computeGBC.R. Note that computeGBC.R uses functions from /cbica/projects/network_replication/Rscripts/functions/main_analyses/computeConnectivityMetrics.R.
+
+A similar process was used for BNC, WNC, and edge-level connectivity.
+- Shell script: /cbica/projects/network_replication/Rscripts/PNC_scripts/Analysis_scripts/connMetrics_scripts/compute<metric>_PNC.sh
+- Rscript: /cbica/projects/network_replication/Rscripts/functions/main_analyses/compute<metric>.R
+- Functions: /cbica/projects/network_replication/Rscripts/functions/main_analyses/computeConnectivityMetrics.R 
 
 ```{r computeGBC}
 # make output dfs: 

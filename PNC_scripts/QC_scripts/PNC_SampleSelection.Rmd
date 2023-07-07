@@ -216,8 +216,8 @@ final_participants <- data.frame(unique(fMRIinclude_CUBIDS$sub))
 names(final_participants) <- "sub"  
 final_demographics <- merge(demographics, final_participants, by = "sub")
  
-## include average of relMeansRMSMotion and meanFD across the acquisitions included in calculating connectivity matrix 
-# for each subject, take average relMeansRMSMotion and meanFD
+## include average of meanFD across the acquisitions included in calculating connectivity matrix 
+# for each subject, take average meanFD
 subject <- c()
 ses <- c()
 avg_meanFD_vec <- c()
@@ -371,13 +371,12 @@ dim(PNC_qc_filenames_atlases_restOnly_final[[1]]) #1060 scans
 
 saveRDS(PNC_qc_filenames_atlases_restOnly_final,"/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_restOnly_20230629.RData")
 
-#saveRDS(PNC_qc_filenames_atlases_restOnly_final,"/cbica/projects/network_replication/input/PNC/sample_selection/PNC_FinalSample_withCUBIDS_restOnly_20230203.RData")
- 
+  
  
 final_demographics_restOnly <- merge(demographics, final_participants_restOnly, by = "sub")
  
-## include average of relMeansRMSMotion and meanFD across the acquisitions included in calculating connectivity matrix 
-# for each subject, take average relMeansRMSMotion and meanFD
+## include average of meanFD across the acquisitions included in calculating connectivity matrix 
+# for each subject, take average meanFD
 subject <- c()
 ses <- c()
 avg_meanFD_vec <- c()

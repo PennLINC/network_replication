@@ -3,6 +3,7 @@
 #datalad clone ria+file:///cbica/projects/RBC/production/PNC/xcp/output_ria#~data /cbica/projects/network_replication/input/PNC/datalad_xcp
 # --description "cloned RBC production PNC xcp  output_ria into network_replication/input/PNC/datalad_xcp"
 ​
+# git annex was used in 1/2023 when RBC data still lived on CUBIC
 
 cd /cbica/projects/network_replication/input/PNC/datalad_xcp/xcp_abcd  ###change directory to dir with the datalad zips
 for html_file in sub*.html; do  ###for every subject folder ${folder%_*}
@@ -28,17 +29,14 @@ git annex get $sub/*/*/*Schaefer417*ptseries.nii  ###get Glasser for idemo, frac
 cp $sub/*/*/*Schaefer417*ptseries.nii /cbica/projects/network_replication/input/PNC/pnc_xcp/$sub
 git annex drop $sub/*/*/*Schaefer417*ptseries.nii
 
-mkdir /cbica/projects/network_replication/input/PNC/pnc_xcp/qc_files/$sub
 git annex get $sub/*/*/*framewisedisplacement_bold.tsv
-cp $sub/*/*/*framewisedisplacement_bold.tsv /cbica/projects/network_replication/input/PNC/pnc_xcp/qc_files/$sub
+cp $sub/*/*/*framewisedisplacement_bold.tsv /cbica/projects/network_replication/input/PNC/pnc_xcp/qc_files/
 git annex drop $sub/*/*/*framewisedisplacement_bold.tsv
 
 git annex get $sub/*/*/*fsLR_desc-qc_bold.csv
-cp $sub/*/*/*fsLR_desc-qc_bold.csv /cbica/projects/network_replication/input/PNC/pnc_xcp/qc_files/$sub
+cp $sub/*/*/*fsLR_desc-qc_bold.csv /cbica/projects/network_replication/input/PNC/pnc_xcp/qc_files
 git annex drop $sub/*/*/*fsLR_desc-qc_bold.csv
 
 fi
 done
 
-#cd /cbica/projects/network_replication/input/PNC/pnc_xcp/qc_files --description concatenated all the qc files into a csv
-#cat */*.csv > PNC_xcp_qc_20221229.csv
