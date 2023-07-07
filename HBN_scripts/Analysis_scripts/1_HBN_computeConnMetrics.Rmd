@@ -1,6 +1,7 @@
 ---
 title: "HBN Compute Functional Connectivity Metrics"
 author: "Audrey Luo"
+date: "2022-08-02"
 output: html_document
 ---
 
@@ -8,7 +9,7 @@ output: html_document
 ```{r setup, include=FALSE}
 
 library(dplyr)
-#source("/cbica/projects/network_replication/adapted_Rscripts/computeConnectivityMetrics.R")
+source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/computeConnectivityMetrics.R") # note that this line may need to be commented out for running through this Rmd file. computeConnectivityMetrics.R is optimized for cubic job submission and has lib.loc specified for R packages. Lib.loc will throw an error if running this Rmd file locally. 
 dataset="HBN"
 knitr::opts_chunk$set(include = FALSE, eval = TRUE, echo = FALSE, warning = FALSE, message = FALSE) 
 ```
@@ -17,13 +18,17 @@ knitr::opts_chunk$set(include = FALSE, eval = TRUE, echo = FALSE, warning = FALS
 ```{r loadParticipants}
 # load participants
  
-participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_202230226.csv")
+participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_20230629.csv")
 participants <- participants$sub
-
- 
 ```
 
+# GBC, BNC, WNC, and edge-level connectivity were computed on cubic as jobs. The following code chunks consolidate all the steps that were executed. I've consolidated them here for documentation and easy reference.
+For computeGBC, /cbica/projects/network_replication/Rscripts/HBN_scripts/Analysis_scripts/connMetrics_scripts/computeGBC_HBN.sh was submitted as a job. This shell script uses the following Rscript to execute R code: /cbica/projects/network_replication/Rscripts/functions/main_analyses/computeGBC.R. Note that computeGBC.R uses functions from /cbica/projects/network_replication/Rscripts/functions/main_analyses/computeConnectivityMetrics.R.
 
+A similar process was used for BNC, WNC, and edge-level connectivity.
+- Shell script: /cbica/projects/network_replication/Rscripts/HBN_scripts/Analysis_scripts/connMetrics_scripts/compute<metric>_HBN.sh
+- Rscript: /cbica/projects/network_replication/Rscripts/functions/main_analyses/compute<metric>.R
+- Functions: /cbica/projects/network_replication/Rscripts/functions/main_analyses/computeConnectivityMetrics.R
 
 ```{r computeGBC}
 # make output dfs: 
@@ -139,6 +144,7 @@ write.csv(WNC.subxparcel.matrix.schaefer400x17, "/cbica/projects/network_replica
 
 
 # Extract edge-level data (parcel-to-parcel connectivity)
+ 
 ```{r edge_level_dfs}
 
   
@@ -185,6 +191,7 @@ for(i in c(1:length(atlases))){
 
 
 # Perform CovBat Harmonization on Connectivity Metrics (GBC, BNC, WNC)
+Covbat for GBC, BNC, and WNC can be performed locally using this Rmd file.
 
 ```{r setup, include=FALSE}
 
@@ -200,58 +207,10 @@ dataset <- "HBN"
 ```
 
 
-# remove participants missing age data in HBN (which may be included in the subxparcel output - make sure to double check!!)
-```{r remove_participants_missing_age}
-# realized participants were missing age data after connectivity metrics were made. manually removing them here so downstream analysis can be on participants with full demographic data (including age and sex)
-# fyi code for conn metrics scripts was updated with most recent final sample
-
-participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_202230223.csv")
-participants_noAge_index <- c(which(is.na(participants$age))) #age not collected on 58 participants 
-participants <- participants[-c(which(is.na(participants$age))),] 
- 
-
-metric = "GBC"
-for(i in c(1:length(atlases_GBC))){
-  df_name <- paste0(metric, "_", "subxparcel_", atlases_GBC[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases_GBC[i])))
-  assign(df_name, get(df_name)[-participants_noAge_index,])
-  write.csv(get(df_name), sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases_GBC[i]))
-  print(df_name)
-  print(dim(get(df_name)))
-} 
-  
-
-metric = "BNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0(metric, "_", "subxparcel_", atlases[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases[i])))
-  assign(df_name, get(df_name)[-participants_noAge_index,])
-  write.csv(get(df_name), sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases[i]))
-  print(df_name)
-  print(dim(get(df_name)))
-} 
-  
-
-
-metric = "WNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0(metric, "_", "subxparcel_", atlases[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases[i])))
-  assign(df_name, get(df_name)[-participants_noAge_index,])
-  write.csv(get(df_name), sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases[i]))
-  print(df_name)
-  print(dim(get(df_name)))
-} 
-```
-
- 
-
+# load in subxparcel dataframes for each atlas and connectivity metric
 ```{r load_subxparcel}
-participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_202230223.csv")
-participants_noAge_index <- c(which(is.na(participants$age))) #age not collected on 58 participants 
-participants <- participants[-c(which(is.na(participants$age))),] 
- 
- 
+participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_20230629.csv")
+  
  
 #GBC - loads GBC_subxparcel_glasser, GBC_subxparcel_gordon, GBC_subxparcel_schaefer200, GBC_subxparcel_schaefer400
 metric = "GBC"
@@ -259,7 +218,6 @@ for(i in c(1:length(atlases_GBC))){
   df_name <- paste0(metric, "_", "subxparcel_", atlases_GBC[i])
   assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases_GBC[i])))
   assign(df_name, data.frame(get(df_name)[,-1])) # remove subject column
-  #assign(row.names(get(df_name)), subjects)
   print(df_name)
 } 
   
@@ -268,6 +226,7 @@ row.names(GBC_subxparcel_glasser) <- participants$sub
 row.names(GBC_subxparcel_gordon) <- participants$sub
 row.names(GBC_subxparcel_schaefer200) <- participants$sub
 row.names(GBC_subxparcel_schaefer400) <- participants$sub
+ 
  
 
 #BNC - loads BNC_subxparcel_gordon, BNC_subxparcel_schaefer200x7, BNC_subxparcel_schaefer200x17, BNC_subxparcel_schaefer400x7, BNC_subxparcel_schaefer400x17
@@ -306,8 +265,6 @@ row.names(WNC_subxparcel_schaefer400x17) <- participants$sub
 
 
 ```{r run_covbat}
-
-
 age_vec <- participants$age 
 sex_vec <- as.factor(participants$sex)
  
@@ -318,9 +275,8 @@ covar_df <- dplyr::rename(covar_df, sub=...1,
                           age = ...2,
                           sex = ...3,
                           meanFD_avgSes = ...4)
-#batch <- participants$ses 
  
-# Harmonize GBC
+# Harmonize GBC 
 data.harmonized_GBC <- lapply(list(GBC_subxparcel_glasser, GBC_subxparcel_gordon, GBC_subxparcel_schaefer200, GBC_subxparcel_schaefer400), covfam, bat = as.factor(participants$ses), covar = covar_df, gam, y ~ s(age, k=3, fx=T) + as.factor(sex) + as.numeric(meanFD_avgSes))
 names(data.harmonized_GBC) <- atlases_GBC
 
@@ -331,8 +287,7 @@ names(data.harmonized_BNC) <- atlases
 # Harmonize WNC
 data.harmonized_WNC <- lapply(list(WNC_subxparcel_gordon, WNC_subxparcel_schaefer200x7, WNC_subxparcel_schaefer200x17, WNC_subxparcel_schaefer400x7, WNC_subxparcel_schaefer400x17), covfam, bat = as.factor(participants$ses), covar = covar_df, gam, y ~ s(age, k=3, fx=T) + as.factor(sex) + as.numeric(meanFD_avgSes))
 names(data.harmonized_WNC) <- atlases
-
- 
+  
 ```
 
 
@@ -371,7 +326,10 @@ for(i in c(1:length(atlases))){
 
 
 
-# Perform CovBat Harmonization on Edges
+# Perform CovBat Harmonization on Edges 
+This chunk was submitted as a job on cubic due to high computational requirements. 
+Shell script that submits Rscript: /cbica/projects/network_replication/Rscripts/HBN_scripts/Analysis_scripts/connMetrics_scripts/covbat_edges_HBN.sh
+Rscript: /cbica/projects/network_replication/Rscripts/functions/main_analyses/covbat_edges.R
 ```{r edge_covbat}
 # function for performing CovBat on connectivity metrics output for all atlases
 apply_covbat_edge <- function(atlas, dataset) {
@@ -389,10 +347,7 @@ apply_covbat_edge <- function(atlas, dataset) {
     batch <- participants$site
     
   } else if (dataset=="HBN") { 
-    participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_202230223.csv")
-    participants_noAge_index <- c(which(is.na(participants$age))) #age not collected on 58 participants 
-    participants <- participants[-c(which(is.na(participants$age))),] 
-    participants <- participants[-c(which(participants$sub=="sub-NDARCE721YB5"))]
+    participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_20230629.csv")
     age_vec <- participants$age 
     sex_vec <- as.factor(participants$sex)
     meanFD_avgSes_vec <- participants$meanFD_avgSes
