@@ -17,6 +17,9 @@ median before: 13.33 min
 range after: 8.33 to 23.33
 median after: 18.33 
 
+Mean age = 11.6
+SD= 3.6
+
 Race
 - White = 498 - 44.2%
 - Asian = 33 - 2.93%

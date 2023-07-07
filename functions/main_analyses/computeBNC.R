@@ -5,14 +5,13 @@ dataset = args[1]
 
 if (dataset == "NKI"){
   participants <- read.csv("/cbica/projects/network_replication/input/NKI/sample_selection/NKI_demographics_finalsample_20230629.csv")
-  participants <- participants$subject 
+  participants <- gsub("sub-", "", participants$sub) 
 } else if (dataset=="HCPD") {
   participants <- read.csv("/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_demographics_finalsample_20221226.csv")
   participants <- gsub("HCD", "sub-", participants$src_subject_id)
-  
 } else if (dataset=="PNC") {
   participants <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_20230629.csv")
-  participants <- paste0("sub-", participants$rbcid)
+  participants <- participants$sub
 } else if (dataset == "HBN") {
   participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_20230629.csv")
   participants <- participants$sub
@@ -25,7 +24,6 @@ if (dataset == "NKI"){
 # make output dfs: 
 ## BNC.subxparcel.matrix.gordon, BNC.subxparcel.matrix.schaefer200x7, BNC.subxparcel.matrix.schaefer400x7, BNC.subxparcel.matrix.schaefer200x17, BNC.subxparcel.matrix.schaefer400x17
 atlases <- c("gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
-#atlases <- c("schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
 metric = "BNC"
 
 for(i in c(1:length(atlases))){

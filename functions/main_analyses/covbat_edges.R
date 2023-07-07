@@ -34,10 +34,7 @@ apply_covbat_edge <- function(atlas, dataset) {
     rm(participants)
     data.harmonized <- covfam(data=subxedge, bat = as.factor(batch), covar = covar_df, gam, y ~ s(age, k=3, fx=T) + as.factor(sex) + as.numeric(meanFD_avgSes))
   } else if (dataset=="HBN") { 
-    participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_202230223.csv")
-    participants_noAge_index <- c(which(is.na(participants$age))) #age not collected on 58 participants 
-    participants <- participants[-c(which(is.na(participants$age))),] 
-    participants <- participants[-c(which(participants$sub=="sub-NDARCE721YB5")),]
+    participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_20230629.csv")
     age_vec <- participants$age 
     sex_vec <- as.factor(participants$sex)
     meanFD_avgSes_vec <- participants$meanFD_avgSes
@@ -66,17 +63,11 @@ apply_covbat_edge <- function(atlas, dataset) {
  
 
 atlases <- c("gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
-
-#edge_harmonized <- lapply(atlases, apply_covbat_edge, dataset)
+ 
 apply_covbat_edge("gordon", dataset)
 apply_covbat_edge("glasser", dataset)
 apply_covbat_edge("schaefer200x7", dataset)
 apply_covbat_edge("schaefer200x17", dataset)
 apply_covbat_edge("schaefer400x7", dataset)
 apply_covbat_edge("schaefer400x17", dataset)
-#names(edge_harmonized) <- atlases
-
-#for(i in c(1:length(edge_harmonized))){
-#  saveRDS(edge_harmonized[[atlases[i]]], sprintf("/cbica/projects/network_replication/output/%1$s/edge/subxedge_%2$s_covbat.RData", dataset, atlases[i]))
-#  print(atlases[i])
-#} 
+ 

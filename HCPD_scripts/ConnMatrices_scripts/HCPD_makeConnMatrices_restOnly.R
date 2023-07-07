@@ -1,6 +1,4 @@
-
-#library(ciftiTools, lib.loc="/cbica/home/luoau/Rlibs")
-#ciftiTools.setOption('wb_path', '/cbica/share/modules/connectome_workbench/1.4.2')
+ 
 library(base64enc, lib.loc="/cbica/home/luoau/Rlibs")
 library(gifti, lib.loc="/cbica/home/luoau/Rlibs")
 library(cifti, lib.loc="/cbica/home/luoau/Rlibs")

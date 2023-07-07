@@ -1,6 +1,7 @@
 ---
 title: "HCPD Compute Functional Connectivity Metrics"
 author: "Audrey Luo"
+date: "2022-08-02"
 output: html_document
 ---
 
@@ -8,7 +9,7 @@ output: html_document
 ```{r setup, include=FALSE}
 
 library(dplyr)
-source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/computeConnectivityMetrics.R")
+source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/computeConnectivityMetrics.R") # note that this line may need to be commented out for running through this Rmd file. computeConnectivityMetrics.R is optimized for cubic job submission and has lib.loc specified for R packages. Lib.loc will throw an error if running this Rmd file locally. 
 dataset="HCPD"
 knitr::opts_chunk$set(include = FALSE, eval = TRUE, echo = FALSE, warning = FALSE, message = FALSE) 
 ```
@@ -23,7 +24,13 @@ participants <- gsub("HCD", "sub-", participants$src_subject_id)
 ```
 
 
+# GBC, BNC, WNC, and edge-level connectivity were computed on cubic as jobs. The following code chunks consolidate all the steps that were executed. I've consolidated them here for documentation and easy reference.
+For computeGBC, /cbica/projects/network_replication/Rscripts/HCPD_scripts/Analysis_scripts/connMetrics_scripts/computeGBC_HCPD.sh was submitted as a job. This shell script uses the following Rscript to execute R code: /cbica/projects/network_replication/Rscripts/functions/main_analyses/computeGBC.R. Note that computeGBC.R uses functions from /cbica/projects/network_replication/Rscripts/functions/main_analyses/computeConnectivityMetrics.R.
 
+A similar process was used for BNC, WNC, and edge-level connectivity.
+- Shell script: /cbica/projects/network_replication/Rscripts/HCPD_scripts/Analysis_scripts/connMetrics_scripts/compute<metric>_HCPD.sh
+- Rscript: /cbica/projects/network_replication/Rscripts/functions/main_analyses/compute<metric>.R
+- Functions: /cbica/projects/network_replication/Rscripts/functions/main_analyses/computeConnectivityMetrics.R 
 ```{r computeGBC}
 # make output dfs: 
 ## GBC.subxparcel.matrix.glasser, GBC.subxparcel.matrix.gordon, GBC.subxparcel.matrix.schaefer200, GBC.subxparcel.matrix.schaefer400
@@ -144,8 +151,7 @@ write.csv(WNC.subxparcel.matrix.schaefer400x17, "/cbica/projects/network_replica
 # make a dataframe in which rows are subjects, and columns are the names of the edges (parcel1_to_parcel2)
 # the entries represent the parcel-by-parcel correlation
  
-
-# gordon
+ 
 # for each subject, turn the connectivity matrix into a vector
 extractEdge.gordon <- lapply(participants, extractParcel2ParcelConn, "gordon", "HCPD")
 extractEdge.glasser <- lapply(participants, extractParcel2ParcelConn, "glasser", "HCPD")
@@ -155,7 +161,7 @@ extractEdge.schaefer400x7 <- lapply(participants, extractParcel2ParcelConn, "sch
 extractEdge.schaefer400x17 <- lapply(participants, extractParcel2ParcelConn, "schaefer400x17", "HCPD")
 
  
-# for other atlases -- need to run this next
+# for other atlases  
 atlases <- c("glasser", "gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
 atlases <- c("glasser", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
 for(i in c(1:length(atlases))){
@@ -184,7 +190,7 @@ for(i in c(1:length(atlases))){
 
 
 # Perform CovBat Harmonization on Connectivity Metrics (GBC, BNC, WNC)
-
+Covbat for GBC, BNC, and WNC can be performed locally using this Rmd file.
 ```{r setup_covbat, include=FALSE}
 
 #install.packages("/cbica/projects/network_replication/software/covBat_gam/ComBatFamily_0.1.0.tar.gz", repos=NULL, type='source')
@@ -199,8 +205,6 @@ dataset <- "HCPD"
 ```
 
 
-# main analysis
-
 ```{r load_subxparcel}
 participants <- read.csv("/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_demographics_finalsample_20221226.csv")
  
@@ -211,7 +215,6 @@ for(i in c(1:length(atlases_GBC))){
   df_name <- paste0(metric, "_", "subxparcel_", atlases_GBC[i])
   assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases_GBC[i])))
   assign(df_name, data.frame(get(df_name)[,-1]))
-  #assign(row.names(get(df_name)), subjects)
   print(df_name)
 } 
   
@@ -319,7 +322,11 @@ for(i in c(1:length(atlases))){
  
 
 
-# Perform CovBat Harmonization on Edges
+
+# Perform CovBat Harmonization on Edges 
+This chunk was submitted as a job on cubic due to high computational requirements. 
+Shell script that submits Rscript: /cbica/projects/network_replication/Rscripts/HCPD_scripts/Analysis_scripts/connMetrics_scripts/covbat_edges_HCPD.sh
+Rscript: /cbica/projects/network_replication/Rscripts/functions/main_analyses/covbat_edges.R
 ```{r edge_covbat}
 
 # function for performing CovBat on connectivity metrics output for all atlases
@@ -338,14 +345,11 @@ apply_covbat_edge <- function(atlas, dataset) {
     batch <- participants$site
     
   } else if (dataset=="HBN") { 
-    participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_202230223.csv")
-    participants_noAge_index <- c(which(is.na(participants$age))) #age not collected on 58 participants 
-    participants <- participants[-c(which(is.na(participants$age))),] 
-    participants <- participants[-c(which(participants$sub=="sub-NDARCE721YB5"))]
+     participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_20230629.csv")
     age_vec <- participants$age 
     sex_vec <- as.factor(participants$sex)
     meanFD_avgSes_vec <- participants$meanFD_avgSes
-    batch <- participants$ses
+    batch <- participants$sess
     
   } else {
     print("provide proper participants df")

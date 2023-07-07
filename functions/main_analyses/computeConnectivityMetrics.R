@@ -1,23 +1,21 @@
 # functions for computing global brain connectivity (GBC), between-network coupling (BNC), and within-network coupling (WNC)
 # use computeGBC.R, computeBNC.R, computeWNC.R, and computeEdge.R to run jobs.
-# This file just consolidates all the code
+ 
 
-#library(ciftiTools)
-#ciftiTools.setOption('wb_path', '/Applications/workbench/')
-#library(gifti)
+# note that lib.loc has to be specified since this file is linked to in Rscripts submitted as jobs onto cubic (i.e. /Rscripts/functions/main_analyses/compute_GBC.R)
 library(cifti, lib.loc="/cbica/home/luoau/Rlibs")
 library(stringr, lib.loc="/cbica/home/luoau/Rlibs")
 library(dplyr, lib.loc="/cbica/home/luoau/Rlibs")
 library(magrittr, lib.loc="/cbica/home/luoau/Rlibs")
 
 
-# Function for Computing Global Brain Connectivity - updated
-# @param subject rbcid of subject of interest
+# Function for Computing Global Brain Connectivity  
+# @param subject id of subject of interest
 # @param atlas A character string, name of atlas of interest (e.g. glasser, gordon, schaefer200, or schaefer400)
 # @param dataset A character string, name of dataset
 computeGBC <- function(subject, atlas, dataset){
   
-  #read in connectivity matrix and mask   
+  #read in connectivity matrix
   if(dataset == "PNC" | dataset == "HCPD" | dataset == "HBN") {
     connect.matrix <- readRDS(sprintf("/cbica/projects/network_replication/input/%1$s/connMatricesData/connectivity_matrices/%2$s_ConnMatrices.RData", dataset, subject))
     if(atlas=="schaefer200" | atlas=="schaefer400") {
@@ -41,13 +39,13 @@ computeGBC <- function(subject, atlas, dataset){
   }
    
   #compute average connectivity 
-  GBC <- as.array(rowMeans(connect.matrix, na.rm = TRUE))
+  GBC <- as.array(rowMeans(connect.matrix))
   return(GBC)
 }
  
 
 # Function for Computing Between-Network or Within-Network Connectivity
-# @param subject rbcid of subject of interest
+# @param subject id of subject of interest
 # @param atlas A character string, name of atlas of interest (gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", or "schaefer400x17")
 # @param metric A character string, name of connectivity metric (either "BNC" or "WNC")
 # @param dataset A character string, name of dataset
@@ -230,7 +228,7 @@ make_output_dfs <- function(subject_list, atlas){
 # @param dataset A character string, name of dataset
 extractParcel2ParcelConn <- function(subject, atlas, dataset){
   
-  #read in connectivity matrix  # need to fix to make more efficient  
+  #read in connectivity matrix  
   if(dataset == "PNC" | dataset=="HCPD" | dataset=="HBN") {
     connect.matrix <- readRDS(sprintf("/cbica/projects/network_replication/input/%1$s/connMatricesData/connectivity_matrices/%2$s_ConnMatrices.RData", dataset, subject))
     if(str_detect(atlas, "schaefer200") | str_detect(atlas, "schaefer400")) {

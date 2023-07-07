@@ -104,7 +104,7 @@ multiple_sclerosis <- demographics$src_subject_id[c(which(demographics$ms ==1))]
 
 # seizure
 seizure_ph9 <- demographics$src_subject_id[c(which(demographics$ph_9 ==1))]  # "HCD0360838" "HCD0478356" - each participant had one seizure
-epilepsy_cfmh <- demographics$src_subject_id[c(which(demographics$cfmh_chd_seizure ==1))] # "HCD0641341" "HCD1277149" (not sure why these participants didn't endorse ph_9 -- 'ever went to doctor/ER for seizure')
+epilepsy_cfmh <- demographics$src_subject_id[c(which(demographics$cfmh_chd_seizure ==1))] # "HCD0641341" "HCD1277149"  
   
 # brain injury
 brain_injury <- demographics$src_subject_id[c(which(demographics$seq1c_2 ==1))] # 14 participants 
@@ -307,7 +307,7 @@ HCPD_qc_filenames_atlases <- list(HCPD_FinalSample_CUBIDS, file_paths_FINAL)
 HCPD_qc_filenames_atlases_restOnly <- list(HCPD_FinalSample_CUBIDS[c(which(HCPD_FinalSample_CUBIDS$task=="rest")),], file_paths_restOnly_FINAL) 
  
 saveRDS(HCPD_qc_filenames_atlases, "/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_FinalSample_withCUBIDS_20221227.RData")
-saveRDS(HCPD_qc_filenames_atlases_restOnly, "/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_FinalSample_withCUBIDS_restOnly_20221227.RData")
+saveRDS(HCPD_qc_filenames_atlases_restOnly, "/cbica/projects/network_replication/input/HCPD/sample_selection/fMRIinclude_CUBIDS_restOnly_20221227.RData")
   
 ```
 
@@ -317,7 +317,7 @@ saveRDS(HCPD_qc_filenames_atlases_restOnly, "/cbica/projects/network_replication
 - include participants with at least 6 minutes of rest-only scan time
 ```{r}
 
-HCPD_qc_filenames_atlases_restOnly <- readRDS("/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_FinalSample_withCUBIDS_restOnly_20221227.RData")
+HCPD_qc_filenames_atlases_restOnly <- readRDS("/cbica/projects/network_replication/input/HCPD/sample_selection/fMRIinclude_CUBIDS_restOnly_20221227.RData")
 
 ### Include participants with >= 6 minutes of resting state fMRI
 fMRIinclude_CUBIDS_ScanTime_restOnly <- HCPD_qc_filenames_atlases_restOnly[[1]] %>% group_by(sub) %>% summarise(ScanTime_Total = sum(ScanTimeMinutes))
