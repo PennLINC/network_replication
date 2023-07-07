@@ -1,4 +1,5 @@
 
+
 #library(ciftiTools, lib.loc="/cbica/home/luoau/Rlibs")
 #ciftiTools.setOption('wb_path', '/cbica/share/modules/connectome_workbench/1.4.2')
 library(base64enc, lib.loc="/cbica/home/luoau/Rlibs")
@@ -129,12 +130,12 @@ computeConnMatrices <- function(subject, cifti_list){
 }
 
  
-# make list of ciftis (that exist), extract and concatenate timeseries, compute connectivity matrices for subjects with BAS1 or FLU1, ages 5-22
+# make list of ciftis (that exist), extract and concatenate timeseries, compute connectivity matrices for subjects with BAS1 or FLU1, ages 6-22
 all_cifti_list <- lapply(participants, listCifti, list_filepath= NKI_CIFTIfiles$path, ciftiFiles_df = NKI_CIFTIfiles)
 names(all_cifti_list) <- participants  
 
  
-allConnMatrices <- lapply(names(all_cifti_list),computeConnMatrices, all_cifti_list) 
+allConnMatrices <- lapply(names(all_cifti_list), computeConnMatrices, all_cifti_list) 
 names(allConnMatrices) <- participants
 
 

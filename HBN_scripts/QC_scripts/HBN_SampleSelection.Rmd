@@ -87,7 +87,7 @@ T1_QA_HBN <- T1_QA[which(T1_QA$sub %in% collated_HBN.xcp$sub), ]
 # load demographics (updated file from informatics 6/7/2023)
 demographics <- read.table("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_Demographics.tsv", sep="\t", header=TRUE)
 demographics <- dplyr::rename(demographics, sub = participant_id) # 2611 total
-nrow(demographics)
+nrow(demographics) 
 range(demographics$age, na.rm=TRUE) #ages 5-22
 ```
  
@@ -97,7 +97,7 @@ range(demographics$age, na.rm=TRUE) #ages 5-22
 collated_HBN.xcp_medExclusion <- collated_HBN.xcp 
 ```
 
-## 3) include passing T1 QC (HBN dataset only includes scans that passed T1 QC)
+## 3) include passing T1 QC  
 ## 4) include meanFD < 0.3
 ```{r meanFD, cache=TRUE}
 
@@ -115,7 +115,7 @@ collated_HBN.xcp_headMotion <- collated_HBN.xcp_T1Exclusion[c(which(collated_HBN
 length(unique(collated_HBN.xcp_headMotion$sub)) # N=1315 after excluding meanFD >= 0.3  
 nrow(collated_HBN.xcp_headMotion) #3283 scans  
  
-write.csv(collated_HBN.xcp_headMotion, "/cbica/projects/network_replication/input/HBN/sample_selection/collated_HBN.xcp_headMotion_20230629.csv")
+write.csv(collated_HBN.xcp_headMotion, "/cbica/projects/network_replication/input/HBN/sample_selection/collated_HBN.xcp_headMotion_20230629.csv", row.names=F)
 ```
 
 
@@ -228,10 +228,9 @@ final_demographics <- merge(demographics, final_participants, by = "sub")
  
  
 ## include average of meanFD across the acquisitions included in calculating connectivity matrix 
-# for each subject, take average relMeansRMSMotion and meanFD
+# for each subject, take average meanFD
 subject <- c()
 ses <- c()
-avg_relMeansRMSMotion_vec <- c()
 avg_meanFD_vec <- c()
 for(i in c(1:length(unique(fMRIinclude_CUBIDS$sub)))){
   indices <- which(fMRIinclude_CUBIDS$sub == unique(fMRIinclude_CUBIDS$sub)[i])
@@ -247,11 +246,11 @@ HBN_avgMotion$meanFD_avgSes <- as.numeric(HBN_avgMotion$meanFD_avgSes)
 final_dem_df <- merge(dplyr::select(final_demographics, sub, study_site, age, sex, race), HBN_avgMotion, by="sub")
    
  
- write.csv(final_dem_df, "/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_20230629.csv")
+ write.csv(final_dem_df, "/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_202230629.csv", row.names=F)
 
  
 unique(final_dem_df$race) 
-length(which(final_dem_df$race==""))/nrow(final_dem_df)
+length(which(final_dem_df$race=="Mixed"))/nrow(final_dem_df)
 # White = 498 - 44.2%
 # Asian = 33 - 2.93%
 # Black = 139 - 12.34%
@@ -367,11 +366,9 @@ HBN_qc_filenames_atlases_restOnly <- list(HBN_FinalSample_CUBIDS[c(which(HBN_Fin
 
 saveRDS(HBN_qc_filenames_atlases, "/cbica/projects/network_replication/input/HBN/sample_selection/HBN_FinalSample_withCUBIDS_20230629.RData")
 saveRDS(HBN_qc_filenames_atlases_restOnly, "/cbica/projects/network_replication/input/HBN/sample_selection/fMRIinclude_CUBIDS_restOnly_20230629.RData")
-
-HBN_qc_filenames_atlases <- readRDS("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_FinalSample_withCUBIDS_20230629.RData")
 ```
 
-
+ 
 
 # Sensitivity Analysis: Final demographics for rest only
 - include participants with at least 6 minutes of rest-only scan time
@@ -383,7 +380,6 @@ HBN_qc_filenames_atlases_restOnly <- readRDS("/cbica/projects/network_replicatio
 fMRIinclude_CUBIDS_ScanTime_restOnly <- HBN_qc_filenames_atlases_restOnly[[1]] %>% group_by(sub) %>% summarise(ScanTime_Total = sum(ScanTimeMinutes))
  
 range(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total)
-fMRIinclude_CUBIDS_ScanTime_restOnly$sub[c(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total < 6))]
 length(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total >= 6)) # 842
 
 
@@ -411,10 +407,9 @@ final_demographics_restOnly <- merge(demographics, final_participants_restOnly, 
  
  
 ## include average of meanFD across the acquisitions included in calculating connectivity matrix 
-# for each subject, take average relMeansRMSMotion and meanFD
+# for each subject, take average meanFD
 subject <- c()
 ses <- c()
-avg_relMeansRMSMotion_vec <- c()
 avg_meanFD_vec <- c()
 for(i in c(1:length(unique(HBN_FinalSample_CUBIDS_restOnly$sub)))){
   indices <- which(HBN_FinalSample_CUBIDS_restOnly$sub == unique(HBN_FinalSample_CUBIDS_restOnly$sub)[i])
@@ -434,9 +429,7 @@ length(which(final_dem_restOnly_df$sex=="Female")) # 342 females
 length(unique(final_dem_restOnly_df$sub)) # 842 participants
 nrow(HBN_qc_filenames_atlases_restOnly_final[[1]]) #1477 scans
 
-write.csv(final_dem_restOnly_df, "/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_restOnly_20230629.csv")
+write.csv(final_dem_restOnly_df, "/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_restOnly_20230629.csv", row.names=F)
 ```
-
-
 
  

@@ -12,8 +12,7 @@ print("This script 1) creates a list of ciftis to extract timeseries data from, 
 
 # get subjects and filepaths
 HCPD_CIFTI_summary  <- readRDS("/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_FinalSample_withCUBIDS_restOnly_20230203.RData") 
-participants <- unique(HCPD_CIFTI_summary[[1]]$sub)
-#demographics <- read.csv("/cbica/projects/network_replication/input/HCPD/hcpd_demographics.csv")
+participants <- unique(HCPD_CIFTI_summary[[1]]$sub) 
 
 
 # paths to all the cifti files (task carit, emotion, guessing, rest for each atlas)
@@ -58,7 +57,7 @@ listCifti <- function(subject, list_filepath, ciftiFiles_df){
   cifti_names <- cifti_names %>% mutate(ciftiList_names = paste0(subject, "_", task, "_", run,  "_", direction, "_", atlas))
   names(cifti_list) <- cifti_names$ciftiList_names
   print(paste(which(participants == subject), "/", length(participants), "Cifti list done for", subject))
-  saveRDS(cifti_list, paste0("/cbica/projects/network_replication/input/HCPD/connMatricesData/cifti_lists/", subject, "_timeseriesTaskandRest.RData"))
+  saveRDS(cifti_list, paste0("/cbica/projects/network_replication/input/HCPD/connMatricesData/cifti_lists_restOnly/", subject, "_timeseriesRestOnly.RData"))
   
   if(length(cifti_list) == 0){
     print(paste(subject, "missing cifti_list"))

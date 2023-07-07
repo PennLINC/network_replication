@@ -81,7 +81,7 @@ listCifti <- function(subject, list_filepath, ciftiFiles_df){
   cifti_names <- cifti_names %>% mutate(ciftiList_names = paste0(subject, "_", task_scanInfo, "_", atlas))
   names(cifti_list) <- cifti_names$ciftiList_names
   print(paste(which(participants == subject), "/", length(participants), "Cifti list done for", subject))
-  saveRDS(cifti_list, paste0("/cbica/projects/network_replication/input/PNC/connMatricesData/cifti_lists_restOnly/", subject, "_timeseriesTaskandRest.RData"))
+  saveRDS(cifti_list, paste0("/cbica/projects/network_replication/input/PNC/connMatricesData/cifti_lists_restOnly/", subject, "_timeseriesRestOnly.RData"))
   
   
   if(length(cifti_list) == 0){
@@ -119,7 +119,7 @@ listCifti <- function(subject, list_filepath, ciftiFiles_df){
   gc()
 }
 
-# make list of ciftis, extract and concatenate timeseries for task and rest scans, compute connectivity matrices for subjects, ages 5-22 
+# make list of ciftis, extract and concatenate timeseries for task and rest scans, compute connectivity matrices for subjects, ages 8-23
 lapply(participants, listCifti, list_filepath= PNC_CIFTI_filepaths, ciftiFiles_df = PNC_CIFTI_summary)
 
 

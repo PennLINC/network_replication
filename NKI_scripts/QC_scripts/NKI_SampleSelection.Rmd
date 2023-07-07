@@ -1,6 +1,7 @@
 ---
 title: "NKI Sample Selection"
 author: "Audrey Luo"
+date: "2022-12-16"
 output: html_document
 ---
 
@@ -22,7 +23,6 @@ median after: 24.10167 min
 
 * Age
 mean=14.5, SD=4.4
-
 
 * Race 
 -  white = 249 - 65.4%
@@ -80,12 +80,12 @@ collated_NKI.xcp$sub <- gsub("A", "sub-A", collated_NKI.xcp$sub)
 # add binary column indicating FD >0.3 (Exclude == 1)
 collated_NKI.xcp <- collated_NKI.xcp %>% mutate(Exclude = ifelse(meanFD>0.3, 1, 0))
 
-# load T1 QA (updated file from informatics 6/28/2023)
-T1_QA <- read.delim("/cbica/projects/network_replication/input/NKI/sample_selection/study-NKI_desc-T1_qc.tsv")
-T1_QA <- T1_QA %>% dplyr::rename(sub=participant_id) %>% dplyr::rename(ses=ses_id)
+# load T1 QA (updated file from Nathalia Esper 6/30/2023)
+T1_QA <- read.csv("/cbica/projects/network_replication/input/NKI/sample_selection/T1_QA_NKI_NathaliaEsper_20230630.csv")
+T1_QA <- T1_QA %>% dplyr::rename(sub=ID) %>% dplyr::rename(ses=session)
 T1_QA$ses <- gsub("ses-", "", T1_QA$ses)
 T1_QA_NKI <- T1_QA[which(T1_QA$sub %in% collated_NKI.xcp$sub), ]
-collated_NKI.xcp <- merge(collated_NKI.xcp, dplyr::select(T1_QA_NKI, sub, ses,qc_determination), by=c("sub", "ses"))
+collated_NKI.xcp <- merge(collated_NKI.xcp, dplyr::select(T1_QA_NKI, sub, ses,tri.nary_score_without_rater.2), by=c("sub", "ses"))
  
 # load demographics file (updated file from informatics 3/16/2023)
 demographics <- read.delim("/cbica/projects/network_replication/input/NKI/sample_selection/nki_participants.tsv")
@@ -107,9 +107,10 @@ write.csv(collated_NKI.xcp_ageFiltered, "/cbica/projects/network_replication/inp
 ```{r t1_qc}
 collated_NKI.xcp_ageFiltered <- read.csv("/cbica/projects/network_replication/input/NKI/sample_selection/collated_NKI_xcp_ageFiltered_20230629.csv")
 
-# exclude T1 based on qc_determination==Fail
-t1_exclusion <- collated_NKI.xcp_ageFiltered[c(which(collated_NKI.xcp_ageFiltered$qc_determination=="Fail")), ]
-t1_exclusion_sessions <- collated_NKI.xcp_ageFiltered[c(which(collated_NKI.xcp_ageFiltered$qc_determination=="Fail")), c(1, 2)] # selecting sub and ses columns
+# exclude T1 based on `tri.nary_score_without_rater.2`==0
+# note that trinary score == 2 means good, == 0 means bad, == 1 means in between. 
+t1_exclusion <- collated_NKI.xcp_ageFiltered[c(which(collated_NKI.xcp_ageFiltered$tri.nary_score_without_rater.2==0)), ]
+t1_exclusion_sessions <- collated_NKI.xcp_ageFiltered[c(which(collated_NKI.xcp_ageFiltered$tri.nary_score_without_rater.2==0)), c(1, 2)] # selecting sub and ses columns
 t1_exclusion_sessions <- t1_exclusion_sessions %>% mutate(sub_ses = paste0(sub, "_", ses)) # getting the subject and session that failed T1
 collated_NKI.xcp_ageFiltered <- collated_NKI.xcp_ageFiltered %>% mutate(sub_ses =  paste0(sub, "_", ses))
 
@@ -135,7 +136,7 @@ length(unique(meanFD_excluded$sub)) # N=403
 nrow(meanFD_excluded) # 1918 scans
 
 collated_NKI.xcp_headMotion <- meanFD_excluded # We first excluded all scans from a given session that failed T1 (above), then excluded by meanFD.
-casted_NKI.xcp <- dcast(collated_NKI.xcp_headMotion[,c(1:2)], sub~ses)
+casted_NKI.xcp <- dcast(dplyr::select(collated_NKI.xcp_headMotion, sub, ses), sub~ses)
 ```
 
 
@@ -218,7 +219,7 @@ file_paths <- file_paths %>% mutate(path = paste0("/cbica/projects/network_repli
 NKI_qc_filenames_atlases <- list(collated_NKI.xcp_Session, file_paths) 
 
 saveRDS(NKI_qc_filenames_atlases, "/cbica/projects/network_replication/input/NKI/sample_selection/NKI_qc_CIFTI_filepaths_20230629.RData")
-
+ 
 ```
 
 
@@ -337,9 +338,7 @@ mean(final_dem_df$age) # mean=13.95
 sd(final_dem_df$age) # SD=4.8
 
 length(which(final_dem_df$sex=="Female")) # 186 females
- 
-write.csv(final_dem_df, "/cbica/projects/network_replication/input/NKI/sample_selection/NKI_demographics_finalsample_20230629.csv")
+
+write.csv(final_dem_df, "/cbica/projects/network_replication/input/NKI/sample_selection/NKI_demographics_finalsample_20230629.csv", row.names = F)
 ```
   
-
-

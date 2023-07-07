@@ -119,7 +119,7 @@ listCifti <- function(subject, list_filepath, ciftiFiles_df){
   gc()
 }
 
-# make list of ciftis, extract and concatenate timeseries for task and rest scans, compute connectivity matrices for subjects, ages 5-22 
+# make list of ciftis, extract and concatenate timeseries for task and rest scans, compute connectivity matrices for subjects, ages 8-23
 lapply(participants, listCifti, list_filepath= PNC_CIFTI_filepaths, ciftiFiles_df = PNC_CIFTI_summary)
 
 

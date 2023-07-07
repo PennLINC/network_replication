@@ -85,6 +85,8 @@ length(unique(collated_HCPD.xcp$sub)) # 652 participants before head motion QC
 
 ## 2) exclude participants with medical conditions affecting brain function, gross neurological abnormalities
 ```{r medical_exclusion}
+
+
 # cancer/leukemia
 cancer <- demographics$src_subject_id[c(which(demographics$medhis_2e == 1))] # HCD0641341
 
@@ -130,7 +132,7 @@ collated_HCPD.xcp_headMotion <- collated_HCPD.xcp_medExclusion %>% filter(meanFD
 length(unique(collated_HCPD.xcp_headMotion$sub)) # 2 additional participants excluded by meanFD > 0.3, N=629 after excluding meanFD >= 0.3
 nrow(collated_HCPD.xcp_headMotion) #5165 scans
 
-write.csv(collated_HCPD.xcp_headMotion, "/cbica/projects/network_replication/input/HCPD/sample_selection/collated_HCPD.xcp_headMotion_20221224.csv")
+write.csv(collated_HCPD.xcp_headMotion, "/cbica/projects/network_replication/input/HCPD/sample_selection/collated_HCPD.xcp_headMotion_20221224.csv", row.names=F)
 ```
 
 
@@ -150,7 +152,7 @@ fMRIinclude <- collated_HCPD.xcp_headMotion %>% mutate(KeyGroup = paste0("dataty
 fMRIinclude$KeyGroup[c(which(str_detect(fMRIinclude$sub, "0577358")))] <- paste0("acquisition-VARIANTNumVolumes_",fMRIinclude$KeyGroup[c(which(str_detect(fMRIinclude$sub, "0577358")))])
 fMRIinclude$KeyGroup[c(which(str_detect(fMRIinclude$sub, "1529756")))] <- paste0("acquisition-VARIANTNumVolumes_",fMRIinclude$KeyGroup[c(which(str_detect(fMRIinclude$sub, "1529756")))])
   
-fMRIinclude_CUBIDS <- merge(fMRIinclude, CUBIDS_summary[,c(2, 17, 22)], by ="KeyGroup")
+fMRIinclude_CUBIDS <- merge(fMRIinclude, dplyr::select(CUBIDS_summary, KeyGroup, NumVolumes, RepetitionTime), by ="KeyGroup")
   
 
 
@@ -203,30 +205,26 @@ final_demographics <- merge(demographics, final_participants, by = "sub")
  
 
 ## include average of relMeansRMSMotion and meanFD across the acquisitions included in calculating connectivity matrix 
-# for each subject, take average relMeansRMSMotion and meanFD
+# for each subject, take average meanFD
 subject <- c()
 ses <- c()
-avg_relMeansRMSMotion_vec <- c()
 avg_meanFD_vec <- c()
 for(i in c(1:length(unique(HCPD_FinalSample_CUBIDS$sub)))){
   indices <- which(HCPD_FinalSample_CUBIDS$sub == unique(HCPD_FinalSample_CUBIDS$sub)[i])
-  avg_RMS <- mean(as.numeric(HCPD_FinalSample_CUBIDS$relMeansRMSMotion[indices]))
   avg_meanFD <- mean(as.numeric(HCPD_FinalSample_CUBIDS$meanFD[indices]))
   subject <- append(subject, unique(HCPD_FinalSample_CUBIDS$sub)[i])
   ses <- append(ses,HCPD_FinalSample_CUBIDS$ses[indices[1]])
-  avg_relMeansRMSMotion_vec <- append(avg_relMeansRMSMotion_vec, avg_RMS)
   avg_meanFD_vec <- append(avg_meanFD_vec, avg_meanFD)
 }  
 
-HCPD_avgMotion <- data.frame(cbind(subject, ses, avg_meanFD_vec, avg_relMeansRMSMotion_vec))
-names(HCPD_avgMotion) <- c("sub", "ses", "meanFD_avgSes", "relMeansRMSMotion_avgSes")
+HCPD_avgMotion <- data.frame(cbind(subject, ses, avg_meanFD_vec))
+names(HCPD_avgMotion) <- c("sub", "ses", "meanFD_avgSes")
 HCPD_avgMotion$meanFD_avgSes <- as.numeric(HCPD_avgMotion$meanFD_avgSes)
-HCPD_avgMotion$relMeansRMSMotion_avgSes <- as.numeric(HCPD_avgMotion$relMeansRMSMotion_avgSes)
 final_dem_df <- merge(final_demographics, HCPD_avgMotion, by="sub")
    
 unique(final_dem_df$race)
  
-length(which(final_dem_df$race=="White"))/nrow(final_dem_df)
+length(which(final_dem_df$race=="Asian"))/nrow(final_dem_df)
 # white = 395 - 63.2%
 # asian = 48 - 7.7%%
 # black = 69 - 11%
@@ -237,7 +235,7 @@ length(which(final_dem_df$race=="White"))/nrow(final_dem_df)
 sd(final_dem_df$interview_age/12) # mean=14.5, SD=4.1
 length(which(final_dem_df$sex=="F")) # 337 females
 
-write.csv(final_dem_df, "/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_demographics_finalsample_20221226.csv")
+write.csv(final_dem_df, "/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_demographics_finalsample_20221226.csv", row.names=F)
 
 ```
 
@@ -270,9 +268,9 @@ for (i in c(1:nrow(HCPD_FinalSample_CUBIDS))) {
   atlas_list <- append(atlas, atlas_list)
   subject_list <- append(subject, subject_list)
   if (subject == "sub-1529756" | subject == "sub-0577358") {
-  file <- paste0(subject, "_ses-V1_task-", task, "_acq-VARIANTNumVolumes_dir-", direction, "_run-", run, "_space-fsLR_atlas-", atlas, "_den-91k_timeseries.ptseries.nii")
+  file <- paste0(subject, "_ses-V1_task-", task, "_acq-VARIANTNumVolumes_dir-", direction, "_run-0", run, "_space-fsLR_atlas-", atlas, "_den-91k_timeseries.ptseries.nii")
   } else {
-  file <- paste0(subject, "_ses-V1_task-", task, "_dir-", direction, "_run-", run, "_space-fsLR_atlas-", atlas, "_den-91k_timeseries.ptseries.nii")
+  file <- paste0(subject, "_ses-V1_task-", task, "_dir-", direction, "_run-0", run, "_space-fsLR_atlas-", atlas, "_den-91k_timeseries.ptseries.nii")
 
   }
   ptseries_filenames <- append(file, ptseries_filenames)
@@ -307,11 +305,10 @@ length(unique(file_paths_restOnly_FINAL$subject)) #N=611
   
 HCPD_qc_filenames_atlases <- list(HCPD_FinalSample_CUBIDS, file_paths_FINAL) 
 HCPD_qc_filenames_atlases_restOnly <- list(HCPD_FinalSample_CUBIDS[c(which(HCPD_FinalSample_CUBIDS$task=="rest")),], file_paths_restOnly_FINAL) 
-  
-
+ 
 saveRDS(HCPD_qc_filenames_atlases, "/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_FinalSample_withCUBIDS_20221227.RData")
 saveRDS(HCPD_qc_filenames_atlases_restOnly, "/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_FinalSample_withCUBIDS_restOnly_20221227.RData")
- 
+  
 ```
 
 
@@ -355,38 +352,29 @@ demographics <- demographics %>% mutate(sub = gsub("HCD", "sub-", src_subject_id
 final_demographics_restOnly <- merge(demographics, final_participants_restOnly, by = "sub")
  
 
-## include average of relMeansRMSMotion and meanFD across the acquisitions included in calculating connectivity matrix 
-# for each subject, take average relMeansRMSMotion and meanFD
+## include average of meanFD across the acquisitions included in calculating connectivity matrix 
+# for each subject, take average meanFD
 subject <- c()
 ses <- c()
-avg_relMeansRMSMotion_vec <- c()
 avg_meanFD_vec <- c()
 for(i in c(1:length(unique(HCPD_FinalSample_CUBIDS_restOnly$sub)))){
   indices <- which(HCPD_FinalSample_CUBIDS_restOnly$sub == unique(HCPD_FinalSample_CUBIDS_restOnly$sub)[i])
-  avg_RMS <- mean(as.numeric(HCPD_FinalSample_CUBIDS_restOnly$relMeansRMSMotion[indices]))
   avg_meanFD <- mean(as.numeric(HCPD_FinalSample_CUBIDS_restOnly$meanFD[indices]))
   subject <- append(subject, unique(HCPD_FinalSample_CUBIDS_restOnly$sub)[i])
   ses <- append(ses,HCPD_FinalSample_CUBIDS_restOnly$ses[indices[1]])
-  avg_relMeansRMSMotion_vec <- append(avg_relMeansRMSMotion_vec, avg_RMS)
   avg_meanFD_vec <- append(avg_meanFD_vec, avg_meanFD)
 }  
  
 
-HCPD_avgMotion <- data.frame(cbind(subject, ses, avg_meanFD_vec, avg_relMeansRMSMotion_vec))
-names(HCPD_avgMotion) <- c("sub", "ses", "meanFD_avgSes", "relMeansRMSMotion_avgSes")
+HCPD_avgMotion <- data.frame(cbind(subject, ses, avg_meanFD_vec))
+names(HCPD_avgMotion) <- c("sub", "ses", "meanFD_avgSes")
 HCPD_avgMotion$meanFD_avgSes <- as.numeric(HCPD_avgMotion$meanFD_avgSes)
-HCPD_avgMotion$relMeansRMSMotion_avgSes <- as.numeric(HCPD_avgMotion$relMeansRMSMotion_avgSes)
 final_dem_restOnly_df <- merge(final_demographics_restOnly, HCPD_avgMotion, by="sub")
   
 
 length(which(final_dem_restOnly_df$sex=="F")) # 329 females
 
-write.csv(final_dem_restOnly_df, "/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_demographics_finalsample_restOnly_20230103.csv")
+write.csv(final_dem_restOnly_df, "/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_demographics_finalsample_restOnly_20230103.csv", row.names=F)
 ``` 
 
-
-```{r}
-
-HCPD_CIFTI_summary
-```
 

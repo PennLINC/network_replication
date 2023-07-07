@@ -13,13 +13,13 @@ print("This script 1) creates a list of ciftis to extract timeseries data from, 
 # get subjects and filepaths
 HCPD_CIFTI_summary  <- readRDS("/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_FinalSample_withCUBIDS_20221227.RData") 
 participants <- unique(HCPD_CIFTI_summary[[1]]$sub)
- 
+
 
 # paths to all the cifti files (task carit, emotion, guessing, rest for each atlas)
 HCPD_CIFTI_filepaths <- HCPD_CIFTI_summary[[2]]$path
 
 
- 
+
 ## This function extracts the timeseries data from cifti files and concatenates those timeseries for existing acquisitions
 ### @param name A character string, the name of cifti containing timeseries of interest
 ### @param cifti A list of ciftis containing the cifti of interest
@@ -58,7 +58,7 @@ listCifti <- function(subject, list_filepath, ciftiFiles_df){
   names(cifti_list) <- cifti_names$ciftiList_names
   print(paste(which(participants == subject), "/", length(participants), "Cifti list done for", subject))
   saveRDS(cifti_list, paste0("/cbica/projects/network_replication/input/HCPD/connMatricesData/cifti_lists/", subject, "_timeseriesTaskandRest.RData"))
-   
+  
   
   if(length(cifti_list) == 0){
     print(paste(subject, "missing cifti_list"))
@@ -94,7 +94,7 @@ listCifti <- function(subject, list_filepath, ciftiFiles_df){
   rm(matrix_output)
   gc()
 }
- 
+
 # make list of ciftis, extract and concatenate timeseries for task and rest scans, compute connectivity matrices for subjects, ages 5-22 
 lapply(participants, listCifti, list_filepath= HCPD_CIFTI_filepaths, ciftiFiles_df = HCPD_CIFTI_summary)
 
