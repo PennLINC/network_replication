@@ -24,17 +24,13 @@ unzip -j "$file" "xcp_d/$sub/ses-V1/func/*ses-V1_task*space-fsLR_atlas*Schaefer2
 unzip -j "$file" "xcp_d/$sub/ses-V1/func/*ses-V1_task*space-fsLR_atlas*Schaefer417*ptseries.nii" -d /cbica/projects/network_replication/input/HCPD/hcpd_xcp/$sub
 
 
-#get processed timeseries residuals
-mkdir /cbica/projects/network_replication/input/HCPD/hcpd_xcp/qc_files/$sub
-unzip -j "$file" "xcp_d/$sub/ses-V1/func/*ses-V1_task-rest*fsLR*qc.csv" -d /cbica/projects/network_replication/input/HCPD/hcpd_xcp/qc_files/$sub  ###this unzips just the one file you want and puts it in the -d director
+#get qc files
+unzip -j "$file" "xcp_d/$sub/ses-V1/func/*ses-V1_task-rest*fsLR*qc.csv" -d /cbica/projects/network_replication/input/HCPD/hcpd_xcp/qc_files/  ###this unzips just the one file you want and puts it in the -d director
 
 datalad drop $file   ###drop the zip
 fi
 done
-
-# cd /cbica/projects/network_replication/input/HCPD/hcpd_xcp/qc_files --description concatenated all the qc files into a csv
-# cat */*.csv > HCPD_xcp_qc.csv
-
+ 
 
 
 
