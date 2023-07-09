@@ -262,18 +262,15 @@ make_smooths_fig_centered <- function(atlas, metric){
   smooth_fits <- get(paste0("devTraj.centered.", atlas, ".", metric, "_df"))
   smooths_fig_centered <- ggplot(smooth_fits,aes(age,est,group=SA.axis_rank)) + 
     geom_line(data = smooth_fits, size=.7, alpha = .6, aes(color=SA.axis_rank)) + 
-    ylim(-0.035, 0.055) + 
-    #ylab("Global Brain Connectivity \n(Zero-Centered)") + xlab("Age") + 
+    ylim(-0.042, 0.053) + 
     paletteer::scale_color_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(smooth_fits$SA.axis_rank), max(smooth_fits$SA.axis_rank)), oob = squish) + 
     theme(
       axis.title.x=element_blank(),
       axis.title.y=element_blank(),
-      #axis.title.x=element_text(size=24, color = "black"),
-      #axis.title.y=element_text(size=24, color = "black"),
       axis.line = element_line(color = "black"),
-      axis.text=element_text(size=32, color = "black"),
+      axis.text=element_text(size=28, color = "black"),
       panel.background=element_blank(),  
-      legend.position = "none")  
+      legend.position = "none") 
   return(smooths_fig_centered)
 }
  
@@ -284,24 +281,19 @@ make_smooths_fig_centered <- function(atlas, metric){
 # @param metric A character string of connectivity metric (i.e. "GBC")
 # @param parcels A character string of parcel(s) whose trajectory you want to plot (i.e. "SomMot", "visual")
 # @param color_hexcode A character string for color of geom_line
-# @param SA_rank A numeric for mean SA rank of parcels
-# @param ggseg_atlas A character for 
+
 make_repParcel.fig <- function(metric, atlas, parcels, color_hexcode) {
   df <- get(paste0("repParcels_", atlas))
   smooth_fits <- df[[parcels]]
   main.plot <- ggplot(smooth_fits,aes(age,est,group=SA.axis_rank)) + 
-    geom_line(data = smooth_fits, size=1.5, alpha = .6,  colour=color_hexcode) + ylim(-0.035, 0.055) + xlim(min(smooth_fits$age), max(smooth_fits$age)) + 
-    #ylab("Global Brain Connectivity \n(Zero-Centered)") + xlab("Age") + 
+    geom_line(data = smooth_fits, size=1.5, alpha = .6,  colour=color_hexcode) + ylim(-0.042, 0.053) + xlim(min(smooth_fits$age), max(smooth_fits$age)) +
     theme(
       axis.title.x=element_blank(),
       axis.title.y=element_blank(),
-      #axis.title.x=element_text(size=24, color = "black"),
-      #axis.title.y=element_text(size=24, color = "black"),
       axis.line = element_line(color = "black"),
-      axis.text=element_text(size=32, color = "black"),
+      axis.text=element_text(size=28, color = "black"),
       panel.background=element_blank(),  
-      legend.position = "none")  
-  #plot.with.inset <- main.plot + annotation_custom(ggplotGrob(fig_inset), xmin = 16, xmax = 20, ymin = ggplot_coords[3], ymax = ggplot_coords[4])
+      legend.position = "none") 
   return(main.plot)
 }
 
