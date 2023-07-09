@@ -1,17 +1,10 @@
-# make figures
-
-
+# code for making figures in 3_<dataset>_devEffectFigures.Rmd
 source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/GAM_functions.R")
 library(dplyr)
 library(magrittr)
 library(ggplot2)
 library(paletteer)
-
  
-# load gordon parcel xcp mapping
-gordon_mapping <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Gordon333Atlas.Parcels.LabelKey.csv")
-
-   
 
 # load parcellated S-A axis
 glasser_SAaxis <- read.csv("/cbica/projects/network_replication/SAaxis/glasser_SAaxis.csv")
@@ -62,8 +55,6 @@ combineGAMdfs <- function(metric, atlas){
   df.list <- list(SAaxis, gam_output)
   axis <- Reduce(function(x,y) merge(x,y, all=TRUE, sort=F), df.list) 
   axis$SA.axis_rank <- as.numeric(axis$SA.axis_rank)
-  axis <- axis[,-c(which(names(axis) =="X"))]
-
   return(axis)
 }
   
@@ -120,165 +111,7 @@ make_gam.smooths_covbat <- function(metric, atlas, dataset){
   return(gam.smooths)
 }
 
-
-
-
  
-
-# Functions for making figures
-
-## FIGURE: Surface View of Age Effect
-# @param metric A character string of connectivity metric (i.e. "GBC")
-# @param atlas A character string of atlas name
-# NOTE: glasser and schaefer17_400 need to have separate hemispheres; gordon needs labels to be re-mapped
-
-ageEffect_surf_figure <- function(atlas, metric){
-  if (metric=="GBC" & str_detect(atlas,"schaefer200")) {
-    ggseg_atlas <- paste0("schaefer17_200")
-  } else if (metric=="GBC" & str_detect(atlas,"schaefer400")){
-    ggseg_atlas <- paste0("schaefer17_400")  
-  } else if (str_detect(atlas, "x")) {
-    network <- str_extract(atlas, "x[0-9]+")[1]
-    network <- gsub("x", "", network)
-    parcellation <- str_extract(atlas, "r[0-9]{3}")[1]
-    parcellation <- gsub("r", "", parcellation)
-    ggseg_atlas <- paste0("schaefer", network, "_", parcellation)
-  } else if (atlas == "gordon" | atlas=="glasser") {
-    ggseg_atlas <- atlas
-  } else (
-    print("Please provide valid atlas.")
-  )
-  df.dev <- paste0(metric, ".axis_", atlas)
-  df.dev <- get(df.dev)
-  df.dev <- df.dev %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
-  df.dev$region <- df.dev$label
-  df.dev <- data.frame(cbind(df.dev$region, df.dev$GAM.age.AdjRsq))
-  names(df.dev) <- c("region", "GAM.age.AdjRsq")
-  df.dev$GAM.age.AdjRsq <- as.numeric(df.dev$GAM.age.AdjRsq)
-  # adjust region names
-  if(atlas =="schaefer200" | atlas =="schaefer400" | str_detect(atlas, "17")) {
-    df.dev$region <- gsub("Network", "17Network", df.dev$region)
-  } else if(str_detect(atlas, "7")) {
-    df.dev$region <- gsub("Network", "7Network", df.dev$region)
-  } else if(atlas=="gordon"){
-    df.dev$region <- gordon_mapping$parcel.balsa
-    df.dev$region <- gsub("L_", "", df.dev$region)
-    df.dev$region <- gsub("R_", "", df.dev$region)
-  } else if(atlas=="glasser") {
-    df.dev$region <- df.dev$region  # nothing needs to be done for glasser
-  } else{
-    print("Please provide valid atlas.")
-  }
-  
-  # split df's into right and left hemisphere for schaefer400x17 and glasser 
-  # make ggseg figure
-  if(atlas=="glasser") { 
-    r_df.dev <-  df.dev
-    r_df.dev$region<- gsub(x = r_df.dev$region, pattern = "R_", replacement = "")
-    r_df.dev$region <-  gsub(x = r_df.dev$region, pattern = "_ROI", replacement = "")
-    r_df.dev <- r_df.dev[-which(grepl("L_", r_df.dev$region)),]
-    
-    l_df.dev <-  df.dev
-    l_df.dev$region<- gsub(x = l_df.dev$region, pattern = "L_", replacement = "")
-    l_df.dev$region <-  gsub(x = l_df.dev$region, pattern = "_ROI", replacement = "")
-    l_df.dev <- l_df.dev[-which(grepl("R_", l_df.dev$region)),]
-     
-     
-    r_glasser_ageEffect <- ggplot() + geom_brain(data=r_df.dev, 
-                                               atlas=get(ggseg_atlas), 
-                                               mapping=aes(fill=GAM.age.AdjRsq), 
-                                               show.legend=TRUE, 
-                                               hemi = "right") + 
-      scale_fill_gradientn(colors= c("#00A3A7FF", "#FFFFFF","#C75DAAFF"), 
-                           limits = range(df.dev$GAM.age.AdjRsq), 
-                           values=rescale(c(min(df.dev$GAM.age.AdjRsq),0,max(df.dev$GAM.age.AdjRsq)))) +
-      theme_void()
-    
-    l_glasser_ageEffect <- ggplot() + geom_brain(data=l_df.dev, 
-                                                 atlas=glasser, 
-                                                 mapping=aes(fill=GAM.age.AdjRsq), 
-                                                 show.legend=TRUE, 
-                                                 hemi = "left") + 
-      labs(title = paste(atlas, metric)) +
-      scale_fill_gradientn(colors= c("#00A3A7FF", "#FFFFFF","#C75DAAFF"), 
-                           limits = range(df.dev$GAM.age.AdjRsq), 
-                           values=rescale(c(min(df.dev$GAM.age.AdjRsq),0,max(df.dev$GAM.age.AdjRsq)))) +
-      theme_void()
-    
-
-    ageEffect_surf <- plot_grid(l_glasser_ageEffect, r_glasser_ageEffect, ncol = 1)
-    
-  } else if (atlas=="schaefer400x17" | atlas=="schaefer400"){
-    r_df.dev <-  df.dev
-    r_df.dev$region<- gsub(x = df.dev$region, pattern = "17Networks_RH_", replacement = "")
-    r_df.dev <- r_df.dev[-which(grepl("17Networks_LH_", r_df.dev$region)),]
-       
-    l_df.dev <-  df.dev
-    l_df.dev$region<- gsub(x = df.dev$region, pattern = "17Networks_LH_", replacement = "")
-    l_df.dev <- l_df.dev[-which(grepl("17Networks_RH_", l_df.dev$region)),]
-    
-    r_schaefer17_400_ageEffect <- ggplot() + geom_brain(data=r_df.dev, 
-                                                 atlas=get(ggseg_atlas), 
-                                                 mapping=aes(fill=GAM.age.AdjRsq), 
-                                                 show.legend=TRUE, 
-                                                 hemi = "right") + 
-      scale_fill_gradientn(colors= c("#00A3A7FF", "#FFFFFF","#C75DAAFF"), 
-                           limits = range(df.dev$GAM.age.AdjRsq), 
-                           values=rescale(c(min(df.dev$GAM.age.AdjRsq),0,max(df.dev$GAM.age.AdjRsq)))) +
-      theme_void()
-    
-    l_schaefer17_400_ageEffect <- ggplot() + geom_brain(data=l_df.dev, 
-                                                 atlas=schaefer17_400, 
-                                                 mapping=aes(fill=GAM.age.AdjRsq), 
-                                                 show.legend=TRUE, 
-                                                 hemi = "left") + 
-      labs(title = paste(atlas, metric)) +
-      scale_fill_gradientn(colors= c("#00A3A7FF", "#FFFFFF","#C75DAAFF"), 
-                           limits = range(df.dev$GAM.age.AdjRsq), 
-                           values=rescale(c(min(df.dev$GAM.age.AdjRsq),0,max(df.dev$GAM.age.AdjRsq)))) +
-      theme_void()
-    
-    
-    ageEffect_surf <- plot_grid(l_schaefer17_400_ageEffect, r_schaefer17_400_ageEffect, ncol = 1)
-  } else {
-    ageEffect_surf <- ggplot() + geom_brain(data=df.dev, 
-                                            atlas=get(ggseg_atlas), 
-                                            mapping=aes(fill=GAM.age.AdjRsq), 
-                                            show.legend=TRUE, 
-                                            position = position_brain(hemi ~ side)) + 
-      labs(title = paste(atlas, metric)) +
-      scale_fill_gradientn(colors= c("#00A3A7FF", "#FFFFFF","#C75DAAFF"), 
-                           limits = range(df.dev$GAM.age.AdjRsq), 
-                           values=rescale(c(min(df.dev$GAM.age.AdjRsq),0,max(df.dev$GAM.age.AdjRsq)))) +
-      theme_void()
-    
-  }
-  return(ageEffect_surf)
-}
-
-## FIGURE: SA axis average rank vs. age effect - before spin test
-# @param axis A dataframe with SA-axis rank and GAM results
-# @param metric A character string of connectivity metric (i.e. "GBC")
-# @param atlas A character string of atlas name
-gam_figure <- function(axis, metric, atlas){
-  axis <- axis %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
-  AgeEffect_figure <- ggplot(axis, aes(x=SA.axis_rank, y=GAM.age.AdjRsq, fill = SA.axis_rank_signif)) + 
-    geom_point(color = "white", shape = 21, size=2) +
-      scale_fill_gradient2(low="#24bde0",high = "#dc665e", mid = "#F8E97D", midpoint = median(axis$SA.axis_rank), na.value="gray") +
-      labs(fill = "SA Axis Rank", x="\nSensorimotor-Association Axis Rank\n", y=expression(paste("Age Effect (Delta Adj", " R"^2, ")"))) +
-    ggtitle(paste(metric, "-", atlas)) +
-      geom_smooth(data = axis, method='lm', se=TRUE, fill=alpha(c("gray70"),.9), col="black") +
-      theme(plot.title = element_text(size=12, hjust=0.5),
-        axis.title.x=element_text(size=12, color = "black"),
-        axis.title.y=element_text(size=12, color = "black"),
-        axis.line = element_line(color = "black"),
-        axis.text=element_text(size=12, color = "black"),
-        panel.background=element_blank(),
-        legend.position = "right") +
-    stat_cor(method = "spearman",label.x.npc = 0.6, label.y.npc = 0.8,size = 4, r.digits = 3)
-  return(AgeEffect_figure)
-}
-
 ## FIGURE: SA axis average rank vs. age effect - with spin test
 # included all datapoints
 # @param axis A dataframe with SA-axis rank and GAM results
@@ -288,7 +121,7 @@ gam_figure <- function(axis, metric, atlas){
 # @param x_pos A numeric for horizontal position of r_text
 # @param y_pos A numeric for vertical position of r_text
  
-gam_figure_p.spin <- function(axis, metric, atlas, r_text, x_pos, y_pos){
+gam_figure_p.spin <- function(axis, metric, atlas, r_text, x_pos, y_pos, ylim_lower, ylim_upper){
   axis <- axis %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
   AgeEffect_figure <- ggplot(axis, aes(x=SA.axis_rank, y=GAM.age.AdjRsq, fill = SA.axis_rank_signif)) + 
     geom_point(color = "gray", shape = 21, size=3.5) + 
@@ -296,7 +129,7 @@ gam_figure_p.spin <- function(axis, metric, atlas, r_text, x_pos, y_pos){
     paletteer::scale_color_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(axis$SA.axis_rank), max(axis$SA.axis_rank)), oob = squish) +
       labs(fill = "SA Axis Rank", x="\nSensorimotor-Association Axis Rank\n", y=expression(paste("Age Effect (Delta Adj", " R"^2, ")"))) +
       #ggtitle(paste(metric, "-", atlas)) + 
-    ylim(-0.07, 0.10) +  # ylim(-0.065, 0.15) for GBC;  ylim(-0.055, 0.17) for WNC; ylim(-0.07, 0.10) for BNC;  
+    ylim(ylim_lower, ylim_upper) +  # ylim(-0.065, 0.15) for GBC;  ylim(-0.07, 0.10) for BNC;  ylim(-0.055, 0.17) for WNC; 
       geom_smooth(data = axis, method='lm', se=TRUE, fill=alpha(c("gray70"),.9), col="black") +
       theme(
         axis.title.x=element_text(size=24, color = "black", margin = margin(t = -15, r = 0, b = 0, l = 0)),
@@ -311,60 +144,6 @@ gam_figure_p.spin <- function(axis, metric, atlas, r_text, x_pos, y_pos){
  
 
 
-## FIGURE: SA axis average rank vs. age effect - with spin test, with Val's color palette
-# included all datapoints
-# @param axis A dataframe with SA-axis rank and GAM results
-# @param metric A character string of connectivity metric (i.e. "GBC")
-# @param atlas A character string of atlas name
-# @param r_text An expression including info on p_spin and r
-# @param x_pos A numeric for horizontal position of r_text
-# @param y_pos A numeric for vertical position of r_text
-
-gam_figure_p.spin_Val <- function(axis, metric, atlas, r_text, x_pos, y_pos){
-  axis <- axis %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
-  AgeEffect_figure <- ggplot(axis, aes(x=SA.axis_rank, y=GAM.age.AdjRsq, fill = SA.axis_rank_signif)) + 
-    geom_point(color = "gray", shape = 21, size=3.5) + 
-    scale_fill_gradient2(low = "goldenrod1", mid = "white", high = "#6f1282", guide = "colourbar", aesthetics = "fill", name = NULL, midpoint = 100) +
-    scale_colour_gradient2(low = "goldenrod1", mid = "white", high = "#6f1282", guide = "colourbar", aesthetics = "color", name = NULL, midpoint = 100) +
-    labs(fill = "SA Axis Rank", x="\nSensorimotor-Association Axis Rank\n", y=expression(paste("Age Effect (Delta Adj", " R"^2, ")"))) +
-    #ggtitle(paste(metric, "-", atlas)) + 
-    ylim(-0.055, 0.17) +  # ylim(-0.065, 0.15) for GBC; ylim(-0.055, 0.17) for WNC; ylim(-0.07, 0.10) for BNC;  
-    geom_smooth(data = axis, method='lm', se=TRUE, fill=alpha(c("gray70"),.9), col="black") +
-    theme(
-      axis.title.x=element_text(size=18, color = "black", margin = margin(t = -15, r = 0, b = 0, l = 0)),
-      axis.title.y=element_text(size=18, color = "black"),
-      axis.line = element_line(color = "black"),
-      axis.text=element_text(size=18, color = "black"),
-      panel.background=element_blank(),  
-      legend.position = "none") +
-    annotate(geom="text", x=x_pos, y=y_pos, label=r_text, color="black", size=7)
-  return(AgeEffect_figure)
-}
-
-## FIGURE: Developmental Trajectories 
-# @param metric A character string of connectivity metric (i.e. "GBC")
-# @param atlas A character string of atlas name 
-devTraj_figure <- function(metric, atlas) {
-  gam.smooths <- get(paste0("gam.smooths.", atlas, '.', metric))
-  axis <- get(paste0(metric, ".axis_", atlas))  
-  smooths_figure <- ggplot(gam.smooths,aes(age,fit,group=index)) + 
-    geom_line(data = gam.smooths, size=1, alpha = .6, aes(color=SA.axis_rank)) + 
-    paletteer::scale_color_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(axis$SA.axis_rank), max(axis$SA.axis_rank)), oob = squish) + 
-    labs(color = "SA Axis Rank",
-         x="Age", 
-         y="Predicted Global Brain Connectivity") +
-    ggtitle(paste(metric, "-", atlas)) + 
-    theme(
-      axis.title.x=element_text(size=12, color = "black"),
-      axis.title.y=element_text(size=12, color = "black"),
-      axis.line = element_line(color = "black"),
-      axis.text=element_text(size=12, color = "black"),
-      panel.background=element_blank(),
-      legend.position = "bottom") + coord_cartesian(expand = FALSE, xlim = c(8, 23))
-  return(smooths_figure)
-}
-
-
 ## Makes smooths df for developmental trajectories, centered on zero
 # @param metric A character string of connectivity metric (i.e. "GBC")
 # @param atlas A character string of atlas name 
@@ -372,18 +151,11 @@ devTraj_figure <- function(metric, atlas) {
 
 make_gam.smooths_centered <- function(metric, atlas, dataset){
   demog <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s%3$s_demographics_finalsample.csv", dataset, metric, atlas))
-  if (dataset=="NKI"){
-    demog$sex <- as.factor(demog$gender)
-  } else {
-    demog$sex <- as.factor(demog$sex)
-  }
+  demog$sex <- as.factor(demog$sex)
+ 
   #make wide_df to include parcels and age, sex, meanFD_avgSes 
   start_parcels <- which(names(demog) == "subject") +1
-  if (dataset=="HCPD") {
-    end_parcels <- start_parcels + nrow(get(paste0(atlas, ".parcel.labels"))) - 1
-  } else {
-    end_parcels <- which(names(demog) == "X")-1
-  }
+  end_parcels <- start_parcels + nrow(get(paste0(atlas, ".parcel.labels"))) - 1
   ind_age <- which(names(demog) == "age")
   ind_sex <- which(names(demog) == "sex")
   ind_meanFD_avgSes <- which(names(demog) == "meanFD_avgSes")
@@ -506,41 +278,14 @@ make_smooths_fig_centered <- function(atlas, metric){
 }
  
  
-## FIGURE: developmental trajectories, centered on zero - separated by position on SA axis
-# @param atlas A character string of atlas name 
-# @param metric A character string of connectivity metric (i.e. "GBC")
-# @param SA_position A character string of SM, middle axis, or association pole (i.e. "SM", "middle.axis", "assoc.pole")
-
-make_SM.middle.assoc.fig_centered <- function(atlas, metric, SA_position){
-  smooth_fits <- get(paste0(metric, "_SM.middle.assoc"))
-  smooth_fits <- smooth_fits[[atlas]][[SA_position]]
-  if(SA_position == "SM"){
-    SM.middle.assoc_centered <- ggplot(smooth_fits,aes(age,est,group=SA.axis_rank)) + 
-      geom_line(data = smooth_fits, size=.7, alpha = .5, aes(color=SA.axis_rank)) + 
-      ggtitle(paste(metric, "-", atlas, "Sensorimotor Pole")) + 
-      scale_color_gradient2(low="#006CA5FF",high = "#A0CEB6FF", mid = "#009BA8FF", midpoint = median(smooth_fits$SA.axis_rank)) +
-      theme_classic()
-  } else if (SA_position =="middle.axis") {
-    SM.middle.assoc_centered <- ggplot(smooth_fits,aes(age,est,group=SA.axis_rank)) + 
-      geom_line(data = smooth_fits, size=.7, alpha = .5, aes(color=SA.axis_rank)) + 
-      ggtitle(paste(metric, "-", atlas, "Middle Axis")) +   
-      scale_color_gradient2(low="#F8E69DFF",high = "#DB4500FF", mid = "#F0BB55FF", midpoint = median(smooth_fits$SA.axis_rank)) + 
-      theme_classic()
-  } else {
-    SM.middle.assoc_centered <- ggplot(smooth_fits,aes(age,est,group=SA.axis_rank)) + 
-      geom_line(data = smooth_fits, size=.7, alpha = .5, aes(color=SA.axis_rank)) + 
-      ggtitle(paste(metric, "-", atlas, "Association Pole")) +   
-      scale_color_gradient2(low="#F0BB55FF",high = "#A51122FF", mid = "#DB4500FF", midpoint = median(smooth_fits$SA.axis_rank)) +
-      theme_classic()
-  }
-  return(SM.middle.assoc_centered)
-}
 
 ## FIGURE: developmental trajectories for representative parcels
-# @param metric A character string of connectivity metric (i.e. "GBC")
 # @param atlas A character string of atlas name 
+# @param metric A character string of connectivity metric (i.e. "GBC")
 # @param parcels A character string of parcel(s) whose trajectory you want to plot (i.e. "SomMot", "visual")
 # @param color_hexcode A character string for color of geom_line
+# @param SA_rank A numeric for mean SA rank of parcels
+# @param ggseg_atlas A character for 
 make_repParcel.fig <- function(metric, atlas, parcels, color_hexcode) {
   df <- get(paste0("repParcels_", atlas))
   smooth_fits <- df[[parcels]]
@@ -581,6 +326,278 @@ make_repParcel.inset <- function(atlas, parcels, color_hexcode, SA_rank, ggseg_a
   }
 
 
+ 
+## FIGURE: Fitted GBC at each age -
+# @param metric A character string of connectivity metric (i.e. "GBC")
+# @param atlas_name A character string of atlas name 
+plot_cred.intervals <- function(atlas_name, metric) {
+  cor.credible.intervals <- get(paste0("cor.credible.intervals_", metric)) 
+  cor.credible.intervals <- cor.credible.intervals[[atlas_name]]
+  cor.credible.intervals$max.cor.window
+  fig <- ggplot(cor.credible.intervals, aes(x = age, y = SA.correlation, ymin = lower, ymax = upper)) + 
+    geom_line(size = .7) +
+    geom_ribbon(alpha = .2, fill = c("grey60")) +
+    labs(x="Age", y="Spatial Alignment of \nFitted GBC to S-A Axis (r)\n") + ggtitle(paste0(metric, "-", atlas_name, ": ", dataset)) +
+    theme_classic() + ylim(-0.61, 0) +  
+    theme(axis.text = element_text(size = 20, 
+                                   color = c("black")), 
+          axis.title = element_text(size = 20, color = c("black")), 
+          axis.line = element_line(size =.22), 
+          axis.ticks = element_line(size = .22)) +
+    scale_x_continuous(breaks=c(4, 6, 8, 10, 12, 14, 16, 18, 20, 22), expand = c(0, .1)) 
+  return(fig)
+}
+
+
+##########################
+######### Extras ######### 
+##########################
+
+# Functions for making figures
+# load gordon parcel xcp mapping
+gordon_mapping <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Gordon333Atlas.Parcels.LabelKey.csv")
+## FIGURE: Surface View of Age Effect
+# @param metric A character string of connectivity metric (i.e. "GBC")
+# @param atlas A character string of atlas name
+# NOTE: glasser and schaefer17_400 need to have separate hemispheres; gordon needs labels to be re-mapped
+
+ageEffect_surf_figure <- function(atlas, metric){
+  if (metric=="GBC" & str_detect(atlas,"schaefer200")) {
+    ggseg_atlas <- paste0("schaefer17_200")
+  } else if (metric=="GBC" & str_detect(atlas,"schaefer400")){
+    ggseg_atlas <- paste0("schaefer17_400")  
+  } else if (str_detect(atlas, "x")) {
+    network <- str_extract(atlas, "x[0-9]+")[1]
+    network <- gsub("x", "", network)
+    parcellation <- str_extract(atlas, "r[0-9]{3}")[1]
+    parcellation <- gsub("r", "", parcellation)
+    ggseg_atlas <- paste0("schaefer", network, "_", parcellation)
+  } else if (atlas == "gordon" | atlas=="glasser") {
+    ggseg_atlas <- atlas
+  } else (
+    print("Please provide valid atlas.")
+  )
+  df.dev <- paste0(metric, ".axis_", atlas)
+  df.dev <- get(df.dev)
+  df.dev <- df.dev %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+  df.dev$region <- df.dev$label
+  df.dev <- data.frame(cbind(df.dev$region, df.dev$GAM.age.AdjRsq))
+  names(df.dev) <- c("region", "GAM.age.AdjRsq")
+  df.dev$GAM.age.AdjRsq <- as.numeric(df.dev$GAM.age.AdjRsq)
+  # adjust region names
+  if(atlas =="schaefer200" | atlas =="schaefer400" | str_detect(atlas, "17")) {
+    df.dev$region <- gsub("Network", "17Network", df.dev$region)
+  } else if(str_detect(atlas, "7")) {
+    df.dev$region <- gsub("Network", "7Network", df.dev$region)
+  } else if(atlas=="gordon"){
+    df.dev$region <- gordon_mapping$parcel.balsa
+    df.dev$region <- gsub("L_", "", df.dev$region)
+    df.dev$region <- gsub("R_", "", df.dev$region)
+  } else if(atlas=="glasser") {
+    df.dev$region <- df.dev$region  # nothing needs to be done for glasser
+  } else{
+    print("Please provide valid atlas.")
+  }
+  
+  # split df's into right and left hemisphere for schaefer400x17 and glasser 
+  # make ggseg figure
+  if(atlas=="glasser") { 
+    r_df.dev <-  df.dev
+    r_df.dev$region<- gsub(x = r_df.dev$region, pattern = "R_", replacement = "")
+    r_df.dev$region <-  gsub(x = r_df.dev$region, pattern = "_ROI", replacement = "")
+    r_df.dev <- r_df.dev[-which(grepl("L_", r_df.dev$region)),]
+    
+    l_df.dev <-  df.dev
+    l_df.dev$region<- gsub(x = l_df.dev$region, pattern = "L_", replacement = "")
+    l_df.dev$region <-  gsub(x = l_df.dev$region, pattern = "_ROI", replacement = "")
+    l_df.dev <- l_df.dev[-which(grepl("R_", l_df.dev$region)),]
+    
+    
+    r_glasser_ageEffect <- ggplot() + geom_brain(data=r_df.dev, 
+                                                 atlas=get(ggseg_atlas), 
+                                                 mapping=aes(fill=GAM.age.AdjRsq), 
+                                                 show.legend=TRUE, 
+                                                 hemi = "right") + 
+      scale_fill_gradientn(colors= c("#00A3A7FF", "#FFFFFF","#C75DAAFF"), 
+                           limits = range(df.dev$GAM.age.AdjRsq), 
+                           values=rescale(c(min(df.dev$GAM.age.AdjRsq),0,max(df.dev$GAM.age.AdjRsq)))) +
+      theme_void()
+    
+    l_glasser_ageEffect <- ggplot() + geom_brain(data=l_df.dev, 
+                                                 atlas=glasser, 
+                                                 mapping=aes(fill=GAM.age.AdjRsq), 
+                                                 show.legend=TRUE, 
+                                                 hemi = "left") + 
+      labs(title = paste(atlas, metric)) +
+      scale_fill_gradientn(colors= c("#00A3A7FF", "#FFFFFF","#C75DAAFF"), 
+                           limits = range(df.dev$GAM.age.AdjRsq), 
+                           values=rescale(c(min(df.dev$GAM.age.AdjRsq),0,max(df.dev$GAM.age.AdjRsq)))) +
+      theme_void()
+    
+    
+    ageEffect_surf <- plot_grid(l_glasser_ageEffect, r_glasser_ageEffect, ncol = 1)
+    
+  } else if (atlas=="schaefer400x17" | atlas=="schaefer400"){
+    r_df.dev <-  df.dev
+    r_df.dev$region<- gsub(x = df.dev$region, pattern = "17Networks_RH_", replacement = "")
+    r_df.dev <- r_df.dev[-which(grepl("17Networks_LH_", r_df.dev$region)),]
+    
+    l_df.dev <-  df.dev
+    l_df.dev$region<- gsub(x = df.dev$region, pattern = "17Networks_LH_", replacement = "")
+    l_df.dev <- l_df.dev[-which(grepl("17Networks_RH_", l_df.dev$region)),]
+    
+    r_schaefer17_400_ageEffect <- ggplot() + geom_brain(data=r_df.dev, 
+                                                        atlas=get(ggseg_atlas), 
+                                                        mapping=aes(fill=GAM.age.AdjRsq), 
+                                                        show.legend=TRUE, 
+                                                        hemi = "right") + 
+      scale_fill_gradientn(colors= c("#00A3A7FF", "#FFFFFF","#C75DAAFF"), 
+                           limits = range(df.dev$GAM.age.AdjRsq), 
+                           values=rescale(c(min(df.dev$GAM.age.AdjRsq),0,max(df.dev$GAM.age.AdjRsq)))) +
+      theme_void()
+    
+    l_schaefer17_400_ageEffect <- ggplot() + geom_brain(data=l_df.dev, 
+                                                        atlas=schaefer17_400, 
+                                                        mapping=aes(fill=GAM.age.AdjRsq), 
+                                                        show.legend=TRUE, 
+                                                        hemi = "left") + 
+      labs(title = paste(atlas, metric)) +
+      scale_fill_gradientn(colors= c("#00A3A7FF", "#FFFFFF","#C75DAAFF"), 
+                           limits = range(df.dev$GAM.age.AdjRsq), 
+                           values=rescale(c(min(df.dev$GAM.age.AdjRsq),0,max(df.dev$GAM.age.AdjRsq)))) +
+      theme_void()
+    
+    
+    ageEffect_surf <- plot_grid(l_schaefer17_400_ageEffect, r_schaefer17_400_ageEffect, ncol = 1)
+  } else {
+    ageEffect_surf <- ggplot() + geom_brain(data=df.dev, 
+                                            atlas=get(ggseg_atlas), 
+                                            mapping=aes(fill=GAM.age.AdjRsq), 
+                                            show.legend=TRUE, 
+                                            position = position_brain(hemi ~ side)) + 
+      labs(title = paste(atlas, metric)) +
+      scale_fill_gradientn(colors= c("#00A3A7FF", "#FFFFFF","#C75DAAFF"), 
+                           limits = range(df.dev$GAM.age.AdjRsq), 
+                           values=rescale(c(min(df.dev$GAM.age.AdjRsq),0,max(df.dev$GAM.age.AdjRsq)))) +
+      theme_void()
+    
+  }
+  return(ageEffect_surf)
+}
+
+## FIGURE: SA axis average rank vs. age effect - before spin test
+# @param axis A dataframe with SA-axis rank and GAM results
+# @param metric A character string of connectivity metric (i.e. "GBC")
+# @param atlas A character string of atlas name
+gam_figure <- function(axis, metric, atlas){
+  axis <- axis %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+  AgeEffect_figure <- ggplot(axis, aes(x=SA.axis_rank, y=GAM.age.AdjRsq, fill = SA.axis_rank_signif)) + 
+    geom_point(color = "white", shape = 21, size=2) +
+    scale_fill_gradient2(low="#24bde0",high = "#dc665e", mid = "#F8E97D", midpoint = median(axis$SA.axis_rank), na.value="gray") +
+    labs(fill = "SA Axis Rank", x="\nSensorimotor-Association Axis Rank\n", y=expression(paste("Age Effect (Delta Adj", " R"^2, ")"))) +
+    ggtitle(paste(metric, "-", atlas)) +
+    geom_smooth(data = axis, method='lm', se=TRUE, fill=alpha(c("gray70"),.9), col="black") +
+    theme(plot.title = element_text(size=12, hjust=0.5),
+          axis.title.x=element_text(size=12, color = "black"),
+          axis.title.y=element_text(size=12, color = "black"),
+          axis.line = element_line(color = "black"),
+          axis.text=element_text(size=12, color = "black"),
+          panel.background=element_blank(),
+          legend.position = "right") +
+    stat_cor(method = "spearman",label.x.npc = 0.6, label.y.npc = 0.8,size = 4, r.digits = 3)
+  return(AgeEffect_figure)
+}
+
+
+
+## FIGURE: SA axis average rank vs. age effect - with spin test, with Val's color palette
+# included all datapoints
+# @param axis A dataframe with SA-axis rank and GAM results
+# @param metric A character string of connectivity metric (i.e. "GBC")
+# @param atlas A character string of atlas name
+# @param r_text An expression including info on p_spin and r
+# @param x_pos A numeric for horizontal position of r_text
+# @param y_pos A numeric for vertical position of r_text
+
+gam_figure_p.spin_Val <- function(axis, metric, atlas, r_text, x_pos, y_pos){
+  axis <- axis %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+  AgeEffect_figure <- ggplot(axis, aes(x=SA.axis_rank, y=GAM.age.AdjRsq, fill = SA.axis_rank_signif)) + 
+    geom_point(color = "gray", shape = 21, size=3.5) + 
+    scale_fill_gradient2(low = "goldenrod1", mid = "white", high = "#6f1282", guide = "colourbar", aesthetics = "fill", name = NULL, midpoint = 100) +
+    scale_colour_gradient2(low = "goldenrod1", mid = "white", high = "#6f1282", guide = "colourbar", aesthetics = "color", name = NULL, midpoint = 100) +
+    labs(fill = "SA Axis Rank", x="\nSensorimotor-Association Axis Rank\n", y=expression(paste("Age Effect (Delta Adj", " R"^2, ")"))) +
+    #ggtitle(paste(metric, "-", atlas)) + 
+    ylim(-0.055, 0.17) +  # ylim(-0.065, 0.15) for GBC; ylim(-0.055, 0.17) for WNC; ylim(-0.07, 0.10) for BNC;  
+    geom_smooth(data = axis, method='lm', se=TRUE, fill=alpha(c("gray70"),.9), col="black") +
+    theme(
+      axis.title.x=element_text(size=18, color = "black", margin = margin(t = -15, r = 0, b = 0, l = 0)),
+      axis.title.y=element_text(size=18, color = "black"),
+      axis.line = element_line(color = "black"),
+      axis.text=element_text(size=18, color = "black"),
+      panel.background=element_blank(),  
+      legend.position = "none") +
+    annotate(geom="text", x=x_pos, y=y_pos, label=r_text, color="black", size=7)
+  return(AgeEffect_figure)
+}
+
+
+
+## FIGURE: Developmental Trajectories 
+# @param metric A character string of connectivity metric (i.e. "GBC")
+# @param atlas A character string of atlas name 
+devTraj_figure <- function(metric, atlas) {
+  gam.smooths <- get(paste0("gam.smooths.", atlas, '.', metric))
+  axis <- get(paste0(metric, ".axis_", atlas))  
+  smooths_figure <- ggplot(gam.smooths,aes(age,fit,group=index)) + 
+    geom_line(data = gam.smooths, size=1, alpha = .6, aes(color=SA.axis_rank)) + 
+    paletteer::scale_color_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(axis$SA.axis_rank), max(axis$SA.axis_rank)), oob = squish) + 
+    labs(color = "SA Axis Rank",
+         x="Age", 
+         y="Predicted Global Brain Connectivity") +
+    ggtitle(paste(metric, "-", atlas)) + 
+    theme(
+      axis.title.x=element_text(size=12, color = "black"),
+      axis.title.y=element_text(size=12, color = "black"),
+      axis.line = element_line(color = "black"),
+      axis.text=element_text(size=12, color = "black"),
+      panel.background=element_blank(),
+      legend.position = "bottom") + coord_cartesian(expand = FALSE, xlim = c(8, 23))
+  return(smooths_figure)
+}
+
+
+## FIGURE: developmental trajectories, centered on zero - separated by position on SA axis
+# @param atlas A character string of atlas name 
+# @param metric A character string of connectivity metric (i.e. "GBC")
+# @param SA_position A character string of SM, middle axis, or association pole (i.e. "SM", "middle.axis", "assoc.pole")
+
+make_SM.middle.assoc.fig_centered <- function(atlas, metric, SA_position){
+  smooth_fits <- get(paste0(metric, "_SM.middle.assoc"))
+  smooth_fits <- smooth_fits[[atlas]][[SA_position]]
+  if(SA_position == "SM"){
+    SM.middle.assoc_centered <- ggplot(smooth_fits,aes(age,est,group=SA.axis_rank)) + 
+      geom_line(data = smooth_fits, size=.7, alpha = .5, aes(color=SA.axis_rank)) + 
+      ggtitle(paste(metric, "-", atlas, "Sensorimotor Pole")) + 
+      scale_color_gradient2(low="#006CA5FF",high = "#A0CEB6FF", mid = "#009BA8FF", midpoint = median(smooth_fits$SA.axis_rank)) +
+      theme_classic()
+  } else if (SA_position =="middle.axis") {
+    SM.middle.assoc_centered <- ggplot(smooth_fits,aes(age,est,group=SA.axis_rank)) + 
+      geom_line(data = smooth_fits, size=.7, alpha = .5, aes(color=SA.axis_rank)) + 
+      ggtitle(paste(metric, "-", atlas, "Middle Axis")) +   
+      scale_color_gradient2(low="#F8E69DFF",high = "#DB4500FF", mid = "#F0BB55FF", midpoint = median(smooth_fits$SA.axis_rank)) + 
+      theme_classic()
+  } else {
+    SM.middle.assoc_centered <- ggplot(smooth_fits,aes(age,est,group=SA.axis_rank)) + 
+      geom_line(data = smooth_fits, size=.7, alpha = .5, aes(color=SA.axis_rank)) + 
+      ggtitle(paste(metric, "-", atlas, "Association Pole")) +   
+      scale_color_gradient2(low="#F0BB55FF",high = "#A51122FF", mid = "#DB4500FF", midpoint = median(smooth_fits$SA.axis_rank)) +
+      theme_classic()
+  }
+  return(SM.middle.assoc_centered)
+}
+
+
+
 ## FIGURE: Temporal Sliding Window -- Magnitude and direction of developmental change in connectivity for each cortical region
 # @param metric A character string of connectivity metric (i.e. "GBC")
 # @param atlas A character string of atlas name 
@@ -589,7 +606,7 @@ make_repParcel.inset <- function(atlas, parcels, color_hexcode, SA_rank, ggseg_a
 tempSliding_fig <- function(metric, atlas) {
   gam.derivatives.atlas <- get(paste0("gam.", metric, ".derivatives.", atlas))
   derivative.colorbar <- c("#009593FF","#269D91FF","#53A592FF","#71AD95FF","#8AB49BFF",
-                            "#FEFFFFFF",
+                           "#FEFFFFFF",
                            "#D79D86FF","#D68F7FFF","#D5807AFF","#D46F78FF","#D35C79FF")
   derivative.colorbar <- rev(derivative.colorbar)
   tempSliding_ageDerivatives <- ggplot(data=gam.derivatives.atlas,aes(x = age, y = SA.axis_rank, group = index)) +
@@ -620,8 +637,8 @@ make_surface_plot <- function(atlas) {
       axis.line = element_line(color = "black"),
       axis.text=element_text(size=32, color = "black")) + 
     scale_fill_gradient2(  
-                         low = "blue",high = "red",mid = "white",midpoint = 0,
-                         name=expression(paste('Age Effect (',Delta,R^2[adj],')'))) +
+      low = "blue",high = "red",mid = "white",midpoint = 0,
+      name=expression(paste('Age Effect (',Delta,R^2[adj],')'))) +
     xlab("Parcel SA Rank") + 
     ylab("Parcel SA Rank") + 
     geom_vline(xintercept = mean(range(double_age_SA.diff$parcel1.SA.vec)),
@@ -630,32 +647,5 @@ make_surface_plot <- function(atlas) {
                linetype='dashed',size=1) +
     theme(legend.position='none')
   return(surface.plot.fig)
-   
+  
 }
-
- 
-
-
-## FIGURE: Fitted GBC at each age -
-# @param metric A character string of connectivity metric (i.e. "GBC")
-# @param atlas_name A character string of atlas name 
- 
-plot_cred.intervals <- function(atlas_name, metric) {
-  cor.credible.intervals <- get(paste0("cor.credible.intervals_", metric)) 
-  cor.credible.intervals <- cor.credible.intervals[[atlas_name]]
-  cor.credible.intervals$max.cor.window
-  fig <- ggplot(cor.credible.intervals, aes(x = age, y = SA.correlation, ymin = lower, ymax = upper)) + 
-    geom_line(size = .7) +
-    geom_ribbon(alpha = .2, fill = c("grey60")) +
-    labs(x="Age", y="Spatial Alignment of \nFitted GBC to S-A Axis (r)\n") + ggtitle(paste0(metric, "-", atlas_name, ": ", dataset)) +
-    theme_classic() + ylim(-0.61, 0) +  
-    theme(axis.text = element_text(size = 20, 
-                                   color = c("black")), 
-          axis.title = element_text(size = 20, color = c("black")), 
-          axis.line = element_line(size =.22), 
-          axis.ticks = element_line(size = .22)) +
-    scale_x_continuous(breaks=c(4, 6, 8, 10, 12, 14, 16, 18, 20, 22), expand = c(0, .1)) 
-  return(fig)
-}
-
-
