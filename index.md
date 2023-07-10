@@ -224,8 +224,8 @@ The above Rscripts were submitted as individual jobs on CUBIC via the following 
 ```
 
 
-*Cortical parcellation*: Schaefer 200 atlas
-+ *Network solution*: 7 Network
+*Cortical parcellation*: [Schaefer 200 atlas](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_200Parcels_17Networks_order.dlabel.nii) (note that xcp-d git repo has changed since file was originally downloaded)
++ *Network solution*: [7 Network](https://github.com/ThomasYeoLab/CBIG/blob/6d1400a2d643261246f6b042e7ef5fbe417506cd/utilities/matlab/FC/CBIG_ReorderParcelIndex.m) (note that ThomasYeoLab git repo has changed since file was originally downloaded)
 
 **3b. Sensitivity analysis:** 
 
@@ -252,7 +252,7 @@ The above Rscripts were submitted as individual jobs on CUBIC via the following 
 ```
 
 
-*Cortical parcellation*: Schaefer 400, HCP multimodal, Gordon,
+*Cortical parcellation*: [Schaefer 400](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_400Parcels_17Networks_order.dlabel.nii), [HCP multimodal](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/glasser_space-fsLR_den-32k_desc-atlas.dlabel.nii), [Gordon](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/gordon_space-fsLR_den-32k_desc-atlas.dlabel.nii) (note that xcp-d git repo has changed since files were originally downloaded)
 * *Network solution*: 7 Network and 17 Network (Schaefer atlases)
 
 
