@@ -1,6 +1,7 @@
 ---
 title: "HBN Compute Functional Connectivity Metrics"
 author: "Audrey Luo"
+date: "2022-08-02"
 output: html_document
 ---
 
@@ -8,7 +9,7 @@ output: html_document
 ```{r setup, include=FALSE}
 
 library(dplyr)
-source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/computeConnectivityMetrics.R") # note that this line may need to be commented out for running through this Rmd file. computeConnectivityMetrics.R is optimized for cubic job submission and has lib.loc specified for R packages. Lib.loc will throw an error if running this Rmd file locally. 
+#source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/computeConnectivityMetrics.R") # note that this line may need to be commented out for running through this Rmd file. computeConnectivityMetrics.R is optimized for cubic job submission and has lib.loc specified for R packages. Lib.loc will throw an error if running this Rmd file locally. 
 dataset="HBN"
 knitr::opts_chunk$set(include = FALSE, eval = TRUE, echo = FALSE, warning = FALSE, message = FALSE) 
 ```
@@ -149,9 +150,7 @@ write.csv(WNC.subxparcel.matrix.schaefer400x17, "/cbica/projects/network_replica
   
 # make a dataframe in which rows are subjects, and columns are the names of the edges (parcel1_to_parcel2)
 # the entries represent the parcel-by-parcel correlation
- 
-
-# gordon
+  
 # for each subject, turn the connectivity matrix into a vector
 extractEdge.gordon <- lapply(participants, extractParcel2ParcelConn, "gordon", "HBN")
 extractEdge.glasser <- lapply(participants, extractParcel2ParcelConn, "glasser", "HBN")
@@ -161,9 +160,7 @@ extractEdge.schaefer400x7 <- lapply(participants, extractParcel2ParcelConn, "sch
 extractEdge.schaefer400x17 <- lapply(participants, extractParcel2ParcelConn, "schaefer400x17", "HBN")
 
  
-# for other atlases -- need to run this next
 atlases <- c("glasser", "gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
-atlases <- c("glasser", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
 for(i in c(1:length(atlases))){
   extractEdge <- get(paste0("extractEdge.", atlases[i]))
   names(extractEdge) <- participants 
@@ -233,7 +230,7 @@ metric = "BNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0(metric, "_", "subxparcel_", atlases[i])
   assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases[i])))
-  assign(df_name, data.frame(get(df_name)[,-c(1:2)])) # remove X and subject columns
+  assign(df_name, data.frame(get(df_name)[,-c(1:2)])) # remove subject column and X
   print(df_name)
 } 
   
@@ -242,14 +239,13 @@ row.names(BNC_subxparcel_schaefer200x7) <- participants$sub
 row.names(BNC_subxparcel_schaefer200x17) <- participants$sub
 row.names(BNC_subxparcel_schaefer400x7) <- participants$sub
 row.names(BNC_subxparcel_schaefer400x17) <- participants$sub
-
-
+ 
 #WNC - loads WNC_subxparcel_gordon, WNC_subxparcel_schaefer200x7,WNC_subxparcel_schaefer200x17, WNC_subxparcel_schaefer400x7, WNC_subxparcel_schaefer400x17
 metric = "WNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0(metric, "_", "subxparcel_", atlases[i])
   assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases[i])))
-  assign(df_name, data.frame(get(df_name)[,-c(1:2)])) # remove X and subject columns
+  assign(df_name, data.frame(get(df_name)[,-c(1:2)])) # remove subject column and X
   print(df_name)
 } 
   
@@ -289,6 +285,7 @@ names(data.harmonized_WNC) <- atlases
   
 ```
 
+ 
 
 ```{r save_out}
 
@@ -300,7 +297,6 @@ for(i in c(1:length(atlases_GBC))){
   write.csv(get(df_name), sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s_covbat.csv", dataset, metric, atlases_GBC[i]))
   print(df_name)
 }  
-
  
 #BNC - save out covbat harmonized connectivity metrics 
 metric = "BNC"
@@ -322,8 +318,7 @@ for(i in c(1:length(atlases))){
 }  
 ```
 
-
-
+ 
 
 # Perform CovBat Harmonization on Edges 
 This chunk was submitted as a job on cubic due to high computational requirements. 

@@ -536,7 +536,7 @@ r_text_WNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.31, ",  , italic
 (WNC_schaefer200x7 <- gam_figure_p.spin(WNC.axis_schaefer200x7, "WNC", "schaefer200x7", r_text_WNC.schaefer200x7, 
                                         x_pos= 150, y_pos=0.12, ylim_lower=-0.055, ylim_upper= 0.17))
 
-r_text_WNC.schaefer200x17 <- expression(paste(italic("r"), "= -0.13, ",  , italic(p[spin]), "= N.S."))
+r_text_WNC.schaefer200x17 <- expression(paste(italic("r"), "= -0.14, ",  , italic(p[spin]), "= N.S."))
 (WNC_schaefer200x17 <- gam_figure_p.spin(WNC.axis_schaefer200x17, "WNC", "schaefer200x17", r_text_WNC.schaefer200x17, 
                                          x_pos= 160, y_pos=0.1, ylim_lower=-0.055, ylim_upper= 0.17))
 
@@ -609,7 +609,7 @@ saveRDS(cor.credible.intervals, "/cbica/projects/network_replication/output/NKI/
 
  
 ```{r load_cor.credible.intervals, include=FALSE}
-cor.credible.intervals_GBC <- readRDS("/cbica/projects/network_replication/output/NKI/GBC/GAM/cor.credible.intervals_GBC_fitted.RData")
+cor.credible.intervals <- readRDS("/cbica/projects/network_replication/output/NKI/GBC/GAM/cor.credible.intervals_GBC_fitted.RData")
 ```
 
 #### Plot Figure 5B
@@ -636,7 +636,7 @@ ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network
 #### Plot Figure 6B: BNC DevEffect  
 ```{r Fig2, fig.height= 8, fig.width= 16, warning=FALSE, cache=TRUE}
 BNC_schaefer200x7 
-save_plot("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig6/Fig6_BNCAgeEffect_NKI.pdf", BNC_schaefer200x7, dpi=300,base_width = 6, base_height = 5)
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig6/Fig6_BNCAgeEffect_NKI.pdf", BNC_schaefer200x7, dpi=300,base_width = 6, base_height = 5)
 ```
 
 ## **Figure 6F**

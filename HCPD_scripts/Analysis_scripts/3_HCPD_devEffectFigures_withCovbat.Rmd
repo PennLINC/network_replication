@@ -483,7 +483,6 @@ p_spin_BNC$p_spin_BNC = as.numeric(p_spin_BNC$p_spin_BNC)
 saveRDS(list(p_spin_GBC, p_spin_BNC, p_spin_WNC), "/cbica/projects/network_replication/output/HCPD/pspin_vals_covbat.RData")
 ```
 
- 
 ### DevEffect with p_spin: 
 this section required manual input since expression() doesn't take variables :( 
 ```{r make_figures_pspin, include=FALSE}
@@ -492,7 +491,7 @@ pspin_vals <- readRDS("/cbica/projects/network_replication/output/HCPD/pspin_val
 
  
 #GBC
-r_text_GBC.glasser <- expression(paste(italic("r"), " = -0.50, ",  , italic(p[spin]), "< 0.0001")) 
+r_text_GBC.glasser <- expression(paste(italic("r"), " = -0.50, ",  , italic(p[spin]), "< 0.001")) 
 (GBC_glasser <- gam_figure_p.spin(GBC.axis_glasser, "GBC", "Glasser", r_text_GBC.glasser,
                                   x_pos= 270, y_pos=0.12, ylim_lower=-0.065, ylim_upper=0.15))
 
@@ -611,7 +610,7 @@ saveRDS(cor.credible.intervals, "/cbica/projects/network_replication/output/HCPD
 
  
 ```{r load_cor.credible.intervals, include=FALSE}
-cor.credible.intervals_GBC <- readRDS("/cbica/projects/network_replication/output/HCPD/GBC/GAM/cor.credible.intervals_GBC_fitted.RData")
+cor.credible.intervals <- readRDS("/cbica/projects/network_replication/output/HCPD/GBC/GAM/cor.credible.intervals_GBC_fitted.RData")
 ```
 
 #### Plot Figure 5C

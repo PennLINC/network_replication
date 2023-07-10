@@ -1,6 +1,7 @@
 ---
 title: "HCPD Compute Functional Connectivity Metrics"
 author: "Audrey Luo"
+date: "2022-08-02"
 output: html_document
 ---
 
@@ -8,7 +9,7 @@ output: html_document
 ```{r setup, include=FALSE}
 
 library(dplyr)
-source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/computeConnectivityMetrics.R") # note that this line may need to be commented out for running through this Rmd file. computeConnectivityMetrics.R is optimized for cubic job submission and has lib.loc specified for R packages. Lib.loc will throw an error if running this Rmd file locally. 
+#source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/computeConnectivityMetrics.R") # note that this line may need to be commented out for running through this Rmd file. computeConnectivityMetrics.R is optimized for cubic job submission and has lib.loc specified for R packages. Lib.loc will throw an error if running this Rmd file locally. 
 dataset="HCPD"
 knitr::opts_chunk$set(include = FALSE, eval = TRUE, echo = FALSE, warning = FALSE, message = FALSE) 
 ```
@@ -213,7 +214,7 @@ metric = "GBC"
 for(i in c(1:length(atlases_GBC))){
   df_name <- paste0(metric, "_", "subxparcel_", atlases_GBC[i])
   assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases_GBC[i])))
-  assign(df_name, data.frame(get(df_name)[,-1]))
+  assign(df_name, data.frame(get(df_name)[,-1])) # remove subject column
   print(df_name)
 } 
   
@@ -222,13 +223,12 @@ row.names(GBC_subxparcel_gordon) <- participants$sub
 row.names(GBC_subxparcel_schaefer200) <- participants$sub
 row.names(GBC_subxparcel_schaefer400) <- participants$sub
  
-
 #BNC - loads BNC_subxparcel_gordon, BNC_subxparcel_schaefer200x7, BNC_subxparcel_schaefer200x17, BNC_subxparcel_schaefer400x7, BNC_subxparcel_schaefer400x17
 metric = "BNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0(metric, "_", "subxparcel_", atlases[i])
   assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases[i])))
-  assign(df_name, data.frame(get(df_name)[,-1]))
+  assign(df_name, data.frame(get(df_name)[,-1])) # remove subject column
   print(df_name)
 } 
   
@@ -237,14 +237,13 @@ row.names(BNC_subxparcel_schaefer200x7) <- participants$sub
 row.names(BNC_subxparcel_schaefer200x17) <- participants$sub
 row.names(BNC_subxparcel_schaefer400x7) <- participants$sub
 row.names(BNC_subxparcel_schaefer400x17) <- participants$sub
-
-
+ 
 #WNC - loads WNC_subxparcel_gordon, WNC_subxparcel_schaefer200x7,WNC_subxparcel_schaefer200x17, WNC_subxparcel_schaefer400x7, WNC_subxparcel_schaefer400x17
 metric = "WNC"
 for(i in c(1:length(atlases))){
   df_name <- paste0(metric, "_", "subxparcel_", atlases[i])
   assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases[i])))
-  assign(df_name, data.frame(get(df_name)[,-1]))
+  assign(df_name, data.frame(get(df_name)[,-1])) # remove subject column
   print(df_name)
 } 
   

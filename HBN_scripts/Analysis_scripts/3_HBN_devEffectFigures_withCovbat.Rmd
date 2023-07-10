@@ -483,7 +483,7 @@ p_spin_BNC$p_spin_BNC = as.numeric(p_spin_BNC$p_spin_BNC)
 
 saveRDS(list(p_spin_GBC, p_spin_BNC, p_spin_WNC), "/cbica/projects/network_replication/output/HBN/pspin_vals_covbat.RData")
 ```
-
+ 
  
 ### DevEffect with p_spin: 
 this section required manual input since expression() doesn't take variables :( 
@@ -514,7 +514,7 @@ r_text_GBC.schaefer400 <- expression(paste(italic("r"), "= -0.72, ",  , italic(p
 #BNC
 r_text_BNC.gordon <- expression(paste(italic("r"), "= -0.71, ",  , italic(p[spin]), "< 0.0001"))
 (BNC_gordon <- gam_figure_p.spin(BNC.axis_gordon, "BNC", "Gordon", r_text_BNC.gordon, 
-                                  x_pos= 270, y_pos=0.12, ylim_lower=-0.07, ylim_upper=0.10))
+                                  x_pos= 270, y_pos=0.1, ylim_lower=-0.07, ylim_upper=0.10))
 
 r_text_BNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.70, ",  , italic(p[spin]), "< 0.0001"))
 (BNC_schaefer200x7 <- gam_figure_p.spin(BNC.axis_schaefer200x7, "BNC", "schaefer200x7", r_text_BNC.schaefer200x7, 
@@ -540,7 +540,7 @@ r_text_WNC.gordon <- expression(paste(italic("r"), "= -0.16, ",  , italic(p[spin
 
 r_text_WNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.37, ",  , italic(p[spin]), "< 0.0001"))
 (WNC_schaefer200x7 <- gam_figure_p.spin(WNC.axis_schaefer200x7, "WNC", "schaefer200x7", r_text_WNC.schaefer200x7, 
-                                 x_pos= 150, y_pos=0.17, ylim_lower=-0.055, ylim_upper=0.17))
+                                 x_pos= 150, y_pos=0.12, ylim_lower=-0.055, ylim_upper=0.17))
 
 r_text_WNC.schaefer200x17 <- expression(paste(italic("r"), "= -0.28, ",  , italic(p[spin]), "< 0.01"))
 (WNC_schaefer200x17 <- gam_figure_p.spin(WNC.axis_schaefer200x17, "WNC", "schaefer200x17", r_text_WNC.schaefer200x17, 
@@ -612,7 +612,7 @@ saveRDS(cor.credible.intervals, "/cbica/projects/network_replication/output/HBN/
 
  
 ```{r load_cor.credible.intervals, include=FALSE}
-cor.credible.intervals_GBC <- readRDS("/cbica/projects/network_replication/output/HBN/GBC/GAM/cor.credible.intervals_GBC_fitted.RData")
+cor.credible.intervals <- readRDS("/cbica/projects/network_replication/output/HBN/GBC/GAM/cor.credible.intervals_GBC_fitted.RData")
 ```
 
 #### Plot Figure 5D

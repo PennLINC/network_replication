@@ -658,7 +658,7 @@ saveRDS(cor.credible.intervals, "/cbica/projects/network_replication/output/PNC/
 
  
 ```{r load_cor.credible.intervals, include=FALSE}
-cor.credible.intervals_GBC <- readRDS("/cbica/projects/network_replication/output/PNC/GBC/GAM/cor.credible.intervals_GBC_fitted.RData")
+cor.credible.intervals <- readRDS("/cbica/projects/network_replication/output/PNC/GBC/GAM/cor.credible.intervals_GBC_fitted.RData")
 ```
 
 #### Plot Figure 5A
