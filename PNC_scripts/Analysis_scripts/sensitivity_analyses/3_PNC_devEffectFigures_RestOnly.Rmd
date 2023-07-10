@@ -1,5 +1,5 @@
 ---
-title: "HBN Figures - Sensitivity Analysis"
+title: "PNC Figures - Sensitivity Analysis"
 author: "Audrey Luo"
 output: html_document
 ---
@@ -30,7 +30,7 @@ source("/cbica/projects/network_replication/Rscripts/functions/sensitivity_analy
 source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/netrep_spinTests.R")
 source("/cbica/projects/network_replication/software/perm.sphere.p.R")
  
-dataset <- "HBN"
+dataset <- "PNC"
 metric="GBC"
 atlas="schaefer200"
   
@@ -56,7 +56,7 @@ schaefer200_SAaxis <- schaefer200x17_SAaxis
 ```{r load_gam, include=FALSE, cache=TRUE}
 #GBC - loads gam.GBC.age.schaefer200
 
-gam.GBC.age.schaefer200 <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/GAM/GAMresults.%2$s.age.%3$s_covbat.csv", dataset, metric, atlas))
+gam.GBC.age.schaefer200 <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/GAM/GAMresults.%2$s.age.%3$s.csv", dataset, metric, atlas))
  
 ```
 
@@ -72,13 +72,13 @@ GBC.axis_schaefer200 <- combineGAMdfs(metric, atlas)
 GBC.axis_schaefer200 <- sig_parcels(GBC.axis_schaefer200) 
  
 # writes GBC.axis_schaefer200 
-write.csv(GBC.axis_schaefer200, sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/GAM/%3$s_covbat.csv", dataset, metric, "GBC.axis_schaefer200"))
+write.csv(GBC.axis_schaefer200, sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/GAM/%3$s.csv", dataset, metric, "GBC.axis_schaefer200"))
 ```
 
 #### load figure df's - metric.axis_atlas
 ```{r load_figureDfs, include=FALSE, cache=TRUE}
 #loads GBC.axis_schaefer200 
-GBC.axis_schaefer200 <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/GAM/%3$s_covbat.csv", dataset, metric, "GBC.axis_schaefer200"))
+GBC.axis_schaefer200 <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/GAM/%3$s.csv", dataset, metric, "GBC.axis_schaefer200"))
 ```
 
 
@@ -106,24 +106,24 @@ corr.GBC_schaefer200 <- cor.test(GBC.axis_schaefer200$GAM.age.AdjRsq, as.numeric
  
 spearman_rho <- corr.GBC_schaefer200
  
-write.csv(spearman_rho, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/spearman_rho.csv")
+write.csv(spearman_rho, "/cbica/projects/network_replication/output/PNC/sensitivity_analyses/spearman_rho.csv")
 
 # spin permutation test:
 p_spin_schaefer200 <- perm.sphere.p(as.numeric(df.dev.spin_GBC_schaefer200$GAM.age.AdjRsq), as.numeric(df.dev.spin_GBC_schaefer200$SA.axis_rank), perm.id.full_schaefer200x17, corr.type='spearman')
  
-saveRDS(p_spin_schaefer200, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/pspin_vals.RData")
+saveRDS(p_spin_schaefer200, "/cbica/projects/network_replication/output/PNC/sensitivity_analyses/pspin_vals.RData")
  
 ```
  
 ### DevEffect with p_spin: 
 this section requires manual input since expression() doesn't take variables :( 
 ```{r make_figures_pspin, include=FALSE}
-spearman_rho <- read.csv("/cbica/projects/network_replication/output/HBN/sensitivity_analyses/spearman_rho.csv")
-pspin_vals <- readRDS("/cbica/projects/network_replication/output/HBN/sensitivity_analyses/pspin_vals.RData")
+spearman_rho <- read.csv("/cbica/projects/network_replication/output/PNC/sensitivity_analyses/spearman_rho.csv")
+pspin_vals <- readRDS("/cbica/projects/network_replication/output/PNC/sensitivity_analyses/pspin_vals.RData")
 
  
 #GBC 
-r_text_GBC.schaefer200 <- expression(paste(italic("r"), "= -0.73, ",  , italic(p[spin]), "< 0.0001"))
+r_text_GBC.schaefer200 <- expression(paste(italic("r"), "= -0.68, ",  , italic(p[spin]), "< 0.0001"))
 (GBC_schaefer200 <- gam_figure_p.spin(GBC.axis_schaefer200, "GBC", "Schaefer200", r_text_GBC.schaefer200, x_pos= 150, y_pos=0.08))
  
 ```
@@ -133,7 +133,7 @@ r_text_GBC.schaefer200 <- expression(paste(italic("r"), "= -0.73, ",  , italic(p
  
 GBC_schaefer200
  
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Supplementary/FigS3_GBCAgeEffect_HBN.pdf", dpi=300, width = 5, height = 5)
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Supplementary/FigS3_GBCAgeEffect_PNC.pdf", dpi=300, width = 5, height = 5)
 
 ```
 
@@ -142,17 +142,17 @@ ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network
 ### DevTraj Centered
 #### load gam.smooths
 ```{r load.gam.smooths, include=FALSE, cache=TRUE}
-gam.smooths.schaefer200.GBC <- make_gam.smooths_covbat(metric, atlas, dataset)
+gam.smooths.schaefer200.GBC <- make_gam.smooths(metric, atlas, dataset)
 ```
 
 #### make devTraj df
 - makes df for trajectories. Can load the output in following chunk.
 ```{r make_devTraj_centered, include=FALSE}
-devTraj.centered.schaefer200.GBC <-  make_gam.smooths_centered_covbat(metric, atlas, dataset)
+devTraj.centered.schaefer200.GBC <-  make_gam.smooths_centered(metric, atlas, dataset)
 ```
 #### load devTraj df
 ```{r load_devTraj_centered.dfs, include=FALSE, cache=TRUE}
-devTraj.centered.schaefer200.GBC_df <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/GAM/GAMsmoothfits.%2$s.age.%3$s_centered_covbat.csv", dataset, metric, atlas))
+devTraj.centered.schaefer200.GBC_df <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/GAM/GAMsmoothfits.%2$s.age.%3$s_centered.csv", dataset, metric, atlas))
 ```
 #### make dev traj figures
 ```{r make_Dev.Trajectory.Figures, include=FALSE}
@@ -163,7 +163,7 @@ devTraj.centered.GBC <- make_smooths_fig_centered(atlas, metric)
 ```{r Fig7, fig.height= 10, fig.width= 12, warning=FALSE}
 
 devTraj.centered.GBC
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Supplementary/FigS3_GBCDevTraj_HBN.pdf", dpi=300, width = 5, height = 5)
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Supplementary/FigS3_GBCDevTraj_PNC.pdf", dpi=300, width = 5, height = 5)
 
 ```
 

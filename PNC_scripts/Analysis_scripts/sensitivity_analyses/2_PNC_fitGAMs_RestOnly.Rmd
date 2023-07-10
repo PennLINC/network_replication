@@ -1,6 +1,7 @@
 ---
-title: "HBN fit GAMs"
+title: "PNC fit GAMs"
 author: "Audrey Luo"
+date: "2023-01-04"
 output: html_document
 ---
 
@@ -10,7 +11,8 @@ library(dplyr)
 source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/GAM_functions.R") # same functions as used for main analysis
 source("/cbica/projects/network_replication/Rscripts/functions/sensitivity_analyses/fitGAMs_restOnly.R") 
  
-dataset = "HBN"
+dataset = "PNC"
+knitr::opts_chunk$set(include = FALSE, eval = TRUE, echo = FALSE, warning = FALSE, message = FALSE) 
   
 ```
 
@@ -18,45 +20,43 @@ dataset = "HBN"
 # make connectivityMetric-demographics .csv's
 ```{r connMetric_demographics, include=FALSE}
 
-demographics <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_restOnly_20230629.csv")
+demographics <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_restOnly_20230629.csv")
 demographics <- demographics %>% rename(subject=sub) 
-
+demographics$age <- demographics$ageAtScan1/12
 demographics <- demographics[,c(which(names(demographics) == "subject"), which(names(demographics) == "sex"), which(names(demographics)=="age"), which(names(demographics) =="meanFD_avgSes"))] 
 
 
-## creates GBC.schaefer200.HBN 
-GBC.schaefer200.HBN <- make_connMetricsDemog_covbat("schaefer200", "GBC", demographics, "subject", dataset)
- 
- 
+## creates GBC.schaefer200.PNC 
+GBC.schaefer200.PNC <- make_connMetricsDemog("schaefer200", "GBC", demographics, "subject", dataset)
  
 ```
 
 
  
+
 
 # load connectivityMetric-demographics .csv's
 ```{r load_connectivity, include=TRUE}  
-GBC.schaefer200.HBN <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/GBC/GBCschaefer200_demographics_finalsample_covbat.csv", dataset)) 
-names(GBC.schaefer200.HBN) <- gsub('X17Networks', "Networks", names(GBC.schaefer200.HBN))
+GBC.schaefer200.PNC <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/GBC/GBCschaefer200_demographics_finalsample.csv", dataset)) 
+names(GBC.schaefer200.PNC) <- gsub('X17Networks', "Networks", names(GBC.schaefer200.PNC))
  
-GBC.schaefer200.HBN$sex <- as.factor(GBC.schaefer200.HBN$sex)
+GBC.schaefer200.PNC$sex <- as.factor(GBC.schaefer200.PNC$sex)
  
  
 ```
 
  
-# load parcel labels  
+# load parcel labels and edges 
 ```{r}
 # load parcel labels 
 schaefer200x17.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x17_regionlist_final.csv")
-schaefer200.parcel.labels <- schaefer200x17.parcel.labels #gbc
 ```  
 
 
 # Fit GAMs
 ```{r}
 # GBC GAMs
-gam.GBC.age.schaefer200 <- fitGAMs_covbat(schaefer200x17.parcel.labels, "GBC", "schaefer200", "", dataset)
+gam.GBC.age.schaefer200 <- fitGAMs(schaefer200x17.parcel.labels, "GBC", "schaefer200", "", dataset)
 ```
 
 
@@ -65,8 +65,8 @@ gam.GBC.age.schaefer200 <- fitGAMs_covbat(schaefer200x17.parcel.labels, "GBC", "
 # Estimate GAM smooths based on model-predicted data and save out predicted y data** 
 ```{r}
 # GBC GAMs 
-gam.GBC.smooths.schaefer200 <- estimate_GAMsmooths_covbat(schaefer200x17.parcel.labels, "GBC", "schaefer200", "", dataset)
+gam.GBC.smooths.schaefer200 <- estimate_GAMsmooths(schaefer200x17.parcel.labels, "GBC", "schaefer200", "", dataset)
 ```
 
 
- 
+

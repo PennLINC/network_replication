@@ -1,6 +1,7 @@
 ---
 title: "HBN Compute Functional Connectivity Metrics"
 author: "Audrey Luo"
+date: "2022-08-02"
 output: html_document
 ---
 
@@ -8,7 +9,7 @@ output: html_document
 ```{r setup, include=FALSE}
 
 library(dplyr)
-#source("/cbica/projects/network_replication/adapted_Rscripts/computeConnectivityMetrics.R")
+#source("/cbica/projects/network_replication/Rscripts/functions/sensitivity_analyses/computeConnectivityMetrics_restOnly.R") # # note that this line may need to be commented out for running through this Rmd file. computeConnectivityMetrics.R is optimized for cubic job submission and has lib.loc specified for R packages. Lib.loc will throw an error if running this Rmd file locally. 
 dataset="HBN"
 knitr::opts_chunk$set(include = FALSE, eval = TRUE, echo = FALSE, warning = FALSE, message = FALSE) 
 ```
@@ -17,18 +18,22 @@ knitr::opts_chunk$set(include = FALSE, eval = TRUE, echo = FALSE, warning = FALS
 ```{r loadParticipants}
 # load participants
  
-participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_restOnly_20230301.csv")
+participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_restOnly_20230629.csv")
 participants <- participants$sub
 
  
 ```
 
 
+# GBC was computed on cubic as jobs. The following code chunk consolidates all the steps that were executed. 
+For computeGBC, /cbica/projects/network_replication/Rscripts/HBN_scripts/Analysis_scripts/connMetrics_scripts/sensitivity_computeGBC_HBN_restOnly.sh was submitted as a job. 
+This shell script uses the following Rscript to execute R code: /cbica/projects/network_replication/Rscripts/functions/sensitivity_analyses/computeGBC_restOnly.R 
+Note that computeGBC_restOnly.R uses functions from /cbica/projects/network_replication/Rscripts/functions/sensitivity_analyses/computeConnectivityMetrics_restOnly.R. 
 
 ```{r computeGBC}
 # make output dfs: 
-## GBC.subxparcel.matrix.glasser, GBC.subxparcel.matrix.gordon, GBC.subxparcel.matrix.schaefer200, GBC.subxparcel.matrix.schaefer400
-atlases <- c("glasser", "gordon", "schaefer200", "schaefer400")
+## GBC.subxparcel.matrix.schaefer200 
+atlases <-  "schaefer200" # only include schaefer200 for sensitivity analysis in supplement
 metric = "GBC"
 
 for(i in c(1:length(atlases))){
@@ -49,142 +54,13 @@ for(sub in c(1:length(participants))){
     print(paste(sub, "/", length(participants), "-", subjectID, atlases[i]))
   }
 }
- 
-write.csv(GBC.subxparcel.matrix.glasser, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/GBC/GBC_subxparcel_matrix_glasser.csv", row.names=F, quote=F)
-write.csv(GBC.subxparcel.matrix.gordon, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/GBC/GBC_subxparcel_matrix_gordon.csv", row.names=F, quote=F)
+  
 write.csv(GBC.subxparcel.matrix.schaefer200, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/GBC/GBC_subxparcel_matrix_schaefer200.csv", row.names=F, quote=F)
-write.csv(GBC.subxparcel.matrix.schaefer400, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/GBC/GBC_subxparcel_matrix_schaefer400.csv", row.names=F, quote=F)
-   
-```
-
-
-
-```{r computeBNC}
-# make output dfs: 
-## BNC.subxparcel.matrix.gordon, BNC.subxparcel.matrix.schaefer200x7, BNC.subxparcel.matrix.schaefer400x7
-atlases <- c("gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
-
-metric = "BNC"
-
-for(i in c(1:length(atlases))){
-  df_name <- paste0(metric, ".subxparcel.matrix.", atlases[i])
-  assign(df_name, make_output_dfs(participants, atlases[i]))
-}
-
-
-# compute BNC
-for(sub in c(1:length(participants))){
-  for(i in c(1:length(atlases))){
-    subjectID=as.character(participants[sub])
-    print(paste(subjectID, atlases[i], metric, dataset))
-    id.data <- computeBNC_WNC(subjectID, atlases[i], metric, dataset)
     
-    dataname <- sprintf("%s.%s.%s", metric, "subxparcel.matrix", atlases[i]) 
-    df_toUpdate <- get(dataname)
-    df_toUpdate[sub,] <- cbind(subjectID, t(id.data)) #update the name of the df every iteration to BNC.subxparcel.matrix.[atlas]
-    assign(dataname, df_toUpdate)  
-    print(paste(sub, "/", length(participants), "-", subjectID, atlases[i]))
-  }
-}
-
-  
-write.csv(BNC.subxparcel.matrix.gordon, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/BNC/BNC_subxparcel_matrix_gordon.csv", row.names=F, quote=F)
-write.csv(BNC.subxparcel.matrix.schaefer200x7, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/BNC/BNC_subxparcel_matrix_schaefer200x7.csv", row.names=F, quote=F)
-write.csv(BNC.subxparcel.matrix.schaefer400x7, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/BNC/BNC_subxparcel_matrix_schaefer400x7.csv", row.names=F, quote=F)
-write.csv(BNC.subxparcel.matrix.schaefer200x17, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/BNC/BNC_subxparcel_matrix_schaefer200x17.csv", row.names=F, quote=F)
-write.csv(BNC.subxparcel.matrix.schaefer400x17, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/BNC/BNC_subxparcel_matrix_schaefer400x17.csv", row.names=F, quote=F)
- 
-
-```
- 
- 
-
-```{r computeWNC}
-
-# make output dfs: 
-## WNC.subxparcel.matrix.gordon, WNC.subxparcel.matrix.schaefer200x7, WNC.subxparcel.matrix.schaefer400x7
-atlases <- c("gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
- 
-metric = "WNC"
-
-for(i in c(1:length(atlases))){
-  df_name <- paste0(metric, ".subxparcel.matrix.", atlases[i])
-  assign(df_name, make_output_dfs(participants, atlases[i]))
-}
-
-
-# compute WNC
-for(sub in c(1:length(participants))){
-  for(i in c(1:length(atlases))){
-    subjectID=as.character(participants[sub])
-    print(paste(subjectID, atlases[i], metric, dataset))
-    id.data <- computeBNC_WNC(subjectID, atlases[i], metric, dataset)
-    
-    dataname <- sprintf("%s.%s.%s", metric, "subxparcel.matrix", atlases[i]) 
-    df_toUpdate <- get(dataname)
-    df_toUpdate[sub,] <- cbind(subjectID, t(id.data)) #update the name of the df every iteration to BNC.subxparcel.matrix.[atlas]
-    assign(dataname, df_toUpdate)  
-    print(paste(sub, "/", length(participants), "-", subjectID, atlases[i]))
-  }
-}
-
-write.csv(WNC.subxparcel.matrix.gordon, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/WNC/WNC_subxparcel_matrix_gordon.csv", row.names=F, quote=F)
-write.csv(WNC.subxparcel.matrix.schaefer200x7, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/WNC/WNC_subxparcel_matrix_schaefer200x7.csv", row.names=F, quote=F)
-write.csv(WNC.subxparcel.matrix.schaefer400x7, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/WNC/WNC_subxparcel_matrix_schaefer400x7.csv", row.names=F, quote=F)
-write.csv(WNC.subxparcel.matrix.schaefer200x17, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/WNC/WNC_subxparcel_matrix_schaefer200x17.csv", row.names=F, quote=F)
-write.csv(WNC.subxparcel.matrix.schaefer400x17, "/cbica/projects/network_replication/output/HBN/sensitivity_analyses/WNC/WNC_subxparcel_matrix_schaefer400x17.csv", row.names=F, quote=F)
- 
-
 ```
 
 
-# Extract edge-level data (parcel-to-parcel connectivity)
-```{r edge_level_dfs}
-
-  
-# make a dataframe in which rows are subjects, and columns are the names of the edges (parcel1_to_parcel2)
-# the entries represent the parcel-by-parcel correlation
- 
-
-# gordon
-# for each subject, turn the connectivity matrix into a vector
-extractEdge.gordon <- lapply(participants, extractParcel2ParcelConn, "gordon", "HBN")
-extractEdge.glasser <- lapply(participants, extractParcel2ParcelConn, "glasser", "HBN")
-extractEdge.schaefer200x7 <- lapply(participants, extractParcel2ParcelConn, "schaefer200x7", "HBN")
-extractEdge.schaefer200x17 <- lapply(participants, extractParcel2ParcelConn, "schaefer200x17", "HBN")
-extractEdge.schaefer400x7 <- lapply(participants, extractParcel2ParcelConn, "schaefer400x7", "HBN")
-extractEdge.schaefer400x17 <- lapply(participants, extractParcel2ParcelConn, "schaefer400x17", "HBN")
-
- 
-# for other atlases -- need to run this next
-atlases <- c("glasser", "gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
-atlases <- c("glasser", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
-for(i in c(1:length(atlases))){
-  extractEdge <- get(paste0("extractEdge.", atlases[i]))
-  names(extractEdge) <- participants 
-  columns_extractEdge <- bind_rows(extractEdge) # turn list into a dataframe
-  subxedge <- as.data.frame(t(columns_extractEdge)) # transpose dataframe
-  
-  edge <- read.csv(sprintf("/cbica/projects/network_replication/atlases/edge/%1$s_edge.csv", atlases[i]))
-  edge <- edge[,2]
-  names(subxedge) <- edge # columns = names of edges
-  
-  subxedge <- subxedge %>% mutate(subject = rownames(subxedge))
-  subxedge <- subxedge %>% relocate(subject)
-  rownames(subxedge) <- NULL
-  
-  saveRDS(subxedge, sprintf("/cbica/projects/network_replication/output/HBN/edge/subxedge_%1$s.RData", atlases[i])) 
-  print(atlases[i])
-} 
- 
-
-
-```
-
-
-
-
-# Perform CovBat Harmonization on Connectivity Metrics (GBC, BNC, WNC, Edges)
+# Perform CovBat Harmonization on GBC
 
 
 ```{r setup_covbat, include=FALSE}
@@ -195,112 +71,32 @@ library(ComBatFamily)
 library(dplyr)
 library(mgcv)
 
-atlases_GBC <- c("glasser", "gordon", "schaefer200", "schaefer400")
-atlases <- c("gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17")
+atlases_GBC <-  "schaefer200" # only include schaefer200 for sensitivity analysis in supplement
 dataset <- "HBN"
  
   
 ```
 
 
-```{r remove_participants_missing_age}
-# realized participants were missing age data after connectivity metrics were made. manually removing them here so downstream analysis can be on participants with full demographic data (including age and sex)
-# fyi code for conn metrics scripts was updated with most recent final sample
-
-participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_restOnly_20230223.csv")
-participants_noAge_index <- c(which(is.na(participants$age))) #age not collected on 37 participants 
-participants <- participants[-c(which(is.na(participants$age))),] 
- 
-
-metric = "GBC"
-for(i in c(1:length(atlases_GBC))){
-  df_name <- paste0(metric, "_", "subxparcel_", atlases_GBC[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxparcel_matrix_%3$s_restOnly.csv", dataset, metric, atlases_GBC[i])))
-  assign(df_name, get(df_name)[-participants_noAge_index,])
-  write.csv(get(df_name), sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxparcel_matrix_%3$s_restOnly.csv", dataset, metric, atlases_GBC[i]))
-  print(df_name)
-  print(dim(get(df_name)))
-} 
-  
- 
-
-metric = "BNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0(metric, "_", "subxparcel_", atlases[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxparcel_matrix_%3$s_restOnly.csv", dataset, metric, atlases[i])))
-  assign(df_name, get(df_name)[-participants_noAge_index,])
-  write.csv(get(df_name), sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxparcel_matrix_%3$s_restOnly.csv", dataset, metric, atlases[i]))
-  print(df_name)
-  print(dim(get(df_name)))
-} 
-  
-
-
-metric = "WNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0(metric, "_", "subxparcel_", atlases[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxparcel_matrix_%3$s_restOnly.csv", dataset, metric, atlases[i])))
-  assign(df_name, get(df_name)[-participants_noAge_index,])
-  write.csv(get(df_name), sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxparcel_matrix_%3$s_restOnly.csv", dataset, metric, atlases[i]))
-  print(df_name)
-  print(dim(get(df_name)))
-} 
-```
-
-
 # Do Covbat on rest only connectivity matrices
 
 ```{r load_subxparcel}
-participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_restOnly_20230301.csv")
+participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_restOnly_20230629.csv")
  
  
-#GBC - loads GBC_subxparcel_glasser, GBC_subxparcel_gordon, GBC_subxparcel_schaefer200, GBC_subxparcel_schaefer400
+#GBC - loads GBC_subxparcel_schaefer200 
 metric = "GBC"
 for(i in c(1:length(atlases_GBC))){
   df_name <- paste0(metric, "_", "subxparcel_", atlases_GBC[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxparcel_matrix_%3$s_restOnly.csv", dataset, metric, atlases_GBC[i])))
-  assign(df_name, data.frame(get(df_name)[,-c(1:2)]))
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases_GBC[i])))
+  assign(df_name, data.frame(get(df_name)[,-1]))
   print(df_name)
 } 
-
  
-row.names(GBC_subxparcel_glasser) <- participants$sub
-row.names(GBC_subxparcel_gordon) <- participants$sub
 row.names(GBC_subxparcel_schaefer200) <- participants$sub
-row.names(GBC_subxparcel_schaefer400) <- participants$sub
+
  
-
-#BNC - loads BNC_subxparcel_gordon, BNC_subxparcel_schaefer200x7, BNC_subxparcel_schaefer200x17, BNC_subxparcel_schaefer400x7, BNC_subxparcel_schaefer400x17
-metric = "BNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0(metric, "_", "subxparcel_", atlases[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxparcel_matrix_%3$s_restOnly.csv", dataset, metric, atlases[i])))
-  assign(df_name, data.frame(get(df_name)[,-c(1:2)]))
-  print(df_name)
-} 
-  
-row.names(BNC_subxparcel_gordon) <- participants$sub
-row.names(BNC_subxparcel_schaefer200x7) <- participants$sub
-row.names(BNC_subxparcel_schaefer200x17) <- participants$sub
-row.names(BNC_subxparcel_schaefer400x7) <- participants$sub
-row.names(BNC_subxparcel_schaefer400x17) <- participants$sub
-
-
-#WNC - loads WNC_subxparcel_gordon, WNC_subxparcel_schaefer200x7,WNC_subxparcel_schaefer200x17, WNC_subxparcel_schaefer400x7, WNC_subxparcel_schaefer400x17
-metric = "WNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0(metric, "_", "subxparcel_", atlases[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxparcel_matrix_%3$s_restOnly.csv", dataset, metric, atlases[i])))
-  assign(df_name, data.frame(get(df_name)[,-c(1:2)]))
-  print(df_name)
-} 
-  
-row.names(WNC_subxparcel_gordon) <- participants$sub
-row.names(WNC_subxparcel_schaefer200x7) <- participants$sub
-row.names(WNC_subxparcel_schaefer200x17) <- participants$sub
-row.names(WNC_subxparcel_schaefer400x7) <- participants$sub
-row.names(WNC_subxparcel_schaefer400x17) <- participants$sub
-
+ 
 ```
 
 
@@ -320,17 +116,7 @@ covar_df <- dplyr::rename(covar_df, sub=...1,
 #batch <- participants$ses 
  
 # Harmonize GBC
-data.harmonized_GBC <- lapply(list(GBC_subxparcel_glasser, GBC_subxparcel_gordon, GBC_subxparcel_schaefer200, GBC_subxparcel_schaefer400), covfam, bat = as.factor(participants$ses), covar = covar_df, gam, y ~ s(age, k=3, fx=T) + as.factor(sex) + as.numeric(meanFD_avgSes))
-names(data.harmonized_GBC) <- atlases_GBC
-
-# Harmonize BNC
-data.harmonized_BNC <- lapply(list(BNC_subxparcel_gordon, BNC_subxparcel_schaefer200x7, BNC_subxparcel_schaefer200x17, BNC_subxparcel_schaefer400x7, BNC_subxparcel_schaefer400x17), covfam, bat = as.factor(participants$ses), covar = covar_df, gam, y ~ s(age, k=3, fx=T) + as.factor(sex) + as.numeric(meanFD_avgSes))
-names(data.harmonized_BNC) <- atlases
- 
-# Harmonize WNC
-data.harmonized_WNC <- lapply(list(WNC_subxparcel_gordon, WNC_subxparcel_schaefer200x7, WNC_subxparcel_schaefer200x17, WNC_subxparcel_schaefer400x7, WNC_subxparcel_schaefer400x17), covfam, bat = as.factor(participants$ses), covar = covar_df, gam, y ~ s(age, k=3, fx=T) + as.factor(sex) + as.numeric(meanFD_avgSes))
-names(data.harmonized_WNC) <- atlases
-
+data.harmonized_GBC <- covfam(data=GBC_subxparcel_schaefer200, bat = as.factor(participants$ses), covar = covar_df, gam, y ~ s(age, k=3, fx=T) + as.factor(sex) + as.numeric(meanFD_avgSes))
 ```
 
 
@@ -340,30 +126,9 @@ names(data.harmonized_WNC) <- atlases
 metric = "GBC"
 for(i in c(1:length(atlases_GBC))){
   df_name <- paste0(metric, "_", "subxparcel_", atlases_GBC[i], "_covbat")
-  assign(df_name, data.frame(data.harmonized_GBC[[atlases_GBC[i]]]$dat.covbat))
+  assign(df_name, data.frame(data.harmonized_GBC$dat.covbat))
   write.csv(get(df_name), sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxparcel_matrix_%3$s_covbat_restOnly.csv", dataset, metric, atlases_GBC[i]))
   print(df_name)
 }  
-
- 
-#BNC - save out covbat harmonized connectivity metrics 
-metric = "BNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0(metric, "_", "subxparcel_", atlases[i], "_covbat")
-  assign(df_name, data.frame(data.harmonized_BNC[[atlases[i]]]$dat.covbat))
-  write.csv(get(df_name), sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxparcel_matrix_%3$s_covbat_restOnly.csv", dataset, metric, atlases[i]))
-  print(df_name)
-}  
-
-
-#WNC - save out covbat harmonized connectivity metrics 
-metric = "WNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0(metric, "_", "subxparcel_", atlases[i], "_covbat")
-  assign(df_name, data.frame(data.harmonized_WNC[[atlases[i]]]$dat.covbat))
-  write.csv(get(df_name), sprintf("/cbica/projects/network_replication/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxparcel_matrix_%3$s_covbat_restOnly.csv", dataset, metric, atlases[i]))
-  print(df_name)
-}  
-
  
 ```

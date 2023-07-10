@@ -1,0 +1,61 @@
+---
+title: "PNC Compute Functional Connectivity Metrics"
+author: "Audrey Luo"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+
+library(dplyr)
+#source("/cbica/projects/network_replication/Rscripts/functions/sensitivity_analyses/computeConnectivityMetrics_restOnly.R") # # note that this line may need to be commented out for running through this Rmd file. computeConnectivityMetrics.R is optimized for cubic job submission and has lib.loc specified for R packages. Lib.loc will throw an error if running this Rmd file locally. 
+dataset="PNC"
+
+knitr::opts_chunk$set(include = FALSE, eval = TRUE, echo = FALSE, warning = FALSE, message = FALSE) 
+```
+
+
+```{r loadParticipants}
+# load participants
+ 
+participants <- read.csv("/cbica/projects/network_replication/input/PNC/sample_selection/PNC_demographics_finalsample_restOnly_20230629.csv")
+participants <- participants$sub
+
+ 
+```
+
+
+
+# GBC was computed on cubic as jobs. The following code chunk consolidates all the steps that were executed. 
+For computeGBC, /cbica/projects/network_replication/Rscripts/PNC_scripts/Analysis_scripts/connMetrics_scripts/sensitivity_computeGBC_PNC_restOnly.sh was submitted as a job. This shell script uses the following Rscript to execute R code: /cbica/projects/network_replication/Rscripts/functions/sensitivity_analyses/computeGBC_restOnly.R Note that computeGBC_restOnly.R uses functions from /cbica/projects/network_replication/Rscripts/functions/sensitivity_analyses/computeConnectivityMetrics_restOnly.R. 
+
+```{r computeGBC}
+# make output dfs: 
+## GBC.subxparcel.matrix.schaefer200 
+atlases <-  "schaefer200" # only include schaefer200 for sensitivity analysis in supplement
+metric = "GBC"
+
+for(i in c(1:length(atlases))){
+  df_name <- paste0(metric, ".subxparcel.matrix.", atlases[i])
+  assign(df_name, make_output_dfs(participants, atlases[i]))
+}
+  
+ 
+# compute GBC
+for(sub in c(1:length(participants))){
+  for(i in c(1:length(atlases))){
+    subjectID=as.character(participants[sub])
+    PNCid.data <- computeGBC(subjectID, atlases[i], "PNC")
+    dataname <- sprintf("%s.%s.%s", metric, "subxparcel.matrix", atlases[i]) 
+    df_toUpdate <- get(dataname)
+    df_toUpdate[sub,] <- cbind(subjectID, t(PNCid.data)) #update the name of the df every iteration to GBC.subxparcel.matrix.[atlas]
+    assign(dataname, df_toUpdate)  
+    print(paste(sub, "/", length(participants), "-", subjectID, atlases[i]))
+  }
+}
+  
+write.csv(GBC.subxparcel.matrix.schaefer200, "/cbica/projects/network_replication/output/PNC/sensitivity_analyses/GBC/GBC_subxparcel_matrix_schaefer200.csv", row.names=F, quote=F)
+    
+```
+
+
