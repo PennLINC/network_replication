@@ -4,7 +4,7 @@ author: "Audrey Luo"
 output: html_document
 ---
 # Sample Selection process
-1) original sample: N=652, ages 5-21, 5716 scans total
+1) original sample: N=652, ages 5-22, 5716 scans total
 2) exclude participants with medical conditions affecting brain function, gross neurological abnormalities: N=631, 5527 scans
 3) include passing T1 QC: all scans in dataset have survived T1 QC already 
 4) include meanFD < 0.3: N=629, 5165 scans 
