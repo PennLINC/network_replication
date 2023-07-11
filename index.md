@@ -150,7 +150,7 @@ Links to the corresponding github code and descriptions of each final sample are
 
 * HCP-D: [HCPD_SampleSelection.Rmd](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/QC_scripts/HCPD_SampleSelection.Rmd)
 
-        1) Original sample: N=652, ages 5-21, 5716 scans total
+        1) Original sample: N=652, ages 5-22, 5716 scans total
         2) Exclude participants with medical conditions affecting brain function, gross neurological abnormalities: N=631, 5527 scans
         3) Include passing T1 QC: all scans in dataset have survived T1 QC already 
         4) Include meanFD < 0.3: N=629, 5165 scans 
@@ -169,7 +169,7 @@ Links to the corresponding github code and descriptions of each final sample are
 
 * HBN: [HBN_SampleSelection.Rmd](https://github.com/PennLINC/network_replication/blob/main/HBN_scripts/QC_scripts/HBN_SampleSelection.Rmd)
 
-        1) original sample: N=2255, ages 5-21, 6915 scans total
+        1) original sample: N=2255, ages 5-22, 6915 scans total
         2) exclude participants with medical conditions affecting brain function, gross neurological abnormalities: no medical exclusion in HBN
         3) include passing T1 QC: N=1669, 5111 scans
         4) include meanFD < 0.3: N=1315, 3283 scans
