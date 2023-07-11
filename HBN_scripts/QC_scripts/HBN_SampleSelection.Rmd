@@ -5,7 +5,7 @@ output: html_document
 ---
 
 # Sample Selection process
-1) original sample: N=2255, ages 5-21, 6915 scans total
+1) original sample: N=2255, ages 5-22, 6915 scans total
 2) exclude participants with medical conditions affecting brain function, gross neurological abnormalities: no medical exclusion in HBN
 3) include passing T1 QC: N=1669, 5111 scans
 4) include meanFD < 0.3: N=1315, 3283 scans
