@@ -141,11 +141,12 @@ Links to the corresponding github code and descriptions of each final sample are
          Age: mean=14.5, SD=4.4
 
          Race 
-        -  white = 249; 65.4%
-        -  asian = 34;  8.9%
-        -  black = 77; 20.2%
-        -  other = 10; 2.6%
-        -  missing = 11; 2.9%  
+        - White = 258 - 65.0%
+        - Asian = 34 - 8.5%
+        - Black = 82 - 20.7%
+        - Other = 11 - 2.8%
+        - Missing = 12 - 3.0%
+
 
 
 * HCP-D: [HCPD_SampleSelection.Rmd](https://github.com/PennLINC/network_replication/blob/main/HCPD_scripts/QC_scripts/HCPD_SampleSelection.Rmd)
