@@ -312,7 +312,6 @@ saveRDS(HCPD_qc_filenames_atlases_restOnly, "/cbica/projects/network_replication
 ```
 
 
-
 # Sensitivity Analysis: Final demographics for rest only
 - include participants with at least 6 minutes of rest-only scan time
 ```{r}
@@ -377,4 +376,5 @@ length(which(final_dem_restOnly_df$sex=="F")) # 329 females
 write.csv(final_dem_restOnly_df, "/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_demographics_finalsample_restOnly_20230103.csv", row.names=F)
 ``` 
 
+ 
 

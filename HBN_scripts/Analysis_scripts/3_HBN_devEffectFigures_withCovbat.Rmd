@@ -490,7 +490,7 @@ this section required manual input since expression() doesn't take variables :(
 ```{r make_figures_pspin, include=FALSE}
 spearman_rho <- read.csv("/cbica/projects/network_replication/output/HBN/spearman_rho_covbat.csv")
 pspin_vals <- readRDS("/cbica/projects/network_replication/output/HBN/pspin_vals_covbat.RData")
-
+ 
  
 #GBC
 r_text_GBC.glasser <- expression(paste(italic("r"), " = -0.77, ",  , italic(p[spin]), "< 0.0001")) 
@@ -516,7 +516,7 @@ r_text_BNC.gordon <- expression(paste(italic("r"), "= -0.71, ",  , italic(p[spin
 (BNC_gordon <- gam_figure_p.spin(BNC.axis_gordon, "BNC", "Gordon", r_text_BNC.gordon, 
                                   x_pos= 270, y_pos=0.1, ylim_lower=-0.07, ylim_upper=0.10))
 
-r_text_BNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.70, ",  , italic(p[spin]), "< 0.0001"))
+r_text_BNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.70, ",  , italic(p[spin]), "< 0.001"))
 (BNC_schaefer200x7 <- gam_figure_p.spin(BNC.axis_schaefer200x7, "BNC", "schaefer200x7", r_text_BNC.schaefer200x7, 
                                   x_pos= 150, y_pos=0.1, ylim_lower=-0.085, ylim_upper=0.10))
 
@@ -538,15 +538,15 @@ r_text_WNC.gordon <- expression(paste(italic("r"), "= -0.16, ",  , italic(p[spin
 (WNC_gordon <- gam_figure_p.spin(WNC.axis_gordon, "WNC", "Gordon", r_text_WNC.gordon, 
                                  x_pos= 270, y_pos=0.12, ylim_lower=-0.055, ylim_upper=0.17))
 
-r_text_WNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.37, ",  , italic(p[spin]), "< 0.0001"))
+r_text_WNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.37, ",  , italic(p[spin]), "< 0.001"))
 (WNC_schaefer200x7 <- gam_figure_p.spin(WNC.axis_schaefer200x7, "WNC", "schaefer200x7", r_text_WNC.schaefer200x7, 
-                                 x_pos= 150, y_pos=0.12, ylim_lower=-0.055, ylim_upper=0.17))
+                                 x_pos= 150, y_pos=0.15, ylim_lower=-0.055, ylim_upper=0.17))
 
 r_text_WNC.schaefer200x17 <- expression(paste(italic("r"), "= -0.28, ",  , italic(p[spin]), "< 0.01"))
 (WNC_schaefer200x17 <- gam_figure_p.spin(WNC.axis_schaefer200x17, "WNC", "schaefer200x17", r_text_WNC.schaefer200x17, 
                                  x_pos= 160, y_pos=0.1, ylim_lower=-0.055, ylim_upper=0.17))
 
-r_text_WNC.schaefer400x7 <- expression(paste(italic("r"), "= -0.31, ",  , italic(p[spin]), "< 0.01"))
+r_text_WNC.schaefer400x7 <- expression(paste(italic("r"), "= -0.31, ",  , italic(p[spin]), "< 0.001"))
 (WNC_schaefer400x7 <- gam_figure_p.spin(WNC.axis_schaefer400x7, "WNC", "schaefer400x7", r_text_WNC.schaefer400x7, 
                                  x_pos= 260, y_pos=0.1, ylim_lower=-0.055, ylim_upper=0.17))
 
