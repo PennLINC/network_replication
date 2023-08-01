@@ -5,7 +5,7 @@ library(dplyr)
  
 
 #FIT GAM FUNCTION
-##Function to fit a GAM (measure ~ s(smooth_var) + covariates)) per each region in atlas and save out statistics and derivative-based characteristics
+##Function to fit a GAM (measure ~ s(smooth_var) + covariates)) per each region in atlas and save out statistics and fitted values-based characteristics
 gam.fit <- function(measure, atlas, dataset, region, smooth_var, covariates, stats_only = FALSE){
   
   #Fit the gam
@@ -153,10 +153,9 @@ gam.predsmooth <- function(measure, atlas, dataset, region, smooth_var, covariat
 gam.smooth.predict_posterior <- function(measure, atlas, dataset, region, smooth_var, covariates, knots, set_fx = FALSE, draws, increments, return_posterior_fits = TRUE){
   
   #Set parameters
-  npd <- as.numeric(draws) #number of draws from the posterior distribution; number of posterior derivative sets estimated
-  np <- as.numeric(increments) #number of smooth_var increments to get derivatives at
-  UNCONDITIONAL <- FALSE #should we account for uncertainty when estimating smoothness parameters?
-  
+  npd <- as.numeric(draws) #number of draws from the posterior distribution; number of posterior fitted values sets estimated
+  np <- as.numeric(increments) #number of smooth_var increments to get fitted values at
+  UNCONDITIONAL <- FALSE  
   
   #Fit the gam
   dataname <- sprintf("%s.%s.%s", measure, atlas, dataset)  # e.g. GBC.schaefer200.PNC
