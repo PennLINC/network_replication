@@ -200,11 +200,7 @@ make_gam.smooths_centered <- function(metric, atlas, dataset){
 
 make_gam.smooths_centered_covbat <- function(metric, atlas, dataset){
   demog <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/%2$s%3$s_demographics_finalsample_covbat.csv", dataset, metric, atlas))
-  if (dataset=="NKI"){
-    demog$sex <- as.factor(demog$gender)
-  } else {
-    demog$sex <- as.factor(demog$sex)
-  }
+  demog$sex <- as.factor(demog$sex)
   if (dataset=="HBN") {
     demog <- demog[-c(which(names(demog) == "X"))]
   }
@@ -262,7 +258,7 @@ make_smooths_fig_centered <- function(atlas, metric){
   smooth_fits <- get(paste0("devTraj.centered.", atlas, ".", metric, "_df"))
   smooths_fig_centered <- ggplot(smooth_fits,aes(age,est,group=SA.axis_rank)) + 
     geom_line(data = smooth_fits, size=.7, alpha = .6, aes(color=SA.axis_rank)) + 
-    ylim(-0.042, 0.053) + 
+    ylim(-0.042, 0.053) + xlim(5, 23) +
     paletteer::scale_color_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(smooth_fits$SA.axis_rank), max(smooth_fits$SA.axis_rank)), oob = squish) + 
     theme(
       axis.title.x=element_blank(),
@@ -286,7 +282,7 @@ make_repParcel.fig <- function(metric, atlas, parcels, color_hexcode) {
   df <- get(paste0("repParcels_", atlas))
   smooth_fits <- df[[parcels]]
   main.plot <- ggplot(smooth_fits,aes(age,est,group=SA.axis_rank)) + 
-    geom_line(data = smooth_fits, size=1.5, alpha = .6,  colour=color_hexcode) + ylim(-0.042, 0.053) + xlim(min(smooth_fits$age), max(smooth_fits$age)) +
+    geom_line(data = smooth_fits, size=1.5, alpha = .6,  colour=color_hexcode) + ylim(-0.042, 0.053) + xlim(5, 23) +
     theme(
       axis.title.x=element_blank(),
       axis.title.y=element_blank(),

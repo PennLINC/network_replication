@@ -124,31 +124,6 @@ gam_figure_p.spin <- function(axis, metric, atlas, r_text, x_pos, y_pos){
 }
 
  
-
-## FIGURE: Developmental Trajectories 
-# @param metric A character string of connectivity metric (i.e. "GBC")
-# @param atlas A character string of atlas name 
-devTraj_figure <- function(metric, atlas) {
-  gam.smooths <- get(paste0("gam.smooths.", atlas, '.', metric))
-  axis <- get(paste0(metric, ".axis_", atlas))  
-  smooths_figure <- ggplot(gam.smooths,aes(age,fit,group=index)) + 
-    geom_line(data = gam.smooths, size=1, alpha = .6, aes(color=SA.axis_rank)) + 
-    paletteer::scale_color_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(axis$SA.axis_rank), max(axis$SA.axis_rank)), oob = squish) + 
-    labs(color = "SA Axis Rank",
-         x="Age", 
-         y="Predicted Global Brain Connectivity") +
-    ggtitle(paste(metric, "-", atlas)) + 
-    theme(
-      axis.title.x=element_text(size=12, color = "black"),
-      axis.title.y=element_text(size=12, color = "black"),
-      axis.line = element_line(color = "black"),
-      axis.text=element_text(size=12, color = "black"),
-      panel.background=element_blank(),
-      legend.position = "bottom") + coord_cartesian(expand = FALSE, xlim = c(8, 23))
-  return(smooths_figure)
-}
-
-
 ## Makes smooths df for developmental trajectories, centered on zero
 # @param metric A character string of connectivity metric (i.e. "GBC")
 # @param atlas A character string of atlas name 
@@ -256,11 +231,11 @@ make_smooths_fig_centered <- function(atlas, metric){
   smooth_fits <- get(paste0("devTraj.centered.", atlas, ".", metric, "_df"))
   smooths_fig_centered <- ggplot(smooth_fits,aes(age,est,group=SA.axis_rank)) + 
     geom_line(data = smooth_fits, size=.7, alpha = .6, aes(color=SA.axis_rank)) + 
-    ylim(-0.042, 0.055) + ylab("lab") + xlab("Age") + 
+    ylim(-0.042, 0.055) + xlim(5, 23) +  
     paletteer::scale_color_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(smooth_fits$SA.axis_rank), max(smooth_fits$SA.axis_rank)), oob = squish) + 
     theme(
-      axis.title.x=element_text(size=20, color = "black"),
-      axis.title.y=element_text(size=20, color = "black"),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
       axis.line = element_line(color = "black"),
       axis.text=element_text(size=20, color = "black"),
       panel.background=element_blank(),  

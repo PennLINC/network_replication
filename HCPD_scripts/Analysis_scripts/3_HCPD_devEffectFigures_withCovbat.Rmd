@@ -619,13 +619,13 @@ SA_metric_corr_GBC <- ggplot(cor.credible.intervals, aes(x = age, y = abs(SA.cor
     geom_line(size = .5) +
     geom_ribbon(alpha = .2, fill = c("grey60")) + geom_hline(yintercept=0.6,linetype=2) + 
     labs(x="Age", y="Spatial Alignment of GBC to S-A Axis (r)") + 
-    theme_classic() + ylim(0, 0.62) + 
+    theme_classic() + ylim(0, 0.62) + xlim(5, 23) + 
     theme(axis.text = element_text(size = 24, 
                                    color = c("black")), 
-          axis.title = element_text(size = 24, color = c("black")), 
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(),
           axis.line = element_line(size =.22), 
-          axis.ticks = element_line(size = .22)) +
-    scale_x_continuous(breaks=c(4, 6, 8, 10, 12, 14, 16, 18, 20, 22), expand = c(0, .1)) 
+          axis.ticks = element_line(size = .22))  
  
 SA_metric_corr_GBC 
 ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig5/Fig5_HCPD_GBC_ageFittedValues.pdf", dpi=1200, width = 5, height = 5)
