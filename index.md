@@ -110,7 +110,7 @@ Links to the corresponding github code and descriptions of each final sample are
 * PNC: [PNC_SampleSelection.Rmd](https://github.com/PennLINC/network_replication/blob/main/PNC_scripts/QC_scripts/PNC_SampleSelection.Rmd)
 
         1) Original sample: N=1559, 4546 scans total, ages 8-23
-        2) Exclude participants with medical conditions affecting brain function, gross neurological abnormalities, and psychoactive medical medications: N=1413, 4136 scans 
+        2) Exclude participants with medical conditions affecting brain function and gross neurological abnormalities: N=1413, 4136 scans 
         3) Include passing T1 QC: N=1374, 4041 scans
         4) Include meanFD < 0.3: N=1262, 3365 scans
         5) Include scans with at least 7 minutes of scan time: N= 1207,  3310 scans (final sample), 646 females.  
