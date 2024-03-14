@@ -4,8 +4,8 @@ author: "Audrey Luo"
 output: html_document
 ---
 
-Make Figures 3A, 3E, 3I, 3M, 4A, 5A, 6A, and 6E 
-Also makes Figure S2
+Make Figures 2A, 2E, 2I, 2M, 4A, 5A, and 5E 
+Also makes Supp Fig 2
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE) 
 
@@ -15,7 +15,6 @@ library(cowplot)
 library(cifti)
 library(ggseg)
 Sys.setenv(RGL_USE_NULL=TRUE)
-library(ggsegExtra)
 library(ggsegSchaefer)
 library(ggsegGlasser)
 library(ggsegGordon)
@@ -64,7 +63,7 @@ schaefer400_SAaxis <- schaefer400x17_SAaxis
 ```
 
 
-## **Figure 3A**  
+## **Figure 2A**  
 
 ### DevTraj Centered
 #### load gam.smooths
@@ -115,27 +114,16 @@ devTraj.centered.GBC <- lapply(atlases_GBC, make_smooths_fig_centered, "GBC")
 names(devTraj.centered.GBC) <- atlases_GBC
 ```
 
-#### Plot Figure 3A: GBC Dev Trajectory  
+#### Plot Figure 2A: GBC Dev Trajectory  
 ```{r Fig7, fig.height= 10, fig.width= 12, warning=FALSE}
 
 (devTraj.centered.GBC_fig <- plot_grid(devTraj.centered.GBC$glasser, devTraj.centered.GBC$gordon, devTraj.centered.GBC$schaefer200, devTraj.centered.GBC$schaefer400, labels = "AUTO"))
 
-
-devTraj.centered.GBC$schaefer200
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig3/Fig3_GBCDevTraj_PNC.pdf", dpi=1200, width = 5, height = 5)
-
-devTraj.centered.GBC$glasser
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Supplementary/FigS2_GBCDevTraj_PNC.glasser.pdf", dpi=300, width = 5.5, height = 5)
-
-devTraj.centered.GBC$gordon
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Supplementary/FigS2_GBCDevTraj_PNC.gordon.pdf", dpi=300, width = 5.5, height = 5)
-
-devTraj.centered.GBC$schaefer400
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Supplementary/FigS2_GBCDevTraj_PNC.schaefer400.pdf", dpi=300, width = 5.5, height = 5)
+ 
 ```
  
 
-## **Figure 3E, I, M**
+## **Figure 2E, I, M**
 #### Make representative parcels
 ```{r make_representative_parcels, warning=FALSE, cache=TRUE}
   
@@ -191,40 +179,30 @@ schaefer200x7_attention <- make_repParcel.fig("GBC", "schaefer200x7", "attention
  
  
 
-#### Plot Figure 3E, I, M
+#### Plot Figure 2E, I, M
 ```{r FigRepresentativeParcels_schaefer200x7_saveOut, fig.height=4, fig.width=4}
  
 schaefer200x7_SomMot
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig3/Fig3_GBCDevTrajRep_SM_PNC.pdf", dpi=1200, width = 5, height = 5)
-
+ 
 schaefer200x7_attention 
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig3/Fig3_GBCDevTrajRep_Attention_PNC.pdf", dpi=1200, width = 5, height = 5)
-
+ 
 schaefer200x7_default 
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig3/Fig3_GBCDevTrajRep_Default_PNC.pdf", dpi=1200, width = 5, height = 5)
  
 ```
 
-#### Make inset for Figure 3
+#### Make inset for Figure 2
 ```{r plot_inset, fig.height=3, fig.width=3}
  
 inset_SomMot <- make_repParcel.inset("schaefer200x7", "SomMot", SA_rank=40, "#24A6A8FF", "schaefer7_200")
-inset_SomMot
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig3/Fig3_GBCDevTrajRep_inset.SomMot.pdf", dpi=300, width = 4, height = 4)
-
+inset_SomMot 
 inset_Attention <- make_repParcel.inset("schaefer200x7", "attention", SA_rank=113, "#EEAC32FF", "schaefer7_200")
-inset_Attention
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig3/Fig3_GBCDevTrajRep_inset.Attention.pdf", dpi=300, width = 4, height = 4)
-
+inset_Attention 
 inset_Default <- make_repParcel.inset("schaefer200x7", "default", SA_rank=155, "#C73000FF", "schaefer7_200")
-inset_Default
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig3/Fig3_GBCDevTrajRep_inset.Default.pdf", dpi=300, width = 4, height = 4)
-  
+inset_Default 
 ```
 
-## **Figure 4A**
-
-#### load gam results
+## **Supp Fig 2**
+#### load gam results (relevant for Fig 5 too)
 ```{r load_gam, include=FALSE, cache=TRUE}
 #GBC - loads gam.GBC.age.glasser, gam.GBC.age.gordon, gam.GBC.age.schaefer200, gam.GBC.age.schaefer400
 
@@ -536,83 +514,32 @@ r_text_GBC.gordon <- expression(paste(italic("r"), "= -0.71, ",  , italic(p[spin
 (GBC_gordon <- gam_figure_p.spin(GBC.axis_gordon, "GBC", "Gordon", r_text_GBC.gordon, 
                                  x_pos= 250, y_pos=0.12, ylim_lower=-0.065, ylim_upper=0.15))
 
-r_text_GBC.schaefer200 <- expression(paste(italic("r"), "= -0.71, ",  , italic(p[spin]), "< 0.0001"))
-(GBC_schaefer200 <- gam_figure_p.spin(GBC.axis_schaefer200, "GBC", "Schaefer200", r_text_GBC.schaefer200, 
-                                      x_pos= 150, y_pos=0.12, ylim_lower=-0.065, ylim_upper=0.15))
-
 r_text_GBC.schaefer400 <- expression(paste(italic("r"), "= -0.69, ",  , italic(p[spin]), "< 0.0001"))
 (GBC_schaefer400 <- gam_figure_p.spin(GBC.axis_schaefer400, "GBC", "Schaefer400", r_text_GBC.schaefer400, 
                                       x_pos= 320, y_pos=0.12, ylim_lower=-0.065, ylim_upper=0.15))
  
  
 #BNC
- 
-r_text_BNC.gordon <- expression(paste(italic("r"), "= -0.70, ",  , italic(p[spin]), "< 0.0001"))
-(BNC_gordon <- gam_figure_p.spin(BNC.axis_gordon, "BNC", "Gordon", r_text_BNC.gordon, 
-                                        x_pos= 270, y_pos=0.12, ylim_lower=-0.07, ylim_upper=0.10))
-
 r_text_BNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.66, ",  , italic(p[spin]), "< 0.001"))
 (BNC_schaefer200x7 <- gam_figure_p.spin(BNC.axis_schaefer200x7, "BNC", "schaefer200x7", r_text_BNC.schaefer200x7, 
                                         x_pos= 150, y_pos=0.1, ylim_lower=-0.07, ylim_upper=0.10))
-
-r_text_BNC.schaefer200x17 <- expression(paste(italic("r"), "= -0.70, ",  , italic(p[spin]), "< 0.0001"))
-(BNC_schaefer200x17 <- gam_figure_p.spin(BNC.axis_schaefer200x17, "BNC", "schaefer200x17", r_text_BNC.schaefer200x17, 
-                                        x_pos= 150, y_pos=0.1, ylim_lower=-0.07, ylim_upper=0.10))
-
-r_text_BNC.schaefer400x7 <- expression(paste(italic("r"), "= -0.63, ",  , italic(p[spin]), "< 0.0001"))
-(BNC_schaefer400x7 <- gam_figure_p.spin(BNC.axis_schaefer400x7, "BNC", "schaefer400x7", r_text_BNC.schaefer400x7, 
-                                        x_pos= 250, y_pos=0.1, ylim_lower=-0.07, ylim_upper=0.10))
-
-r_text_BNC.schaefer400x17 <- expression(paste(italic("r"), "= -0.68, ",  , italic(p[spin]), "< 0.0001"))
-(BNC_schaefer400x17 <- gam_figure_p.spin(BNC.axis_schaefer400x17, "BNC", "schaefer400x17", r_text_BNC.schaefer400x17, 
-                                         x_pos= 250, y_pos=0.1, ylim_lower=-0.07, ylim_upper=0.10))
-
+ 
  
 #WNC
- 
-r_text_WNC.gordon <- expression(paste(italic("r"), "= -0.43, ",  , italic(p[spin]), "< 0.05"))
-(WNC_gordon <- gam_figure_p.spin(WNC.axis_gordon, "WNC", "Gordon", r_text_WNC.gordon, 
-                                        x_pos= 250, y_pos=0.12, ylim_lower=-0.055, ylim_upper=0.17))
-
 r_text_WNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.49, ",  , italic(p[spin]), "< 0.001"))
 (WNC_schaefer200x7 <- gam_figure_p.spin(WNC.axis_schaefer200x7, "WNC", "schaefer200x7", r_text_WNC.schaefer200x7, 
                                         x_pos= 150, y_pos=0.1, ylim_lower=-0.055, ylim_upper=0.17))
-
-r_text_WNC.schaefer200x17 <- expression(paste(italic("r"), "= -0.44, ",  , italic(p[spin]), "< 0.01"))
-(WNC_schaefer200x17 <- gam_figure_p.spin(WNC.axis_schaefer200x17, "WNC", "schaefer200x17", r_text_WNC.schaefer200x17, 
-                                        x_pos= 150, y_pos=0.1, ylim_lower=-0.055, ylim_upper=0.17))
-
-r_text_WNC.schaefer400x7 <- expression(paste(italic("r"), "= -0.51, ",  , italic(p[spin]), "< 0.001"))
-(WNC_schaefer400x7 <- gam_figure_p.spin(WNC.axis_schaefer400x7, "WNC", "schaefer400x7", r_text_WNC.schaefer400x7, 
-                                        x_pos= 250, y_pos=0.1, ylim_lower=-0.055, ylim_upper=0.17))
-
-r_text_WNC.schaefer400x17 <- expression(paste(italic("r"), "= -0.44, ",  , italic(p[spin]), "< 0.01"))
-(WNC_schaefer400x17 <- gam_figure_p.spin(WNC.axis_schaefer400x17, "WNC", "schaefer400x17", r_text_WNC.schaefer400x17, 
-                                        x_pos= 250, y_pos=0.1, ylim_lower=-0.055, ylim_upper=0.17))
- 
  
 ```
  
-#### Plot Figure 4A: GBC DevEffect 
+#### Plot Supp Fig 2: GBC DevEffect 
 ```{r Fig1, fig.height= 8, fig.width= 16, warning=FALSE, cache=TRUE}
 
-plot_grid(GBC_glasser, GBC_gordon, GBC_schaefer200, GBC_schaefer400, labels = "AUTO")
-
-GBC_schaefer200
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig4/Fig4_GBCAgeEffect_PNC.pdf", dpi=300, width = 5, height = 5)
-
-GBC_glasser
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Supplementary/FigS2_GBCAgeEffect_PNC.glasser.pdf", dpi=300, width = 5, height = 5)
-
-GBC_gordon
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Supplementary/FigS2_GBCAgeEffect_PNC.gordon.pdf", dpi=300, width = 5, height = 5)
-
-GBC_schaefer400
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Supplementary/FigS2_GBCAgeEffect_PNC.schaefer400.pdf", dpi=300, width = 5, height = 5)
+plot_grid(GBC_glasser, GBC_gordon, GBC_schaefer400, labels = "AUTO")
 
 ```
 
-## **Figure 5A**
+## **Figure 4A**
 #### load GAM fitted values
 ```{r load_gam.fitted, include=FALSE, cache=TRUE}
 gam.GBC.fitted.schaefer200 <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s.csv", dataset, "GBC", "gam.GBC.fitted.schaefer200"))
@@ -661,7 +588,7 @@ saveRDS(cor.credible.intervals, "/cbica/projects/network_replication/output/PNC/
 cor.credible.intervals <- readRDS("/cbica/projects/network_replication/output/PNC/GBC/GAM/cor.credible.intervals_GBC_fitted.RData")
 ```
 
-#### Plot Figure 5A
+#### Plot Figure 4A
 - plotting absolute alignment with S-A axis
 ```{r plot_cred.intervals, include=FALSE, cache=TRUE}
 SA_metric_corr_GBC <- ggplot(cor.credible.intervals, aes(x = age, y = abs(SA.correlation), ymin = abs(lower), ymax = abs(upper))) + 
@@ -676,28 +603,21 @@ SA_metric_corr_GBC <- ggplot(cor.credible.intervals, aes(x = age, y = abs(SA.cor
           axis.line = element_line(size =.22), 
           axis.ticks = element_line(size = .22))  
  
-SA_metric_corr_GBC 
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig5/Fig5_PNC_GBC_ageFittedValues.pdf", dpi=1200, width = 5, height = 5)
+SA_metric_corr_GBC  
 ```
 
-## **Figure 6A**
-#### Plot Figure 6A: BNC DevEffect  
-```{r Fig2, fig.height= 8, fig.width= 16, warning=FALSE, cache=TRUE}
-
-plot_grid(BNC_gordon, BNC_schaefer200x7, BNC_schaefer200x17, BNC_schaefer400x7, BNC_schaefer400x17, labels = "AUTO")
- 
-BNC_schaefer200x7
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig6/Fig6_BNCAgeEffect_PNC.pdf", dpi=300, width = 6, height = 5)
+## **Figure 5A**
+#### Plot Figure 5A: BNC DevEffect  
+```{r Fig5a, fig.height= 8, fig.width= 16, warning=FALSE, cache=TRUE}
+  
+BNC_schaefer200x7 
 ```
 
-## **Figure 6E**
-#### Plot Figure 6E: WNC DevEffect  
-```{r Fig3, fig.height= 8, fig.width= 16, warning=FALSE, cache=TRUE}
-
-plot_grid(WNC_gordon, WNC_schaefer200x7, WNC_schaefer200x17, WNC_schaefer400x7, WNC_schaefer400x17, labels = "AUTO")
+## **Figure 5E**
+#### Plot Figure 5E: WNC DevEffect  
+```{r Fig5e, fig.height= 8, fig.width= 16, warning=FALSE, cache=TRUE}
  
-WNC_schaefer200x7
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig6/Fig6_WNCAgeEffect_PNC.pdf", dpi=300, width = 6, height = 5)
+WNC_schaefer200x7 
 ```
     
     

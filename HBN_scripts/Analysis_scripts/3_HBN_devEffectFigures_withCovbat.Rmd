@@ -4,7 +4,7 @@ author: "Audrey Luo"
 output: html_document
 ---
 
-Makes Figures 3D, 3H, 3L, 3P, 4D, 5D, 6D, 6H
+Makes Figures 2D, 2H, 2L, 2P, 4D, 5D, 5H
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE) 
 
@@ -14,7 +14,6 @@ library(cowplot)
 library(cifti)
 library(ggseg)
 Sys.setenv(RGL_USE_NULL=TRUE)
-library(ggsegExtra)
 library(ggsegSchaefer)
 library(ggsegGlasser)
 library(ggsegGordon)
@@ -32,7 +31,6 @@ source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/net
 source("/cbica/projects/network_replication/Rscripts/functions/main_analyses/GAM_functions.R")
 source("/cbica/projects/network_replication/software/perm.sphere.p.R")
 
-atlases_GBC <- c("glasser", "gordon", "schaefer200", "schaefer400") # note that GBC (global brain connectivity) == FC strength
 atlases <- c("gordon", "schaefer200x7", "schaefer200x17", "schaefer400x7", "schaefer400x17") # For BNC and WNC 
 dataset <- "HBN"
   
@@ -62,7 +60,7 @@ schaefer400_SAaxis <- schaefer400x17_SAaxis
 ```
 
   
-## **Figure 3D**  
+## **Figure 2D**  
 
 ### DevTraj Centered
 #### load gam.smooths
@@ -110,17 +108,16 @@ devTraj.centered.GBC <- lapply(atlases_GBC, make_smooths_fig_centered, "GBC")
 names(devTraj.centered.GBC) <- atlases_GBC
 ```
 
-#### Plot Figure 3D: GBC Dev Trajectory  
+#### Plot Figure 2D: GBC Dev Trajectory  
 ```{r Fig7, fig.height= 10, fig.width= 12, warning=FALSE}
 
 (devTraj.centered.GBC_fig <- plot_grid(devTraj.centered.GBC$glasser, devTraj.centered.GBC$gordon, devTraj.centered.GBC$schaefer200, devTraj.centered.GBC$schaefer400, labels = "AUTO"))
 
-devTraj.centered.GBC$schaefer200
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig3/Fig3_GBCDevTraj_HBN.pdf", dpi=1200, width = 5, height = 5)
+devTraj.centered.GBC$schaefer200 
 ```
 
 
-## **Figure 3H, L, P**
+## **Figure 2H, L, P**
 #### Make representative parcels
 ```{r make_representative_parcels, warning=FALSE, cache=TRUE}
   
@@ -177,396 +174,20 @@ schaefer200x7_attention <- make_repParcel.fig("GBC", "schaefer200x7", "attention
  
  
 
-#### Plot Figure 3H, L, P
+#### Plot Figure 2H, L, P
 ```{r FigRepresentativeParcels_schaefer200x7_saveOut, fig.height=4, fig.width=4}
  
-schaefer200x7_SomMot
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig3/Fig3_GBCDevTrajRep_SM_HBN.pdf", dpi=1200, width = 5, height = 5)
+schaefer200x7_SomMot 
 
-schaefer200x7_attention 
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig3/Fig3_GBCDevTrajRep_Attention_HBN.pdf", dpi=1200, width = 5, height = 5)
+schaefer200x7_attention  
 
-schaefer200x7_default 
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig3/Fig3_GBCDevTrajRep_Default_HBN.pdf", dpi=1200, width = 5, height = 5)
+schaefer200x7_default  
  
 ```
 
 
+ 
 ## **Figure 4D**
-
-#### load gam results
-```{r load_gam, include=FALSE, cache=TRUE}
-#GBC - loads gam.GBC.age.glasser, gam.GBC.age.gordon, gam.GBC.age.schaefer200, gam.GBC.age.schaefer400
-
-metric = "GBC"
-for(i in c(1:length(atlases_GBC))){
-  df_name <- paste0("gam.", metric, ".", "age.", atlases_GBC[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.%3$s_covbat.csv", dataset, metric, atlases_GBC[i])))
-  assign(df_name, get(df_name) %>% select(-label))
-  if(str_detect(atlases_GBC[i], "schaefer")) {
-  SAaxis <- get(paste0(atlases_GBC[i], "x17_", "SAaxis"))
-  } else {
-  SAaxis <- get(paste0(atlases_GBC[i], "_", "SAaxis"))
-  }
-  df_to.label <- get(df_name)
-  df_to.label$label <- SAaxis$label
-  assign(df_name, df_to.label)
-} 
- 
- 
-#BNC - loads gam.BNC.age.gordon, gam.BNC.age.schaefer200x7, gam.BNC.age.schaefer400x7, gam.BNC.age.schaefer200x17, gam.BNC.age.schaefer400x17
-
-metric = "BNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0("gam.", metric, ".", "age.", atlases[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.%3$s_covbat.csv", dataset, metric, atlases[i])))
-  assign(df_name, get(df_name) %>% select(-label))
-  SAaxis <- get(paste0(atlases[i], "_", "SAaxis"))
-  df_to.label <- get(df_name)
-  df_to.label$label <- SAaxis$label
-  assign(df_name, df_to.label)
-} 
- 
-
-  
-#WNC - loads gam.WNC.age.gordon, gam.WNC.age.schaefer200x7, gam.WNC.age.schaefer400x7, gam.WNC.age.schaefer200x17, gam.WNC.age.schaefer400x17
-metric = "WNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0("gam.", metric, ".", "age.", atlases[i])
-  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.%3$s_covbat.csv", dataset, metric, atlases[i])))
-  assign(df_name, get(df_name) %>% select(-label))
-  SAaxis <- get(paste0(atlases[i], "_", "SAaxis"))
-  df_to.label <- get(df_name)
-  df_to.label$label <- SAaxis$label
-  assign(df_name, df_to.label)
-} 
- 
-```
-
- 
-#### make figure df's - metric.axis_atlas
-- makes metric.axis_atlas df's. can load these df's in following chunk.
-```{r figure_dfs, include=FALSE, eval=FALSE}
-# GBC - makes GBC.axis_glasser, GBC.axis_gordon, GBC.axis_schaefer200, GBC.axis_schaefer400 
-metric = "GBC"
-for(i in c(1:length(atlases_GBC))){
-  df_name <- paste0(metric, ".axis_", atlases_GBC[i])
-  assign(df_name, combineGAMdfs(metric, atlases_GBC[i]))
-  print(df_name)
-} 
-
-  
-# BNC - makes BNC.axis_gordon, BNC.axis_schaefer200x7, BNC.axis_schaefer200x17, BNC.axis_schaefer400x7, BNC.axis_schaefer400x17 
-metric = "BNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0(metric, ".axis_", atlases[i])
-  assign(df_name, combineGAMdfs(metric, atlases[i]))
-  print(df_name)
-} 
-
- 
-# WNC - makes WNC.axis_gordon, WNC.axis_schaefer200x7, WNC.axis_schaefer200x17, WNC.axis_schaefer400x7, WNC.axis_schaefer400x17 
-metric = "WNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0(metric, ".axis_", atlases[i])
-  assign(df_name, combineGAMdfs(metric, atlases[i]))
-  print(df_name)
-} 
- 
-
-#add column for FDR correction
-# GBC
-GBC.axis_glasser <- sig_parcels(GBC.axis_glasser)   
-GBC.axis_gordon <- sig_parcels(GBC.axis_gordon) 
-GBC.axis_schaefer200 <- sig_parcels(GBC.axis_schaefer200) 
-GBC.axis_schaefer400 <- sig_parcels(GBC.axis_schaefer400) 
-
-# BNC
-BNC.axis_gordon <- sig_parcels(BNC.axis_gordon)
-BNC.axis_schaefer200x7 <- sig_parcels(BNC.axis_schaefer200x7)
-BNC.axis_schaefer200x17 <- sig_parcels(BNC.axis_schaefer200x17)
-BNC.axis_schaefer400x7 <- sig_parcels(BNC.axis_schaefer400x7)
-BNC.axis_schaefer400x17 <- sig_parcels(BNC.axis_schaefer400x17)
-
-# WNC
-WNC.axis_gordon <- sig_parcels(WNC.axis_gordon)
-WNC.axis_schaefer200x7 <- sig_parcels(WNC.axis_schaefer200x7)
-WNC.axis_schaefer200x17 <- sig_parcels(WNC.axis_schaefer200x17)
-WNC.axis_schaefer400x7 <- sig_parcels(WNC.axis_schaefer400x7)
-WNC.axis_schaefer400x17 <- sig_parcels(WNC.axis_schaefer400x17)
-
-# GBC - writes GBC.axis_glasser, GBC.axis_gordon, GBC.axis_schaefer200, GBC.axis_schaefer400 
-metric = "GBC"
-for(i in c(1:length(atlases_GBC))){
-  df_name <- paste0(metric, ".axis_", atlases_GBC[i])
-  filename <- paste0(df_name)
-  write.csv(get(filename), sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename))
-  print(df_name)
-} 
-
-  
-# BNC - writes BNC.axis_gordon, BNC.axis_schaefer200x7, BNC.axis_schaefer200x17, BNC.axis_schaefer400x7, BNC.axis_schaefer400x17 
-metric = "BNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0(metric, ".axis_", atlases[i])
-  filename <- paste0(df_name)
-  write.csv(get(filename), sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename))
-  print(df_name)
-} 
-
- 
-# WNC - writes WNC.axis_gordon, WNC.axis_schaefer200x7, WNC.axis_schaefer200x17, WNC.axis_schaefer400x7, WNC.axis_schaefer400x17 
-metric = "WNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0(metric, ".axis_", atlases[i])
-  filename <- paste0(df_name)
-  write.csv(get(filename), sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename))
-  print(df_name)
-} 
-
- 
-```
-
-#### load figure df's - metric.axis_atlas
-```{r load_figureDfs, include=FALSE, cache=TRUE}
-
-#GBC - loads GBC.axis_glasser, GBC.axis_gordon, GBC.axis_schaefer200, GBC.axis_schaefer400 
-metric = "GBC"
-for(i in c(1:length(atlases_GBC))){
-  filename <- paste0(metric, ".axis_", atlases_GBC[i])
-  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename)))
-  print(filename)
-} 
-  
-           
-#BNC - loads BNC.axis_gordon, BNC.axis_schaefer200x7, BNC.axis_schaefer200x17, BNC.axis_schaefer400x7, BNC.axis_schaefer400x17 
-metric = "BNC"
-for(i in c(1:length(atlases))){
-  filename <- paste0(metric, ".axis_", atlases[i])
-  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename)))
-  print(filename)
-} 
-  
-  
-#WNC - loads WNC.axis_gordon, WNC.axis_schaefer200x7, WNC.axis_schaefer200x17, WNC.axis_schaefer400x7, WNC.axis_schaefer400x17
-metric = "WNC"
-for(i in c(1:length(atlases))){
-  filename <- paste0(metric, ".axis_", atlases[i])
-  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename)))
-  print(filename)
-} 
-
-```
-
-
-
-#### Spin-based spatial permutation tests - Prep dataframes
-```{r prep_pspindfs, include=FALSE, cache=TRUE}
-#Load Spin Test Parcel Rotation Matrix
-
-all_atlases <- c("glasser", "gordon","schaefer200x7","schaefer200x17", "schaefer400x7","schaefer400x17")
-
-# parcel rotation matrices: perm.id.full_glasser, perm.id.full_gordon, perm.id.full_schaefer200x7, perm.id.full_schaefer200x17, perm.id.full_schaefer400x7, perm.id.full_schaefer400x17 
-for(i in c(1:length(all_atlases))){
-  df_name <- paste0("perm.id.full", "_", all_atlases[i])
-  assign(df_name, readRDS(sprintf("/cbica/projects/network_replication/software/rotate_parcellation/%1$s.coords_sphericalrotations_N10k.rds", all_atlases[i])))
-  print(paste(df_name, "made"))
-} 
-
- 
-# GBC - making df.dev.spin_GBC_glasser, df.dev.spin_GBC_gordon, df.dev.spin_GBC_schaefer200, df.dev.spin_GBC_schaefer400 
-metric = "GBC"
-for(i in c(1:length(atlases_GBC))){
-  df_name <- paste0("df.dev.spin_", metric, "_", atlases_GBC[i])
-  assign(df_name, prepDfSpin(atlases_GBC[i], metric))
-  print(paste(df_name, "made"))
-} 
-
- 
- 
-
-# BNC - making df.dev.spin_BNC_gordon, df.dev.spin_BNC_schaefer200x7, df.dev.spin_BNC_schaefer200x17, df.dev.spin_BNC_schaefer400x7, df.dev.spin_BNC_schaefer400x17 
-metric = "BNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0("df.dev.spin_", metric, "_", atlases[i])
-  assign(df_name, prepDfSpin(atlases[i], metric))
-  print(paste(df_name, "made"))
-} 
-
-# WNC - making df.dev.spin_WNC_gordon, df.dev.spin_WNC_schaefer200x7, df.dev.spin_WNC_schaefer200x17, df.dev.spin_WNC_schaefer400x7, df.dev.spin_WNC_schaefer400x17 
-metric = "WNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0("df.dev.spin_", metric, "_", atlases[i])
-  assign(df_name, prepDfSpin(atlases[i], metric))
-  print(paste(df_name, "made"))
-} 
-```
-  
- 
-#### Correlations and Spin-based spatial permutation tests
-- executes spin test and saves out p-spin values. Can load values in the next chunk.
-```{r cor_test, include=FALSE, eval=FALSE}
-# GBC - making corr.GBC_glasser, corr.GBC_gordon, corr.GBC_schaefer200, corr.GBC_schaefer400  
-metric = "GBC"
-for(i in c(1:length(atlases_GBC))){
-  df_name <- paste0("corr.", metric, "_", atlases_GBC[i])
-  axis <- get(paste0(metric, ".axis_", atlases_GBC[i]))
-  assign(df_name, cor.test(axis$GAM.age.AdjRsq, as.numeric(axis$SA.axis_rank), method=c("spearman"), exact=F)$estimate)
-  print(paste(df_name, "made"))
-} 
- 
-
-# BNC - making corr.BNC_gordon, corr.BNC_schaefer200x7, corr.BNC_schaefer400x7, corr.BNC_schaefer200x17, corr.BNC_schaefer400x17  
-metric = "BNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0("corr.", metric, "_", atlases[i])
-  axis <- get(paste0(metric, ".axis_", atlases[i]))
-  assign(df_name, cor.test(axis$GAM.age.AdjRsq, as.numeric(axis$SA.axis_rank), method=c("spearman"), exact=F)$estimate)
-  print(paste(df_name, "made"))
-} 
-
-# WNC - making corr.WNC_gordon, corr.WNC_schaefer200x7, corr.WNC_schaefer400x7, corr.WNC_schaefer200x17, corr.WNC_schaefer400x17  
-metric = "WNC"
-for(i in c(1:length(atlases))){
-  df_name <- paste0("corr.", metric, "_", atlases[i])
-  axis <- get(paste0(metric, ".axis_", atlases[i]))
-  assign(df_name, cor.test(axis$GAM.age.AdjRsq, as.numeric(axis$SA.axis_rank), method=c("spearman"), exact=F)$estimate)
-  print(paste(df_name, "made"))
-} 
-
-spearman_rho <- data.frame(cbind(corr.GBC_glasser, corr.GBC_gordon, corr.GBC_schaefer200, corr.GBC_schaefer400, corr.BNC_gordon, corr.BNC_schaefer200x7, corr.BNC_schaefer400x7, corr.BNC_schaefer200x17, corr.BNC_schaefer400x17, corr.WNC_gordon, corr.WNC_schaefer200x7, corr.WNC_schaefer400x7, corr.WNC_schaefer200x17, corr.WNC_schaefer400x17))
-write.csv(spearman_rho, "/cbica/projects/network_replication/output/HBN/spearman_rho_covbat.csv")
-
-# spin permutation tests:
-metric = "GBC"
-p_spin_GBC <- c()
-for(i in c(1:length(atlases_GBC))){
-  df.dev.spin <- get(paste0("df.dev.spin_", metric, "_", atlases_GBC[i]))
-  if(str_detect(atlases_GBC[i], "schaefer")) {
-  perm.id.full <- get(paste0("perm.id.full_", atlases_GBC[i], "x17"))
-  } else {
-  perm.id.full <- get(paste0("perm.id.full_", atlases_GBC[i]))
-  }
-  p_spin_atlas <- perm.sphere.p(as.numeric(df.dev.spin$GAM.age.AdjRsq), as.numeric(df.dev.spin$SA.axis_rank), perm.id.full, corr.type='spearman')
-  p_spin_GBC <- append(p_spin_GBC, p_spin_atlas)
-  print(paste(atlases_GBC[i], p_spin_atlas))
-} 
-p_spin_GBC <- data.frame(cbind(atlases_GBC, p_spin_GBC))
-
-
-metric = "BNC"
-p_spin_BNC <- c()
-for(i in c(1:length(atlases))){
-  df.dev.spin <- get(paste0("df.dev.spin_", metric, "_", atlases[i]))
-  perm.id.full <- get(paste0("perm.id.full_", atlases[i]))
-  p_spin_atlas <- perm.sphere.p(as.numeric(df.dev.spin$GAM.age.AdjRsq), as.numeric(df.dev.spin$SA.axis_rank), perm.id.full, corr.type='spearman')
-  p_spin_BNC <- append(p_spin_BNC, p_spin_atlas)
-  print(paste(atlases[i], p_spin_atlas))
-} 
-p_spin_BNC <- data.frame(cbind(atlases, p_spin_BNC))
-
-metric = "WNC"
-p_spin_WNC <- c()
-for(i in c(1:length(atlases))){
-  df.dev.spin <- get(paste0("df.dev.spin_", metric, "_", atlases[i]))
-  perm.id.full <- get(paste0("perm.id.full_", atlases[i]))
-  p_spin_atlas <- perm.sphere.p(as.numeric(df.dev.spin$GAM.age.AdjRsq), as.numeric(df.dev.spin$SA.axis_rank), perm.id.full, corr.type='spearman')
-  p_spin_WNC <- append(p_spin_WNC, p_spin_atlas)
-  print(paste(atlases[i], p_spin_atlas))
-} 
-p_spin_WNC <- data.frame(cbind(atlases, p_spin_WNC))
- 
-p_spin_WNC$p_spin_WNC = as.numeric(p_spin_WNC$p_spin_WNC)
-p_spin_GBC$p_spin_GBC = as.numeric(p_spin_GBC$p_spin_GBC)
-names(p_spin_GBC)[1] <- "atlases"
-p_spin_BNC$p_spin_BNC = as.numeric(p_spin_BNC$p_spin_BNC)
-
-saveRDS(list(p_spin_GBC, p_spin_BNC, p_spin_WNC), "/cbica/projects/network_replication/output/HBN/pspin_vals_covbat.RData")
-```
- 
- 
-### DevEffect with p_spin: 
-this section required manual input since expression() doesn't take variables :( 
-```{r make_figures_pspin, include=FALSE}
-spearman_rho <- read.csv("/cbica/projects/network_replication/output/HBN/spearman_rho_covbat.csv")
-pspin_vals <- readRDS("/cbica/projects/network_replication/output/HBN/pspin_vals_covbat.RData")
- 
- 
-#GBC
-r_text_GBC.glasser <- expression(paste(italic("r"), " = -0.77, ",  , italic(p[spin]), "< 0.0001")) 
-(GBC_glasser <- gam_figure_p.spin(GBC.axis_glasser, "GBC", "Glasser", r_text_GBC.glasser,
-                                  x_pos= 270, y_pos=0.12, ylim_lower=-0.065, ylim_upper=0.15))
-
-r_text_GBC.gordon <- expression(paste(italic("r"), "= -0.70, ",  , italic(p[spin]), "< 0.0001"))
-(GBC_gordon <- gam_figure_p.spin(GBC.axis_gordon, "GBC", "Gordon", r_text_GBC.gordon, 
-                                  x_pos= 270, y_pos=0.12, ylim_lower=-0.065, ylim_upper=0.15))
-
-r_text_GBC.schaefer200 <- expression(paste(italic("r"), "= -0.72, ",  , italic(p[spin]), "< 0.0001"))
-(GBC_schaefer200 <- gam_figure_p.spin(GBC.axis_schaefer200, "GBC", "Schaefer200", r_text_GBC.schaefer200, 
-                                  x_pos= 150, y_pos=0.12, ylim_lower=-0.065, ylim_upper=0.15))
-
-r_text_GBC.schaefer400 <- expression(paste(italic("r"), "= -0.72, ",  , italic(p[spin]), "< 0.0001"))
-(GBC_schaefer400 <- gam_figure_p.spin(GBC.axis_schaefer400, "GBC", "Schaefer400", r_text_GBC.schaefer400, 
-                                  x_pos= 260, y_pos=0.12, ylim_lower=-0.065, ylim_upper=0.15))
- 
- 
- 
-#BNC
-r_text_BNC.gordon <- expression(paste(italic("r"), "= -0.71, ",  , italic(p[spin]), "< 0.0001"))
-(BNC_gordon <- gam_figure_p.spin(BNC.axis_gordon, "BNC", "Gordon", r_text_BNC.gordon, 
-                                  x_pos= 270, y_pos=0.1, ylim_lower=-0.07, ylim_upper=0.10))
-
-r_text_BNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.70, ",  , italic(p[spin]), "< 0.001"))
-(BNC_schaefer200x7 <- gam_figure_p.spin(BNC.axis_schaefer200x7, "BNC", "schaefer200x7", r_text_BNC.schaefer200x7, 
-                                  x_pos= 150, y_pos=0.1, ylim_lower=-0.085, ylim_upper=0.10))
-
-r_text_BNC.schaefer200x17 <- expression(paste(italic("r"), "= -0.73, ",  , italic(p[spin]), "< 0.0001"))
-(BNC_schaefer200x17 <- gam_figure_p.spin(BNC.axis_schaefer200x17, "BNC", "schaefer200x17", r_text_BNC.schaefer200x17, 
-                                  x_pos= 160, y_pos=0.1, ylim_lower=-0.07, ylim_upper=0.10))
-
-r_text_BNC.schaefer400x7 <- expression(paste(italic("r"), "= -0.66, ",  , italic(p[spin]), "< 0.0001"))
-(BNC_schaefer400x7 <- gam_figure_p.spin(BNC.axis_schaefer400x7, "BNC", "schaefer400x7", r_text_BNC.schaefer400x7, 
-                                  x_pos= 260, y_pos=0.1, ylim_lower=-0.07, ylim_upper=0.10))
-
-r_text_BNC.schaefer400x17 <- expression(paste(italic("r"), "= -0.72, ",  , italic(p[spin]), "< 0.0001"))
-(BNC_schaefer400x17 <- gam_figure_p.spin(BNC.axis_schaefer400x17, "BNC", "schaefer400x17", r_text_BNC.schaefer400x17, 
-                                  x_pos= 260, y_pos=0.1, ylim_lower=-0.07, ylim_upper=0.10))
- 
-
-#WNC
-r_text_WNC.gordon <- expression(paste(italic("r"), "= -0.16, ",  , italic(p[spin]), "= N.S"))
-(WNC_gordon <- gam_figure_p.spin(WNC.axis_gordon, "WNC", "Gordon", r_text_WNC.gordon, 
-                                 x_pos= 270, y_pos=0.12, ylim_lower=-0.055, ylim_upper=0.17))
-
-r_text_WNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.37, ",  , italic(p[spin]), "< 0.001"))
-(WNC_schaefer200x7 <- gam_figure_p.spin(WNC.axis_schaefer200x7, "WNC", "schaefer200x7", r_text_WNC.schaefer200x7, 
-                                 x_pos= 150, y_pos=0.15, ylim_lower=-0.055, ylim_upper=0.17))
-
-r_text_WNC.schaefer200x17 <- expression(paste(italic("r"), "= -0.28, ",  , italic(p[spin]), "< 0.01"))
-(WNC_schaefer200x17 <- gam_figure_p.spin(WNC.axis_schaefer200x17, "WNC", "schaefer200x17", r_text_WNC.schaefer200x17, 
-                                 x_pos= 160, y_pos=0.1, ylim_lower=-0.055, ylim_upper=0.17))
-
-r_text_WNC.schaefer400x7 <- expression(paste(italic("r"), "= -0.31, ",  , italic(p[spin]), "< 0.001"))
-(WNC_schaefer400x7 <- gam_figure_p.spin(WNC.axis_schaefer400x7, "WNC", "schaefer400x7", r_text_WNC.schaefer400x7, 
-                                 x_pos= 260, y_pos=0.1, ylim_lower=-0.055, ylim_upper=0.17))
-
-r_text_WNC.schaefer400x17 <- expression(paste(italic("r"), "= -0.17, ",  , italic(p[spin]), "= N.S."))
-(WNC_schaefer400x17 <- gam_figure_p.spin(WNC.axis_schaefer400x17, "WNC", "schaefer400x17", r_text_WNC.schaefer400x17, 
-                                 x_pos= 260, y_pos=0.1, ylim_lower=-0.055, ylim_upper=0.17))
- 
- 
-```
- 
-#### Plot Figure 4D: GBC DevEffect 
-```{r Fig1, fig.height= 8, fig.width= 10, warning=FALSE, cache=TRUE}
-
-plot_grid(GBC_glasser, GBC_gordon, GBC_schaefer200, GBC_schaefer400, labels = "AUTO")
-
-GBC_schaefer200
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig4/Fig4_GBCAgeEffect_HBN_Covbat.pdf", dpi=300, width = 5, height = 5)
-```
-
-## **Figure 5D**
 #### load GAM fitted values
 ```{r load_gam.fitted, include=FALSE, cache=TRUE}
 gam.GBC.fitted.schaefer200 <- read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, "GBC", "gam.GBC.fitted.schaefer200"))
@@ -615,7 +236,7 @@ saveRDS(cor.credible.intervals, "/cbica/projects/network_replication/output/HBN/
 cor.credible.intervals <- readRDS("/cbica/projects/network_replication/output/HBN/GBC/GAM/cor.credible.intervals_GBC_fitted.RData")
 ```
 
-#### Plot Figure 5D
+#### Plot Figure 4D
 ```{r plot_cred.intervals, include=FALSE, cache=TRUE}
 SA_metric_corr_GBC <- ggplot(cor.credible.intervals, aes(x = age, y = abs(SA.correlation), ymin = abs(lower), ymax = abs(upper))) + 
     geom_line(size = .5) +
@@ -631,21 +252,253 @@ SA_metric_corr_GBC <- ggplot(cor.credible.intervals, aes(x = age, y = abs(SA.cor
  
  
 SA_metric_corr_GBC 
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig5/Fig5_HBN_GBC_ageFittedValues.pdf", dpi=1200, width = 5, height = 5)
 ```
 
 
-#### **Figure 6D** 
-#### Plot Figure 6D: BNC DevEffect  
+ 
+## **Figure 5D and 5H**
+
+#### load gam results
+```{r load_gam, include=FALSE, cache=TRUE}
+ 
+#BNC - loads gam.BNC.age.gordon, gam.BNC.age.schaefer200x7, gam.BNC.age.schaefer400x7, gam.BNC.age.schaefer200x17, gam.BNC.age.schaefer400x17
+
+metric = "BNC"
+for(i in c(1:length(atlases))){
+  df_name <- paste0("gam.", metric, ".", "age.", atlases[i])
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.%3$s_covbat.csv", dataset, metric, atlases[i])))
+  assign(df_name, get(df_name) %>% select(-label))
+  SAaxis <- get(paste0(atlases[i], "_", "SAaxis"))
+  df_to.label <- get(df_name)
+  df_to.label$label <- SAaxis$label
+  assign(df_name, df_to.label)
+} 
+ 
+
+  
+#WNC - loads gam.WNC.age.gordon, gam.WNC.age.schaefer200x7, gam.WNC.age.schaefer400x7, gam.WNC.age.schaefer200x17, gam.WNC.age.schaefer400x17
+metric = "WNC"
+for(i in c(1:length(atlases))){
+  df_name <- paste0("gam.", metric, ".", "age.", atlases[i])
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.%3$s_covbat.csv", dataset, metric, atlases[i])))
+  assign(df_name, get(df_name) %>% select(-label))
+  SAaxis <- get(paste0(atlases[i], "_", "SAaxis"))
+  df_to.label <- get(df_name)
+  df_to.label$label <- SAaxis$label
+  assign(df_name, df_to.label)
+} 
+ 
+```
+
+ 
+#### make figure df's - metric.axis_atlas
+- makes metric.axis_atlas df's. can load these df's in following chunk.
+```{r figure_dfs, include=FALSE, eval=FALSE}
+
+# BNC - makes BNC.axis_gordon, BNC.axis_schaefer200x7, BNC.axis_schaefer200x17, BNC.axis_schaefer400x7, BNC.axis_schaefer400x17 
+metric = "BNC"
+for(i in c(1:length(atlases))){
+  df_name <- paste0(metric, ".axis_", atlases[i])
+  assign(df_name, combineGAMdfs(metric, atlases[i]))
+  print(df_name)
+} 
+
+ 
+# WNC - makes WNC.axis_gordon, WNC.axis_schaefer200x7, WNC.axis_schaefer200x17, WNC.axis_schaefer400x7, WNC.axis_schaefer400x17 
+metric = "WNC"
+for(i in c(1:length(atlases))){
+  df_name <- paste0(metric, ".axis_", atlases[i])
+  assign(df_name, combineGAMdfs(metric, atlases[i]))
+  print(df_name)
+} 
+ 
+
+#add column for FDR correction
+# BNC
+BNC.axis_gordon <- sig_parcels(BNC.axis_gordon)
+BNC.axis_schaefer200x7 <- sig_parcels(BNC.axis_schaefer200x7)
+BNC.axis_schaefer200x17 <- sig_parcels(BNC.axis_schaefer200x17)
+BNC.axis_schaefer400x7 <- sig_parcels(BNC.axis_schaefer400x7)
+BNC.axis_schaefer400x17 <- sig_parcels(BNC.axis_schaefer400x17)
+
+# WNC
+WNC.axis_gordon <- sig_parcels(WNC.axis_gordon)
+WNC.axis_schaefer200x7 <- sig_parcels(WNC.axis_schaefer200x7)
+WNC.axis_schaefer200x17 <- sig_parcels(WNC.axis_schaefer200x17)
+WNC.axis_schaefer400x7 <- sig_parcels(WNC.axis_schaefer400x7)
+WNC.axis_schaefer400x17 <- sig_parcels(WNC.axis_schaefer400x17)
+
+ 
+
+  
+# BNC - writes BNC.axis_gordon, BNC.axis_schaefer200x7, BNC.axis_schaefer200x17, BNC.axis_schaefer400x7, BNC.axis_schaefer400x17 
+metric = "BNC"
+for(i in c(1:length(atlases))){
+  df_name <- paste0(metric, ".axis_", atlases[i])
+  filename <- paste0(df_name)
+  write.csv(get(filename), sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename))
+  print(df_name)
+} 
+
+ 
+# WNC - writes WNC.axis_gordon, WNC.axis_schaefer200x7, WNC.axis_schaefer200x17, WNC.axis_schaefer400x7, WNC.axis_schaefer400x17 
+metric = "WNC"
+for(i in c(1:length(atlases))){
+  df_name <- paste0(metric, ".axis_", atlases[i])
+  filename <- paste0(df_name)
+  write.csv(get(filename), sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename))
+  print(df_name)
+} 
+
+ 
+```
+
+#### load figure df's - metric.axis_atlas
+```{r load_figureDfs, include=FALSE, cache=TRUE}
+ 
+           
+#BNC - loads BNC.axis_gordon, BNC.axis_schaefer200x7, BNC.axis_schaefer200x17, BNC.axis_schaefer400x7, BNC.axis_schaefer400x17 
+metric = "BNC"
+for(i in c(1:length(atlases))){
+  filename <- paste0(metric, ".axis_", atlases[i])
+  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename)))
+  print(filename)
+} 
+  
+  
+#WNC - loads WNC.axis_gordon, WNC.axis_schaefer200x7, WNC.axis_schaefer200x17, WNC.axis_schaefer400x7, WNC.axis_schaefer400x17
+metric = "WNC"
+for(i in c(1:length(atlases))){
+  filename <- paste0(metric, ".axis_", atlases[i])
+  assign(filename, read.csv(sprintf("/cbica/projects/network_replication/output/%1$s/%2$s/GAM/%3$s_covbat.csv", dataset, metric, filename)))
+  print(filename)
+} 
+
+```
+
+
+
+#### Spin-based spatial permutation tests - Prep dataframes
+```{r prep_pspindfs, include=FALSE, cache=TRUE}
+#Load Spin Test Parcel Rotation Matrix
+
+all_atlases <- c("glasser", "gordon","schaefer200x7","schaefer200x17", "schaefer400x7","schaefer400x17")
+
+# parcel rotation matrices: perm.id.full_glasser, perm.id.full_gordon, perm.id.full_schaefer200x7, perm.id.full_schaefer200x17, perm.id.full_schaefer400x7, perm.id.full_schaefer400x17 
+for(i in c(1:length(all_atlases))){
+  df_name <- paste0("perm.id.full", "_", all_atlases[i])
+  assign(df_name, readRDS(sprintf("/cbica/projects/network_replication/software/rotate_parcellation/%1$s.coords_sphericalrotations_N10k.rds", all_atlases[i])))
+  print(paste(df_name, "made"))
+} 
+
+  
+
+# BNC - making df.dev.spin_BNC_gordon, df.dev.spin_BNC_schaefer200x7, df.dev.spin_BNC_schaefer200x17, df.dev.spin_BNC_schaefer400x7, df.dev.spin_BNC_schaefer400x17 
+metric = "BNC"
+for(i in c(1:length(atlases))){
+  df_name <- paste0("df.dev.spin_", metric, "_", atlases[i])
+  assign(df_name, prepDfSpin(atlases[i], metric))
+  print(paste(df_name, "made"))
+} 
+
+# WNC - making df.dev.spin_WNC_gordon, df.dev.spin_WNC_schaefer200x7, df.dev.spin_WNC_schaefer200x17, df.dev.spin_WNC_schaefer400x7, df.dev.spin_WNC_schaefer400x17 
+metric = "WNC"
+for(i in c(1:length(atlases))){
+  df_name <- paste0("df.dev.spin_", metric, "_", atlases[i])
+  assign(df_name, prepDfSpin(atlases[i], metric))
+  print(paste(df_name, "made"))
+} 
+```
+  
+ 
+#### Correlations and Spin-based spatial permutation tests
+- executes spin test and saves out p-spin values. Can load values in the next chunk.
+```{r cor_test, include=FALSE, eval=FALSE}
+ 
+# BNC - making corr.BNC_gordon, corr.BNC_schaefer200x7, corr.BNC_schaefer400x7, corr.BNC_schaefer200x17, corr.BNC_schaefer400x17  
+metric = "BNC"
+for(i in c(1:length(atlases))){
+  df_name <- paste0("corr.", metric, "_", atlases[i])
+  axis <- get(paste0(metric, ".axis_", atlases[i]))
+  assign(df_name, cor.test(axis$GAM.age.AdjRsq, as.numeric(axis$SA.axis_rank), method=c("spearman"), exact=F)$estimate)
+  print(paste(df_name, "made"))
+} 
+
+# WNC - making corr.WNC_gordon, corr.WNC_schaefer200x7, corr.WNC_schaefer400x7, corr.WNC_schaefer200x17, corr.WNC_schaefer400x17  
+metric = "WNC"
+for(i in c(1:length(atlases))){
+  df_name <- paste0("corr.", metric, "_", atlases[i])
+  axis <- get(paste0(metric, ".axis_", atlases[i]))
+  assign(df_name, cor.test(axis$GAM.age.AdjRsq, as.numeric(axis$SA.axis_rank), method=c("spearman"), exact=F)$estimate)
+  print(paste(df_name, "made"))
+} 
+
+spearman_rho <- data.frame(cbind(corr.BNC_gordon, corr.BNC_schaefer200x7, corr.BNC_schaefer400x7, corr.BNC_schaefer200x17, corr.BNC_schaefer400x17, corr.WNC_gordon, corr.WNC_schaefer200x7, corr.WNC_schaefer400x7, corr.WNC_schaefer200x17, corr.WNC_schaefer400x17))
+write.csv(spearman_rho, "/cbica/projects/network_replication/output/HBN/spearman_rho_covbat.csv")
+
+# spin permutation tests:
+
+metric = "BNC"
+p_spin_BNC <- c()
+for(i in c(1:length(atlases))){
+  df.dev.spin <- get(paste0("df.dev.spin_", metric, "_", atlases[i]))
+  perm.id.full <- get(paste0("perm.id.full_", atlases[i]))
+  p_spin_atlas <- perm.sphere.p(as.numeric(df.dev.spin$GAM.age.AdjRsq), as.numeric(df.dev.spin$SA.axis_rank), perm.id.full, corr.type='spearman')
+  p_spin_BNC <- append(p_spin_BNC, p_spin_atlas)
+  print(paste(atlases[i], p_spin_atlas))
+} 
+p_spin_BNC <- data.frame(cbind(atlases, p_spin_BNC))
+
+metric = "WNC"
+p_spin_WNC <- c()
+for(i in c(1:length(atlases))){
+  df.dev.spin <- get(paste0("df.dev.spin_", metric, "_", atlases[i]))
+  perm.id.full <- get(paste0("perm.id.full_", atlases[i]))
+  p_spin_atlas <- perm.sphere.p(as.numeric(df.dev.spin$GAM.age.AdjRsq), as.numeric(df.dev.spin$SA.axis_rank), perm.id.full, corr.type='spearman')
+  p_spin_WNC <- append(p_spin_WNC, p_spin_atlas)
+  print(paste(atlases[i], p_spin_atlas))
+} 
+p_spin_WNC <- data.frame(cbind(atlases, p_spin_WNC))
+ 
+p_spin_WNC$p_spin_WNC = as.numeric(p_spin_WNC$p_spin_WNC)
+p_spin_BNC$p_spin_BNC = as.numeric(p_spin_BNC$p_spin_BNC)
+
+saveRDS(list(p_spin_BNC, p_spin_WNC), "/cbica/projects/network_replication/output/HBN/pspin_vals_covbat.RData")
+```
+ 
+ 
+### DevEffect with p_spin: 
+this section required manual input since expression() doesn't take variables :( 
+```{r make_figures_pspin, include=FALSE}
+spearman_rho <- read.csv("/cbica/projects/network_replication/output/HBN/spearman_rho_covbat.csv")
+pspin_vals <- readRDS("/cbica/projects/network_replication/output/HBN/pspin_vals_covbat.RData")
+ 
+ 
+ 
+ 
+ 
+#BNC
+ 
+r_text_BNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.70, ",  , italic(p[spin]), "< 0.001"))
+(BNC_schaefer200x7 <- gam_figure_p.spin(BNC.axis_schaefer200x7, "BNC", "schaefer200x7", r_text_BNC.schaefer200x7, 
+                                  x_pos= 150, y_pos=0.1, ylim_lower=-0.085, ylim_upper=0.10))
+ 
+#WNC
+ 
+r_text_WNC.schaefer200x7 <- expression(paste(italic("r"), "= -0.37, ",  , italic(p[spin]), "< 0.001"))
+(WNC_schaefer200x7 <- gam_figure_p.spin(WNC.axis_schaefer200x7, "WNC", "schaefer200x7", r_text_WNC.schaefer200x7, 
+                                 x_pos= 150, y_pos=0.15, ylim_lower=-0.055, ylim_upper=0.17))
+
+```
+ 
+#### Plot Figure 5D: BNC DevEffect  
 ```{r Fig2, fig.height= 8, fig.width= 16, warning=FALSE, cache=TRUE}
-BNC_schaefer200x7
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig6/Fig6_BNCAgeEffect_HBN_covbat.pdf", dpi=300, width = 6, height = 5)
+BNC_schaefer200x7 
 ```
 
-#### **Figure 6H**
-#### Plot Figure 6H: BNC DevEffect  
+
+#### Plot Figure 5H: BNC DevEffect  
 ```{r Fig3, fig.height= 8, fig.width= 16, warning=FALSE, cache=TRUE}
-WNC_schaefer200x7
-ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/Figures/Figures_Illustrator/Fig6/Fig6_WNCAgeEffect_HBN_covbat.pdf", dpi=300, width = 6, height = 5)
+WNC_schaefer200x7 
 ```
   

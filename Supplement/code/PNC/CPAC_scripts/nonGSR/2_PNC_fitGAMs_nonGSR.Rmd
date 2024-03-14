@@ -1,0 +1,87 @@
+---
+title: "PNC fit GAMs"
+author: "Audrey Luo"
+date: "2023-12-1"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+
+library(dplyr)
+source("/cbica/projects/network_replication/revisions/code/utils/GAM_functions_revisions.R")
+source("/cbica/projects/network_replication/revisions/code/utils/fitGAMs_revisions.R")  
+dataset = "PNC"
+knitr::opts_chunk$set(include = FALSE, eval = TRUE, echo = FALSE, warning = FALSE, message = FALSE) 
+```
+ 
+ 
+# make connectivityMetric-demographics .csv's
+```{r connMetric_demographics, include=FALSE}
+
+demographics <- read.csv("/cbica/projects/network_replication/revisions/input/PNC/CPAC_sample_selection/CPAC_nonGSR_PNC_demographics_finalsample_20231130.csv")
+demographics <- demographics %>% dplyr::rename(subject=sub)
+ 
+ 
+# GBC - combine GBC with demographics
+
+subxparcel.matrix <- read.csv("/cbica/projects/network_replication/revisions/output/PNC/GBC/GBC_subxparcel_matrix_nonGSR.csv")
+GBC.schaefer200_PNC <- merge(subxparcel.matrix, demographics, by="subject")
+   
+GBC.schaefer200_PNC$sex <- as.factor(GBC.schaefer200_PNC$sex) 
+```
+  
+ 
+# load parcel labels 
+```{r}
+# load parcel labels 
+schaefer200x7.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_regionlist_final.csv")
+ 
+```  
+
+
+# Fit GAMs for GBC 
+```{r}
+# GBC GAMs 
+parcel.labels <- schaefer200x7.parcel.labels$label
+gam.age <- matrix(data=NA, nrow=length(parcel.labels), ncol=9) #empty matrix to save gam.fit output to
+
+for(row in c(1:length(parcel.labels))){ #for each region
+  region <- parcel.labels[row] 
+  GAM.RESULTS <- gam.fit(measure = "GBC", atlas = "schaefer200", conn_type = "PNC", region = region, smooth_var = "age", covariates = "sex + meanFD_avgSes") #run the gam.fit function
+  gam.age[row,] <- GAM.RESULTS}
+gam.age <- as.data.frame(gam.age)
+colnames(gam.age) <- c("label","GAM.age.Fvalue","GAM.age.pvalue","GAM.age.AdjRsq","Anova.age.pvalue","age.onsetchange","age.peakchange","maxage.BNC.increase","age.maturation" )
+cols = c(2:9)    
+gam.age[,cols] = apply(gam.age[,cols], 2, function(x) as.numeric(as.character(x)))
+gam.age <- gam.age %>% mutate(significant = (Anova.age.pvalue < 0.05))
+
+write.csv(gam.age, sprintf("/cbica/projects/network_replication/revisions/output/%1$s/%2$s/GAM/GAMresults.%2$s.age.%3$s%4$s_%5$s.csv", "PNC", "GBC", "schaefer200", "x7", "nonGSR"), row.names = F, quote = F)
+
+```
+
+# Estimate GAM smooths
+```{r}
+gam.smooths <- matrix(data=NA, ncol=7) #empty matrix to save gam.predsmooth fits to
+colnames(gam.smooths) <- c("age","fit","se.fit","selo","sehi","index","label")
+
+for(row in c(1:length(parcel.labels))){ #for each region
+  
+  region <- parcel.labels[row] #get the region name
+  GAM.SMOOTH <- gam.predsmooth(measure = "GBC", atlas = "schaefer200", conn_type = "PNC", region = region, smooth_var = "age", covariates = "sex + meanFD_avgSes") #run the gam.predsmooth function
+  
+  preddata <- as.data.frame(GAM.SMOOTH[3]) #get predicted.smooth df from function output
+  preddata$index <- rep(x=row, 1000) #region index
+  preddata$label <- rep(x=GAM.SMOOTH[1], 1000) #label
+  gam.smooths <- rbind(gam.smooths, preddata)
+  
+  
+}
+gam.smooths <- gam.smooths[-1,] #remove empty initilization row
+gam.smooths$label <- as.character(gam.smooths$label)
+
+
+write.csv(gam.smooths, sprintf("/cbica/projects/network_replication/revisions/output/%1$s/%2$s/GAM/GAMsmoothfits.%2$s.age.%3$s%4$s_%5$s.csv", "PNC", "GBC", "schaefer200", "x7", "nonGSR"), row.names = F, quote = F)
+
+```
+
