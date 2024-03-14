@@ -1,0 +1,105 @@
+---
+title: "HBN Covbat"
+author: "Audrey Luo"
+output: html_document
+---
+ 
+# Perform CovBat Harmonization on GBC + network pair analysis
+```{r setup_covbat, include=FALSE}
+
+library(ComBatFamily)
+library(dplyr)
+library(mgcv)
+
+atlases_GBC <-  "schaefer200" # only include schaefer200 for sensitivity analysis in supplement
+dataset <- "HBN"
+ 
+  
+```
+
+
+# Do Covbat on rest only connectivity matrices
+
+```{r load_subxparcel}
+participants_restOnly <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample_restOnly.csv")
+
+participants <- read.csv("/cbica/projects/network_replication/input/HBN/sample_selection/HBN_demographics_finalsample.csv")
+
+ 
+ 
+#GBC - loads GBC_subxparcel_schaefer200 
+metric = "GBC"
+for(i in c(1:length(atlases_GBC))){
+  df_name <- paste0(metric, "_", "subxparcel_", atlases_GBC[i])
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/manuscript/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases_GBC[i])))
+  assign(df_name, data.frame(get(df_name)[,-1]))
+  print(df_name)
+} 
+ 
+row.names(GBC_subxparcel_schaefer200) <- participants_restOnly$sub
+
+#network pair - loads networkpair_subxnetpair_schaefer200 
+metric = "networkpair"
+networkpair_subxnetpair_schaefer200 <- read.csv(sprintf("/cbica/projects/network_replication/manuscript/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxnetpair_matrix_schaefer200x7_orig.csv", dataset, metric))
+row.names(networkpair_subxnetpair_schaefer200) <- networkpair_subxnetpair_schaefer200$subject
+networkpair_subxnetpair_schaefer200 <- networkpair_subxnetpair_schaefer200 %>% select(-subject)
+ 
+```
+
+
+```{r run_covbat}
+
+
+age_vec <- participants_restOnly$age 
+sex_vec <- as.factor(participants_restOnly$sex)
+ 
+meanFD_avgSes_vec <- participants_restOnly$meanFD_avgSes
+ 
+covar_df <- bind_cols(participants_restOnly$sub, as.numeric(age_vec), as.factor(sex_vec), as.numeric(meanFD_avgSes_vec))
+covar_df <- dplyr::rename(covar_df, sub=...1,
+                          age = ...2,
+                          sex = ...3,
+                          meanFD_avgSes = ...4)
+#batch <- participants_restOnly$ses 
+ 
+# Harmonize GBC
+data.harmonized_GBC <- covfam(data=GBC_subxparcel_schaefer200, bat = as.factor(participants_restOnly$ses), covar = covar_df, gam, y ~ s(age, k=3, fx=T) + as.factor(sex) + as.numeric(meanFD_avgSes))
+
+
+age_vec <- participants$age 
+sex_vec <- as.factor(participants$sex)
+ 
+meanFD_avgSes_vec <- participants$meanFD_avgSes
+ 
+covar_df <- bind_cols(participants$sub, as.numeric(age_vec), as.factor(sex_vec), as.numeric(meanFD_avgSes_vec))
+covar_df <- dplyr::rename(covar_df, sub=...1,
+                          age = ...2,
+                          sex = ...3,
+                          meanFD_avgSes = ...4)
+# Harmonize networkpair
+data.harmonized_networkpair <- covfam(data=networkpair_subxnetpair_schaefer200, bat = as.factor(participants$ses), covar = covar_df, gam, y ~ s(age, k=3, fx=T) + as.factor(sex) + as.numeric(meanFD_avgSes))
+```
+
+
+```{r save_out}
+
+#GBC - save out covbat harmonized connectivity metrics 
+
+metric = "GBC"
+GBC_subxparcel_schaefer200_covbat <- data.frame(data.harmonized_GBC$dat.covbat)
+GBC_subxparcel_schaefer200_covbat$subject <- rownames(GBC_subxparcel_schaefer200_covbat)
+GBC_subxparcel_schaefer200_covbat <- GBC_subxparcel_schaefer200_covbat %>% relocate(subject)
+rownames(GBC_subxparcel_schaefer200_covbat) <- NULL
+write.csv(GBC_subxparcel_schaefer200_covbat, sprintf("/cbica/projects/network_replication/manuscript/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, "schaefer200"), row.names=F)
+
+
+
+#networkpair - save out covbat harmonized connectivity metrics 
+metric = "networkpair"
+networkpair_subxparcel_schaefer200_covbat <- data.frame(data.harmonized_networkpair$dat.covbat)
+networkpair_subxparcel_schaefer200_covbat$subject <- rownames(networkpair_subxparcel_schaefer200_covbat)
+networkpair_subxparcel_schaefer200_covbat <- networkpair_subxparcel_schaefer200_covbat %>% relocate(subject)
+rownames(networkpair_subxparcel_schaefer200_covbat) <- NULL
+write.csv(networkpair_subxparcel_schaefer200_covbat, sprintf("/cbica/projects/network_replication/manuscript/output/%1$s/sensitivity_analyses/%2$s/%2$s_subxnetpair_matrix_%3$s_orig.csv", dataset, metric, "schaefer200x7"), row.names=F)
+
+```

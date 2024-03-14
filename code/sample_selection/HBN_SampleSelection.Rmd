@@ -1,0 +1,440 @@
+---
+title: "HBN Sample Selection"
+author: "Audrey Luo"
+output: html_document
+---
+
+# Sample Selection process
+1) original sample: N=2255, ages 5-22, 6915 scans total
+2) exclude participants with medical conditions affecting brain function, gross neurological abnormalities: no medical exclusion in HBN
+3) include passing T1 QC: N=1669, 5111 scans
+4) include meanFD < 0.3: N=1315, 3283 scans
+5) include scans with at least 7 minutes of scan time: N=1126, 3094 scans (final sample), 439 females
+ 
+range before: 3.33 to 23.33 min
+median before: 13.33 min  
+
+range after: 8.33 to 23.33
+median after: 18.33 
+
+Mean age = 11.6
+SD= 3.6
+
+Race
+- White = 498 - 44.2%
+- Asian = 33 - 2.93%
+- Black = 139 - 12.34%
+- Other (native american, hawaiin pacific islander) = 29 - 2.6%
+- missing = 6 + 143 = 149 - 13.2% +  (unknown and blank)
+- Mixed = 169 - 15.0%
+- Hispanic = 109 - 9.7%
+
+
+# Sample Selection for sensitivity analysis (rest only)
+5) include scans with at least 6 minutes of rest-only scan time (lowered threshold due to fewer total scans available after selecting for rest-only): N=842 , 1477 scans, 342 females 
+
+Notes:
+- mean FD is averaged across the scans in a given session
+  
+## 1) original sample: N=2255, ages 5-22 
+
+```{r setup}
+library(dplyr)
+library(magrittr)
+library(rjson)
+library(reticulate) 
+library(tidyverse)
+# reticulate::py_install("pandas") # install pandas for python code
+# reticulate::py_install("glob2")  # install glob2 for python code
+```
+
+```{r config}
+config_data <- fromJSON(file="/cbica/projects/network_replication/manuscript/code/config_HBN.json")
+qcfile_dir <- config_data$qcfile_dir
+sample_selection_dir <- config_data$sample_selection_data_dir
+CUBIDS_csv_dir <- config_data$CUBIDS_csv_dir
+```
+
+## Concatenate xcp qc files
+```{python}
+import pandas as pd
+import glob2 as glob
+import sys
+import os
+  
+
+config_file = "/cbica/projects/network_replication/manuscript/code/config_HCPD.json"
+with open(config_file, "rb") as f:
+    config = json.load(f) 
+
+path = config['qcfile_dir']
+
+all_files = glob.glob(os.path.join(path, "*.csv")) # load all qc csv filenames 
+
+df_from_each_file = (pd.read_csv(f, header=0) for f in all_files) # read csv's
+concatenated_df = pd.concat(df_from_each_file, ignore_index=True) # concatenate csv's
+ 
+concatenated_df.to_csv(os.path.join(path,r'HBN_xcp_qc_concat_20230628.csv'),index=False) # save out concatenated qc files
+
+```
+ 
+## 1) Original sample
+```{r qc_setup}
+# load concatenated qc files
+collated_HBN.xcp <- read.csv(paste0(qcfile_dir,"HBN_xcp_qc_concat_20230628.csv"))
+collated_HBN.xcp$sub <- paste0("sub-", collated_HBN.xcp$sub)
+length(unique(collated_HBN.xcp$sub)) # 2255 participants before head motion QC  
+nrow(collated_HBN.xcp) #6915 scans
+ 
+
+# load T1 QA (updated file from Nathalia Esper 6/30/2023)
+T1_QA <- read.csv(paste0(sample_selection_dir, "T1_QA_HBN_NathaliaEsper_20230630.csv"))
+T1_QA <- T1_QA %>% dplyr::rename(sub=ID)  
+T1_QA_HBN <- T1_QA[which(T1_QA$sub %in% collated_HBN.xcp$sub), ]
+
+# load demographics (updated file from informatics 6/7/2023)
+demographics <- read.table(paste0(sample_selection_dir,"HBN_Demographics.tsv"), sep="\t", header=TRUE)
+demographics <- dplyr::rename(demographics, sub = participant_id) # 2611 total
+nrow(demographics) 
+range(demographics$age, na.rm=TRUE) #ages 5-22
+```
+ 
+
+## 2) no medical exclusion done for HBN (data not available)
+```{r medical_exclusion}
+collated_HBN.xcp_medExclusion <- collated_HBN.xcp 
+```
+
+## 3) include passing T1 QC  
+## 4) include meanFD < 0.3
+```{r meanFD, cache=TRUE}
+
+# exclude T1 based on `tri.nary_score_without_rater.2`==0
+# note that trinary score == 2 means good, == 0 means bad, == 1 means in between. 
+T1_QA_HBN <- T1_QA_HBN %>% mutate(T1_exclude = ifelse(tri.nary_score_without_rater.2==0, 1, 0))
+collated_HBN.xcp_T1Exclusion <- merge(collated_HBN.xcp_medExclusion, dplyr::select(T1_QA_HBN, sub, tri.nary_score_without_rater.2, T1_exclude), by = "sub")
+collated_HBN.xcp_T1Exclusion <- collated_HBN.xcp_T1Exclusion[-c(which(collated_HBN.xcp_T1Exclusion$T1_exclude==1)),]
+
+length(unique(collated_HBN.xcp_T1Exclusion$sub)) # N=1669 after excluding participants with failed T1
+nrow(collated_HBN.xcp_T1Exclusion) # 5111 scans
+
+
+collated_HBN.xcp_headMotion <- collated_HBN.xcp_T1Exclusion[c(which(collated_HBN.xcp_T1Exclusion$meanFD < 0.3)),]
+length(unique(collated_HBN.xcp_headMotion$sub)) # N=1315 after excluding meanFD >= 0.3  
+nrow(collated_HBN.xcp_headMotion) #3283 scans  
+  
+```
+
+
+## 5) include scans with at least 7 minutes of scan time
+```{r scan_time}
+# Calculate scan time for each subject 
+
+
+# load cubids summary and files csv
+CUBIDS_summary <- read.csv(paste0(CUBIDS_csv_dir, "HBN_with_orientation_summary_20230214.csv"))
+CUBIDS_summary <- CUBIDS_summary[,-c(1:4)]
+
+CUBIDS_files <- read.csv(paste0(CUBIDS_csv_dir, "HBN_with_orientation_files.csv"))
+ 
+# filter only for fMRI
+CUBIDS_files_func <- CUBIDS_files[-c(which(str_detect(CUBIDS_files$FilePath, "dwi")), 
+                                     which(str_detect(CUBIDS_files$FilePath, "anat")), 
+                                     which(str_detect(CUBIDS_files$FilePath, "fmap")), 
+                                     which(str_detect(CUBIDS_files$FilePath, "peer"))),]
+# make columns for subject ID, site, task, and run (if there were multiple resting state scans)
+CUBIDS_files_func <- CUBIDS_files_func %>% 
+  mutate(sub = gsub("sub-", "", str_extract(FilePath, "sub-NDA[A-Z0-9]*"))) %>% 
+  mutate(site = gsub("ses-", "", str_extract(FilePath, "ses-[A-Za-z]*"))) %>% 
+  mutate(task = gsub("task-", "",str_extract(FilePath, "task-[A-Za-z0-9_-]*_bold"))) %>%
+  mutate(rest_run = str_extract(FilePath, "run-[0-6]"))
+
+# clean up variables
+CUBIDS_files_func$site <- gsub("HBNsite", "", CUBIDS_files_func$site)
+CUBIDS_files_func$task <- gsub("_bold", "", CUBIDS_files_func$task)
+ 
+# create variable for variant info and clean 
+CUBIDS_files_func <- CUBIDS_files_func %>%
+  mutate(variant_info_CUBIDS = gsub("_", "", str_extract(task, "acq-[A-Za-z0-9]*")))
+CUBIDS_files_func$variant_info_CUBIDS <- gsub("acq-", "", CUBIDS_files_func$variant_info_CUBIDS)
+
+# clean task variable
+CUBIDS_files_func$task <- gsub("acq-[A-Za-z0-9]*", "", CUBIDS_files_func$task)
+CUBIDS_files_func$task <- gsub("__", "_", CUBIDS_files_func$task)
+CUBIDS_files_func$task <- gsub("_$", "", CUBIDS_files_func$task)
+
+# make sub_site_task variable for easy merging with collated_HBN.xcp_headMotion (see below)
+CUBIDS_files_func <- CUBIDS_files_func %>% mutate(sub_site_task = paste0(sub, "_", site, "_", task))
+ 
+
+# now onto collated_HBN.xcp_headMotion: edit task variable to include run # (for multiple rest scans)
+collated_HBN.xcp_headMotion$run[c(which(is.na(collated_HBN.xcp_headMotion$run)))] <- ""
+collated_HBN.xcp_headMotion <- collated_HBN.xcp_headMotion %>% unite(task, c("task", "run"))
+collated_HBN.xcp_headMotion$task <- gsub("rest_(\\d+)", "rest_run-\\1", collated_HBN.xcp_headMotion$task)
+collated_HBN.xcp_headMotion$task <- gsub("(\\w+)_$", "\\1", collated_HBN.xcp_headMotion$task)
+ 
+# make site and sub_site_task variables in collated_HBN.xcp_headMotion for easy merging with CUBIDS_files_func
+collated_HBN.xcp_headMotion <- collated_HBN.xcp_headMotion %>% 
+  mutate(site = gsub("HBNsite", "", ses)) %>%
+  mutate(sub_site_task = gsub("sub-","", paste0(sub, "_", site, "_", task))) 
+ 
+
+# rename collated_HBN.xcp_headMotion$acq as collated_HBN.xcp_headMotion$variant_info
+collated_HBN.xcp_headMotion <- collated_HBN.xcp_headMotion %>% dplyr::rename(variant_info=acq)
+ 
+fMRIinclude_CUBIDS <- merge(dplyr::select(collated_HBN.xcp_headMotion, sub, ses, task, meanFD, relMeansRMSMotion, variant_info, site, sub_site_task), dplyr::select(CUBIDS_files_func, RepetitionTime, NumVolumes, rest_run, sub_site_task), by ="sub_site_task")  
+ 
+
+# sort dataframe by subject and compute scan time
+fMRIinclude_CUBIDS <- fMRIinclude_CUBIDS %>% 
+  arrange(sub) %>% 
+  mutate(ScanTimeMinutes = NumVolumes*RepetitionTime/60) 
+fMRIinclude_CUBIDS_ScanTime <- fMRIinclude_CUBIDS %>% 
+  group_by(sub) %>% 
+  summarise(ScanTime_Total = sum(ScanTimeMinutes))
+ 
+ 
+range(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) #  3.333333 to 23.333333 min
+median(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) #  13.33333 min  
+ 
+ 
+subject_scanTime_exclude <- fMRIinclude_CUBIDS_ScanTime$sub[c(which(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total < 7))] # exclude participants with less than 7 min of scan time
+  
+fMRIinclude_CUBIDS <- fMRIinclude_CUBIDS[-c(which(fMRIinclude_CUBIDS$sub %in% subject_scanTime_exclude)),]  
+length(unique(fMRIinclude_CUBIDS$sub)) # N=1126
+nrow(fMRIinclude_CUBIDS) # 3094 scans  
+ 
+fMRIinclude_CUBIDS_ScanTime <- fMRIinclude_CUBIDS %>% group_by(sub) %>% summarise(ScanTime_Total = sum(ScanTimeMinutes))
+ 
+max(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) # 23 minutes and 20 seconds
+range(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) # 8.333333 min to 23.333333 min
+median(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) # 18.33333 min 
+
+fMRIinclude_CUBIDS_NumVols <- fMRIinclude_CUBIDS %>% group_by(sub) %>% summarise(NumVols_Total = sum(NumVolumes))
+max(fMRIinclude_CUBIDS_NumVols$NumVols_Total) # maximum: 1750 volumes
+
+
+ 
+```
+ 
+ 
+
+# Final Demographics Dataframe
+```{r final_participant_list}
+ 
+final_participants <- data.frame(unique(fMRIinclude_CUBIDS$sub))
+names(final_participants) <- "sub" 
+ 
+final_demographics <- merge(demographics, final_participants, by = "sub")
+ 
+ 
+## include average of meanFD across the acquisitions included in calculating connectivity matrix 
+# for each subject, take average meanFD
+subject <- c()
+ses <- c()
+avg_meanFD_vec <- c()
+for(i in c(1:length(unique(fMRIinclude_CUBIDS$sub)))){
+  indices <- which(fMRIinclude_CUBIDS$sub == unique(fMRIinclude_CUBIDS$sub)[i])
+  avg_meanFD <- mean(as.numeric(fMRIinclude_CUBIDS$meanFD[indices]))
+  subject <- append(subject, unique(fMRIinclude_CUBIDS$sub)[i])
+  ses <- append(ses,fMRIinclude_CUBIDS$ses[indices[1]])
+  avg_meanFD_vec <- append(avg_meanFD_vec, avg_meanFD)
+}  
+
+HBN_avgMotion <- data.frame(cbind(subject, ses, avg_meanFD_vec))
+names(HBN_avgMotion) <- c("sub", "ses", "meanFD_avgSes")
+HBN_avgMotion$meanFD_avgSes <- as.numeric(HBN_avgMotion$meanFD_avgSes) 
+final_dem_df <- merge(dplyr::select(final_demographics, sub, study_site, age, sex, race), HBN_avgMotion, by="sub")
+   
+ 
+write.csv(final_dem_df, paste0(sample_selection_dir,"HBN_demographics_finalsample.csv"), row.names=F)
+write.table(final_dem_df$sub, paste0(sample_selection_dir, "HBN_final_subjectlist.txt"), row.names=F, col.names=F)
+
+ 
+unique(final_dem_df$race) 
+length(which(final_dem_df$race=="Mixed"))/nrow(final_dem_df)
+# White = 498 - 44.2%
+# Asian = 33 - 2.93%
+# Black = 139 - 12.34%
+# Other (native american, hawaiin pacific islander) = 29 - 2.6%
+# missing = 6 + 143 = 149 - 13.2% +  (unknown and blank)
+# Mixed = 169 - 15.0%
+# Hispanic = 109 - 9.7%
+
+mean(final_dem_df$age) # mean = 11.6
+sd(final_dem_df$age) # sd= 3.6
+
+length(which(final_dem_df$sex=="Female")) # 439 females
+length(which(final_dem_df$sex=="Female"))/nrow(final_dem_df) # 39.0%
+ 
+```
+
+ 
+
+# Final CIFTI File list (for creating connectivity matrices)
+```{r ciftiFile_list, include=FALSE, cache=TRUE}
+   
+fMRIinclude_CUBIDS$rest_run <- replace_na(fMRIinclude_CUBIDS$rest_run, "")
+ 
+# need to reformat task and variant_info again for following for-loop
+fMRIinclude_CUBIDS$task <- gsub("_run-[0-2]", "", fMRIinclude_CUBIDS$task)
+fMRIinclude_CUBIDS$variant_info[c(which(fMRIinclude_CUBIDS$variant_info==""))] <- NA
+
+atlases <- c("Glasser", "Gordon", "Schaefer217", "Schaefer417")
+subject_list <- list()
+ptseries_filenames <- list()
+task_list <- list()
+site_list <- list()
+run_list <- list()
+variant_list <- list()
+ 
+atlas_list <- list()
+ 
+for (i in c(1:nrow(fMRIinclude_CUBIDS))) {
+  for (j in c(1:length(atlases))){
+  atlas <- atlases[j]
+  subject <- fMRIinclude_CUBIDS$sub[i]
+  task <- fMRIinclude_CUBIDS$task[i]
+  site <- fMRIinclude_CUBIDS$site[i]
+  run <- fMRIinclude_CUBIDS$rest_run[i]
+  variant <- fMRIinclude_CUBIDS$variant_info[i]
+  if (!is.na(variant)) {
+    variant <- paste0("_acq-", variant)
+  } else {
+    variant <- ""
+  }
+  atlas_list <- append(atlas, atlas_list)
+  subject_list <- append(subject, subject_list)
+  task_list <- append(task, task_list)
+  site_list <- append(site, site_list)
+  run_list <- append(run, run_list)
+  variant_list <- append(variant, variant_list)
+   
+  if (fMRIinclude_CUBIDS$task[i] == "rest" &
+      str_detect(fMRIinclude_CUBIDS$rest_run[i], "run")) { # for rest scans with > 1 run
+  file <- paste0(subject, "_ses-HBNsite", site, "_task-", task, variant, "_", run, "_space-fsLR_atlas-", atlas, "_den-91k_timeseries.ptseries.nii")
+  } else if (fMRIinclude_CUBIDS$task[i] == "rest" &
+      fMRIinclude_CUBIDS$rest_run[i] == ""){ # for rest scans with only 1 run  
+    file <- paste0(subject, "_ses-HBNsite", site, "_task-", task, variant, "_space-fsLR_atlas-", atlas, "_den-91k_timeseries.ptseries.nii")
+  } else if (str_detect(fMRIinclude_CUBIDS$task[i], "movie")){ # for task scans
+    file <- paste0(subject, "_ses-HBNsite", site, "_task-", task, variant, "_space-fsLR_atlas-", atlas, "_den-91k_timeseries.ptseries.nii")
+ 
+  } else {
+    print(paste(subject, "issue"))
+  }
+  ptseries_filenames <- append(file, ptseries_filenames)
+  #print(paste(task, direction, atlas))
+  }
+  print(paste(subject, "done", i, "/", nrow(fMRIinclude_CUBIDS)))
+}
+
+   
+ 
+filenamesDF <- as.data.frame(do.call(rbind, ptseries_filenames))
+subject_namesDF <- as.data.frame(do.call(rbind, subject_list))
+task_namesDF <- as.data.frame(do.call(rbind, task_list))
+site_namesDF <- as.data.frame(do.call(rbind, site_list))
+run_namesDF <- as.data.frame(do.call(rbind, run_list))
+variant_namesDF <- as.data.frame(do.call(rbind, variant_list))
+atlas_namesDF <- as.data.frame(do.call(rbind, atlas_list))
+  
+file_paths <- as.data.frame(cbind(subject_namesDF, task_namesDF, site_namesDF, run_namesDF, variant_namesDF, atlas_namesDF, filenamesDF))
+names(file_paths) <- c("subject", "task", "site", "run", "variant_info", "atlas", "filenames")
+  
+file_paths <- file_paths %>% mutate(path = paste0("/cbica/projects/network_replication/input/HBN/HBN_xcp/", subject, "/", filenames)) %>% mutate(sub_site_task_run = paste0(subject, "_", site, "_", task, "_", run))
+file_paths$sub_site_task_run <- gsub("_$", "", file_paths$sub_site_task_run)
+HBN_FinalSample_CUBIDS <- fMRIinclude_CUBIDS %>% mutate(sub_site_task_run = paste0(sub, "_", site, "_", task, "_", rest_run))
+HBN_FinalSample_CUBIDS$sub_site_task_run <- gsub("_$", "", HBN_FinalSample_CUBIDS$sub_site_task_run)
+ 
+ 
+file_paths_restOnly <- file_paths[which(file_paths$task == "rest"),]
+
+file_paths_FINAL <- merge(file_paths, HBN_FinalSample_CUBIDS[, c(2, ncol(HBN_FinalSample_CUBIDS))], by = "sub_site_task_run") 
+file_paths_restOnly_FINAL <- merge(file_paths_restOnly, HBN_FinalSample_CUBIDS[, c(2, ncol(HBN_FinalSample_CUBIDS))], by = "sub_site_task_run")
+ 
+# main analysis final N's
+length(unique(file_paths_FINAL$sub_site_task_run)) # 3094 scans 
+length(unique(file_paths_FINAL$subject)) #N=1126
+  
+# sensitivity analysis final N's
+length(unique(file_paths_restOnly_FINAL$sub_site_task_run)) # 1626 scans
+length(unique(file_paths_restOnly_FINAL$subject)) #N=991
+  
+HBN_qc_filenames_atlases <- list(HBN_FinalSample_CUBIDS, file_paths_FINAL) 
+HBN_qc_filenames_atlases_restOnly <- list(HBN_FinalSample_CUBIDS[c(which(HBN_FinalSample_CUBIDS$task=="rest")),], file_paths_restOnly_FINAL) 
+ 
+
+saveRDS(HBN_qc_filenames_atlases, "/cbica/projects/network_replication/input/HBN/sample_selection/HBN_FinalSample_filenames.RData")
+
+
+ 
+```
+
+ 
+
+# Sensitivity Analysis: Final demographics for rest only
+- include participants with at least 6 minutes of rest-only scan time
+```{r}
+ 
+
+### Include participants with >= 6 minutes of resting state fMRI
+fMRIinclude_CUBIDS_ScanTime_restOnly <- HBN_qc_filenames_atlases_restOnly[[1]] %>% group_by(sub) %>% summarise(ScanTime_Total = sum(ScanTimeMinutes))
+ 
+range(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total)
+length(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total >= 6)) # 842
+
+
+final_participants_restOnly <- data.frame(fMRIinclude_CUBIDS_ScanTime_restOnly$sub[c(which(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total >= 6))])
+names(final_participants_restOnly) <- "sub" 
+ 
+
+max(fMRIinclude_CUBIDS_ScanTime_restOnly$ScanTime_Total) #10.15 minutes
+
+fMRIinclude_CUBIDS_NumVols_restOnly <- HBN_qc_filenames_atlases_restOnly[[1]] %>% group_by(sub) %>% summarise(NumVolsTotal = sum(NumVolumes))
+max(fMRIinclude_CUBIDS_NumVols_restOnly$NumVolsTotal) #750 volumes
+
+HBN_FinalSample_CUBIDS_restOnly <- HBN_qc_filenames_atlases_restOnly[[1]] 
+HBN_FinalSample_CUBIDS_restOnly <- merge(HBN_FinalSample_CUBIDS_restOnly, final_participants_restOnly)
+
+ 
+HBN_qc_filenames_atlases_restOnly_final <- merge(HBN_qc_filenames_atlases_restOnly[[2]], final_participants_restOnly, by= "sub")
+HBN_qc_filenames_atlases_restOnly_final <- list(HBN_FinalSample_CUBIDS_restOnly, HBN_qc_filenames_atlases_restOnly_final)
+nrow(HBN_qc_filenames_atlases_restOnly_final[[1]]) #1477 scans
+ 
+
+saveRDS(HBN_qc_filenames_atlases_restOnly_final, "/cbica/projects/network_replication/input/HBN/sample_selection/HBN_FinalSample_filenames_restOnly.RData")
+ 
+final_demographics_restOnly <- merge(demographics, final_participants_restOnly, by = "sub")
+ 
+ 
+## include average of meanFD across the acquisitions included in calculating connectivity matrix 
+# for each subject, take average meanFD
+subject <- c()
+ses <- c()
+avg_meanFD_vec <- c()
+for(i in c(1:length(unique(HBN_FinalSample_CUBIDS_restOnly$sub)))){
+  indices <- which(HBN_FinalSample_CUBIDS_restOnly$sub == unique(HBN_FinalSample_CUBIDS_restOnly$sub)[i])
+  avg_meanFD <- mean(as.numeric(HBN_FinalSample_CUBIDS_restOnly$meanFD[indices]))
+  subject <- append(subject, unique(HBN_FinalSample_CUBIDS_restOnly$sub)[i])
+  ses <- append(ses,HBN_FinalSample_CUBIDS_restOnly$ses[indices[1]])
+  avg_meanFD_vec <- append(avg_meanFD_vec, avg_meanFD)
+}  
+ 
+
+HBN_avgMotion <- data.frame(cbind(subject, ses, avg_meanFD_vec))
+names(HBN_avgMotion) <- c("sub", "ses", "meanFD_avgSes")
+HBN_avgMotion$meanFD_avgSes <- as.numeric(HBN_avgMotion$meanFD_avgSes)
+final_dem_restOnly_df <- merge(final_demographics_restOnly, HBN_avgMotion, by="sub")
+   
+length(which(final_dem_restOnly_df$sex=="Female")) # 342 females
+length(unique(final_dem_restOnly_df$sub)) # 842 participants
+nrow(HBN_qc_filenames_atlases_restOnly_final[[1]]) #1477 scans
+
+write.csv(final_dem_restOnly_df, paste0(sample_selection_dir, "HBN_demographics_finalsample_restOnly.csv"), row.names=F)
+write.table(final_dem_restOnly_df$sub, paste0(sample_selection_dir, "HBN_final_subjectlist_restOnly.txt"), row.names = F, col.names=F)
+```
+ 
+
+ 
+
+ 

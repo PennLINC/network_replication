@@ -1,0 +1,8 @@
+{
+	"dataset": "HBN",
+	"data_root": "/cbica/projects/network_replication/manuscript/input/HBN/",
+	"outputs_root": "/cbica/projects/network_replication/manuscript/output/HBN/",
+	"qcfile_dir": "/cbica/projects/network_replication/input/HBN/HBN_xcp/qc_files/",
+	"sample_selection_data_dir": "/cbica/projects/network_replication/input/HBN/sample_selection/",
+	"CUBIDS_csv_dir": "/cbica/projects/network_replication/input/HBN/CUBIDS_csvs/"
+}

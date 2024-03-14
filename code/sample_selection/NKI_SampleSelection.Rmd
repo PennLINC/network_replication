@@ -1,0 +1,340 @@
+---
+title: "NKI Sample Selection"
+author: "Audrey Luo"
+output: html_document
+---
+
+# Sample Selection process
+1) original sample: N=1288, ages 6-85, 6346 scans total
+2) include ages 6-22: N=426, 2584 scans
+3) include passing T1 QC: N=421, 2474 scans. 
+  - delete all scans from a given session if fail T1 
+4) include meanFD < 0.3: N=403, 1918 scans
+5) choose the session that has the most scans surviving the head motion exclusion: N=403, 1037 scans
+6) include scans with at least 7 minutes of scan time: N=397, 1031 scans (final sample),  186 females
+
+* Scan time
+range before: 5.00000 to 24.10167 min
+median before: 24.10167 min
+
+range after: 7.75075 to 24.10167 min
+median after: 24.10167 min
+
+* Age
+mean=14.5, SD=4.4
+
+* Race 
+-  white = 249 - 65.4%
+-  asian = 34 - 8.9%
+-  black = 77 - 20.2%
+-  other = 10 - 2.6%
+-  missing = 11 - 2.9%
+
+Notes:
+- mean FD is averaged across the scans in a given session
+  
+
+```{r setup}
+library(data.table)
+library(dplyr)
+library(magrittr)
+library(rjson)
+library(reticulate) 
+library(tidyverse)
+# reticulate::py_install("pandas") # install pandas for python code
+# reticulate::py_install("glob2")  # install glob2 for python code
+```
+
+```{r config}
+config_data <- fromJSON(file="/cbica/projects/network_replication/manuscript/code/config_NKI.json")
+qcfile_dir <- config_data$qcfile_dir
+sample_selection_dir <- config_data$sample_selection_data_dir
+CUBIDS_csv_dir <- config_data$CUBIDS_csv_dir
+```
+
+
+## Concatenate xcp qc files
+```{python}
+import pandas as pd
+import glob2 as glob
+import sys
+import os
+  
+config_file = "/cbica/projects/network_replication/manuscript/code/config_NKI.json"
+with open(config_file, "rb") as f:
+    config = json.load(f) 
+
+path = config['qcfile_dir']
+all_files = glob.glob(os.path.join(path, "*.csv")) # load all qc csv filenames 
+
+df_from_each_file = (pd.read_csv(f, header=0) for f in all_files) # read csv's
+concatenated_df = pd.concat(df_from_each_file, ignore_index=True) # concatenate csv's
+ 
+concatenated_df.to_csv(os.path.join(path,r'NKI_xcp_qc_concat_20230628.csv'),index=False) # save out concatenatd qc files
+
+```
+ 
+## Load files and format qc csv
+```{r}
+# load concatenated qc files
+collated_NKI.xcp <- read.csv(paste0(qcfile_dir, "NKI_xcp_qc_concat_20230628.csv"))
+length(unique(collated_NKI.xcp$sub)) #1284 total participants 
+nrow(collated_NKI.xcp) #6342 scans total
+collated_NKI.xcp$sub <- gsub("A", "sub-A", collated_NKI.xcp$sub)
+# add binary column indicating FD >0.3 (Exclude == 1)
+collated_NKI.xcp <- collated_NKI.xcp %>% mutate(Exclude = ifelse(meanFD>0.3, 1, 0))
+
+# load T1 QA (updated file from Nathalia Esper 6/30/2023)
+T1_QA <- read.csv(paste0(sample_selection_dir, "T1_QA_NKI_NathaliaEsper_20230630.csv"))
+T1_QA <- T1_QA %>% dplyr::rename(sub=ID) %>% dplyr::rename(ses=session)
+T1_QA$ses <- gsub("ses-", "", T1_QA$ses)
+T1_QA_NKI <- T1_QA[which(T1_QA$sub %in% collated_NKI.xcp$sub), ]
+collated_NKI.xcp <- merge(collated_NKI.xcp, dplyr::select(T1_QA_NKI, sub, ses,tri.nary_score_without_rater.2), by=c("sub", "ses"))
+ 
+# load demographics file (updated file from informatics 3/16/2023)
+demographics <- read.delim(paste0(sample_selection_dir, "nki_participants.tsv"))
+demographics <- demographics %>% dplyr::rename(sub=participant_id)
+range(demographics$age, na.rm=TRUE) # age range of entire sample: 6-85 years
+demographics_filtered <- demographics$sub[c(which(demographics$age >5 & demographics$age <23))]
+```
+
+## 1) & 2) Filter for ages 6-22 
+```{r age}
+collated_NKI.xcp_ageFiltered <- collated_NKI.xcp[c(which(collated_NKI.xcp$sub %in% demographics_filtered)),]
+length(unique(collated_NKI.xcp_ageFiltered$sub)) # N=426, ages 6-22
+nrow(collated_NKI.xcp_ageFiltered) # 2584 scans
+  
+```
+ 
+## 3) include passing T1 QC   
+```{r t1_qc}
+ # exclude T1 based on `tri.nary_score_without_rater.2`==0
+# note that trinary score == 2 means good, == 0 means bad, == 1 means in between. 
+t1_exclusion <- collated_NKI.xcp_ageFiltered[c(which(collated_NKI.xcp_ageFiltered$tri.nary_score_without_rater.2==0)), ]
+t1_exclusion_sessions <- collated_NKI.xcp_ageFiltered[c(which(collated_NKI.xcp_ageFiltered$tri.nary_score_without_rater.2==0)), c(1, 2)] # selecting sub and ses columns
+t1_exclusion_sessions <- t1_exclusion_sessions %>% mutate(sub_ses = paste0(sub, "_", ses)) # getting the subject and session that failed T1
+collated_NKI.xcp_ageFiltered <- collated_NKI.xcp_ageFiltered %>% mutate(sub_ses =  paste0(sub, "_", ses))
+
+t1_excluded <- collated_NKI.xcp_ageFiltered[-c(which(collated_NKI.xcp_ageFiltered$sub_ses %in% unique(t1_exclusion_sessions$sub_ses))),] # delete all the scans in a given session if T1 qc from that session fails
+
+length(unique(t1_excluded$sub)) # N=421
+nrow(t1_excluded) # 2474 scans
+
+length(unique(collated_NKI.xcp_ageFiltered$sub)) - length(unique(t1_excluded$sub)) # 5 participants excluded
+nrow(collated_NKI.xcp_ageFiltered) - nrow(t1_excluded) # 110 scans excluded
+ 
+```
+
+## 4) include meanFD < 0.3
+```{r meanFD, include=FALSE}
+# Find the scans that are both T1 and meanFD excluded (meanFD exclusion determined by Exclude==1, i.e. meanFD > 0.3). 
+meanFD_exclusion <- t1_excluded[c(which(t1_excluded$Exclude==1)),]
+meanFD_excluded <- t1_excluded[-c(which(t1_excluded$Exclude==1)),]
+length(unique(t1_excluded$sub)) - length(unique(meanFD_excluded$sub)) # 18 additional participants excluded
+nrow(meanFD_exclusion) # 556 additional scans excluded
+
+length(unique(meanFD_excluded$sub)) # N=403
+nrow(meanFD_excluded) # 1918 scans
+
+collated_NKI.xcp_headMotion <- meanFD_excluded # We first excluded all scans from a given session that failed T1 (above), then excluded by meanFD.
+casted_NKI.xcp <- dcast(dplyr::select(collated_NKI.xcp_headMotion, sub, ses), sub~ses)
+```
+
+
+## 5) choose the session that has the most scans surviving the head motion exclusion
+```{r choose_session, include=FALSE}
+ 
+sub_list <- c()
+ses_list <- c()
+for (i in 1:nrow(casted_NKI.xcp)){
+  subject <- casted_NKI.xcp$sub[i]
+  sub_list <- append(sub_list, subject)
+  print(subject)
+  sessions_maxScans <- names(casted_NKI.xcp)[c(which(casted_NKI.xcp[i,] == pmax(casted_NKI.xcp$BAS1[i],casted_NKI.xcp$BAS2[i], casted_NKI.xcp$FLU1[i], casted_NKI.xcp$FLU2[i], casted_NKI.xcp$TRT[i])))] # identify sessions that have max number of scans
+  if ("BAS1" %in% sessions_maxScans) {
+    ses <- "BAS1"
+    ses_list <- append(ses_list, ses)
+  } else if ("FLU1" %in% sessions_maxScans) {
+    ses <- "FLU1"
+    ses_list <- append(ses_list, ses)
+  } else if ("BAS2" %in% sessions_maxScans) {
+    ses <- "BAS2"
+    ses_list <- append(ses_list, ses)
+  } else if ("FLU2" %in% sessions_maxScans) {
+    ses <- "FLU2"
+    ses_list <- append(ses_list, ses)
+  } else if ("TRT" %in% sessions_maxScans) {
+    ses <- "TRT"
+    ses_list <- append(ses_list, ses)
+  }
+  print(ses)
+}
+ 
+subject_session <- as.data.frame(cbind(sub_list, ses_list))
+names(subject_session) <- c("sub", "ses")
+  
+collated_NKI.xcp_Session <- merge(collated_NKI.xcp_headMotion, subject_session, by=c("sub", "ses"))
+length(unique(collated_NKI.xcp_Session$sub)) # 403 participants
+nrow(collated_NKI.xcp_Session) # 1037 scans
+ 
+```
+
+
+
+## 6) include scans with at least 7 minutes of scan time
+```{r ciftiFile_list, include=FALSE}
+# first, make CIFTI File list (for creating connectivity matrices) 
+atlases <- c("Glasser", "Gordon", "Schaefer217", "Schaefer417")
+
+ptseries_filenames <- list()
+subject_names <- list()
+subfolder_names <- list()
+for (i in c(1:nrow(collated_NKI.xcp_Session))) {
+  for(j in c(1:length(atlases))){
+    filename <- paste0(collated_NKI.xcp_Session$sub[i], "_ses-", collated_NKI.xcp_Session$ses[i], "_task-rest_acq-", collated_NKI.xcp_Session$acq[i], "_space-fsLR_atlas-", atlases[j], "_den-91k_bold.ptseries.nii")
+    RBC_path <- paste0("/cbica/projects/network_replication/input/NKI/nki_xcp/")
+    subject <- paste0(collated_NKI.xcp_Session$sub[i])
+    subfolder <- paste0("/ses-",collated_NKI.xcp_Session$ses[i],  "/func/" )
+    if(file.exists(paste0(RBC_path,collated_NKI.xcp_Session$sub[i], "/", filename))) {
+      ptseries_filenames <- append(ptseries_filenames, filename)
+      subject_names <- append(subject_names, subject)
+      subfolder_names <- append(subfolder_names, subfolder)
+      print(paste(i, "/", nrow(collated_NKI.xcp_Session), j))
+    } else {
+      print(paste("missing", filename))
+    }
+  }
+}
+  
+ptseries_filenamesDF <- as.data.frame(do.call(rbind, ptseries_filenames))
+subject_namesDF <- as.data.frame(do.call(rbind, subject_names))
+subfolder_namesDF <- as.data.frame(do.call(rbind, subfolder_names))
+file_paths <- as.data.frame(cbind(subject_namesDF, subfolder_namesDF, ptseries_filenamesDF))
+names(file_paths) <- c("subject_namesDF", "subfolder_namesDF","ptseries_filenamesDF")
+file_paths <- file_paths %>% mutate(path = paste0("/cbica/projects/network_replication/input/NKI/nki_xcp/", subject_namesDF, "/", ptseries_filenamesDF))
+ 
+NKI_qc_filenames_atlases <- list(collated_NKI.xcp_Session, file_paths) 
+ 
+ 
+```
+
+
+- Calculate scan time for each subject 
+```{r scan_time}
+
+sub_variants <- unique(c(unique(NKI_qc_filenames_atlases[[1]]$sub[which(str_detect(NKI_qc_filenames_atlases[[1]]$acq, "VARIANT"))]), unique(NKI_qc_filenames_atlases[[1]]$sub[which(str_detect(NKI_qc_filenames_atlases[[1]]$acq, "RR"))]))) 
+length(sub_variants) # 74 participants with variant acquisitions
+length(unique(NKI_qc_filenames_atlases[[1]]$sub)) # 403 total participants  
+  
+# scans of subjects that have at least one variant acquisition
+df_NKI_qc_subVariants <- NKI_qc_filenames_atlases[[1]][c(which(NKI_qc_filenames_atlases[[1]]$sub %in% sub_variants)),]
+
+
+# load cubids summary and files csv
+CUBIDS_summary <- read.csv(paste0(CUBIDS_csv_dir, "NKI_with_orientation_summary_20221201.csv"))
+CUBIDS_files <- read.csv(paste0(CUBIDS_csv_dir, "NKI_with_orientation_files.csv"))
+ 
+# look at only fMRI scans 
+CUBIDS_files_func <- CUBIDS_files[-c(which(str_detect(CUBIDS_files$FilePath, "dwi")), which(str_detect(CUBIDS_files$FilePath, "anat"))),]
+CUBIDS_files_func <- CUBIDS_files_func[c(which(str_detect(CUBIDS_files_func$KeyParamGroup, "rest"))),]  
+
+ 
+# determine subject and session number for each CUBIDS line
+CUBIDS_files_func <- CUBIDS_files_func %>% mutate(sub = str_extract(FilePath, "sub-A[0-9]+")) %>% mutate(ses = gsub("ses-", "", str_extract(FilePath, "ses-[A-Z0-9]+"))) %>% mutate(acq= gsub("acq-", "",str_extract(FilePath, "acq-(CAP|1400|645)")))
+CUBIDS_files_func <- CUBIDS_files_func %>% mutate(sub_ses_acq = paste0(sub, "_", ses, "_", acq))
+ 
+ 
+
+NKI_qc_filenames_atlases[[1]] <- NKI_qc_filenames_atlases[[1]] %>% mutate(acq_noVar = str_extract(acq, "(CAP|1400|645)")) %>% mutate(sub_ses_acq = paste0(sub, "_", ses, "_", acq_noVar))
+ 
+
+fMRIinclude_CUBIDS <- merge(NKI_qc_filenames_atlases[[1]], dplyr::select(CUBIDS_files_func, KeyParamGroup, KeyGroup, Counts, NumVolumes, FilePath, sub_ses_acq), by="sub_ses_acq") # fMRIinclude_CUBIDS shoud have same number of rows as NKI_qc_filenames_atlases[[1]]
+
+
+# calculate scan time column. fyi, CAP is TR=2500 ms
+fMRIinclude_CUBIDS <- fMRIinclude_CUBIDS %>% mutate(TR = ifelse(str_detect(acq, "1400"), 1400, ifelse(str_detect(acq, "645"), 645, ifelse(str_detect(acq, "CAP"), 2500, NA))))
+
+fMRIinclude_CUBIDS <- fMRIinclude_CUBIDS %>% mutate(ScanTimeMinutes = TR*NumVolumes/1000/60)
+
+ 
+# for each subject, sum the scan time
+fMRIinclude_ScanTime_NKI <- fMRIinclude_CUBIDS %>% group_by(sub) %>% summarise(ScanTime_Total = sum(ScanTimeMinutes))
+range(fMRIinclude_ScanTime_NKI$ScanTime_Total)  # 5.00000 24.10167
+median(fMRIinclude_ScanTime_NKI$ScanTime_Total)  # 24.10167
+ 
+subject_scanTime_exclude <- fMRIinclude_ScanTime_NKI$sub[c(which(fMRIinclude_ScanTime_NKI$ScanTime_Total < 7))] # Remove subjects with total scan time less than 7 minutes
+  
+fMRIinclude_CUBIDS <- fMRIinclude_CUBIDS[-c(which(fMRIinclude_CUBIDS$sub %in% subject_scanTime_exclude)),]  
+NKI_FinalSample <- list()
+NKI_FinalSample[[1]] <- fMRIinclude_CUBIDS
+NKI_FinalSample[[2]] <- NKI_qc_filenames_atlases[[2]][-c(which(NKI_qc_filenames_atlases[[2]]$subject_namesDF %in% subject_scanTime_exclude)),]  
+
+length(unique(NKI_FinalSample[[1]]$sub)) # N=397 final sample (after excluding scan time < 7 min)
+nrow(NKI_FinalSample[[1]]) # 1031 scans
+ 
+saveRDS(NKI_FinalSample, paste0(sample_selection_dir, "NKI_FinalSample_filenames.RData"))
+ 
+## Documenting scan time information
+fMRIinclude_CUBIDS <- NKI_FinalSample[[1]]
+ 
+fMRIinclude_CUBIDS_ScanTime <- fMRIinclude_CUBIDS %>% group_by(sub) %>% summarise(ScanTime_Total = sum(ScanTimeMinutes))
+ 
+max(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) # 24.10167
+range(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) # 7.75075 24.10167
+median(fMRIinclude_CUBIDS_ScanTime$ScanTime_Total) # 24.10167
+
+fMRIinclude_CUBIDS_NumVols <- fMRIinclude_CUBIDS %>% group_by(sub) %>% summarise(NumVols_Total = sum(NumVolumes))
+max(fMRIinclude_CUBIDS_NumVols$NumVols_Total) # 1424 volumes
+```
+ 
+
+
+# Final Demographics Dataframe
+```{r demographics_finalSample}
+
+final_dem <- demographics[c(which(demographics$sub %in% NKI_FinalSample[[1]]$sub)),]
+final_dem <- final_dem[!duplicated(final_dem$sub),] # 397 participants 
+ 
+
+## include average of relMeansRMSMotion and meanFD across the acquisitions included in calculating connectivity matrix 
+
+# for each subject, take average relMeansRMSMotion and meanFD
+subject <- c()
+ses <- c()
+avg_relMeansRMSMotion_vec <- c()
+avg_meanFD_vec <- c()
+for(i in c(1:length(unique(NKI_FinalSample[[1]]$sub)))){
+  indices <- which(NKI_FinalSample[[1]]$sub == unique(NKI_FinalSample[[1]]$sub)[i])
+  avg_RMS <- mean(NKI_FinalSample[[1]]$relMeansRMSMotion[indices])
+  avg_meanFD <- mean(NKI_FinalSample[[1]]$meanFD[indices])
+  subject <- append(subject, unique(NKI_FinalSample[[1]]$sub)[i])
+  ses <- append(ses,NKI_FinalSample[[1]]$ses[indices[1]])
+  avg_relMeansRMSMotion_vec <- append(avg_relMeansRMSMotion_vec, avg_RMS)
+  avg_meanFD_vec <- append(avg_meanFD_vec, avg_meanFD)
+}  
+
+NKI_avgMotion <- data.frame(cbind(subject, ses, avg_meanFD_vec, avg_relMeansRMSMotion_vec))
+names(NKI_avgMotion) <- c("sub", "ses", "meanFD_avgSes", "relMeansRMSMotion_avgSes")
+final_dem_df <- merge(final_dem, NKI_avgMotion, by="sub")
+  
+# Checking race demographics
+length(which(is.na(final_dem_df$race)))/nrow(final_dem_df)
+length(which(final_dem_df$race=="White"))
+length(which(final_dem_df$race=="White"))/nrow(final_dem_df)
+
+# White = 258 - 65.0%
+# Asian = 34 - 8.5%
+# Black = 82 - 20.7%
+# Other = 11 - 2.8%
+# Missing = 12 - 3.0%
+
+mean(final_dem_df$age) # mean=13.95
+sd(final_dem_df$age) # SD=4.8
+
+length(which(final_dem_df$sex=="Female")) # 186 females
+
+write.csv(final_dem_df, paste0(sample_selection_dir, "NKI_demographics_finalsample.csv"), row.names = F)
+write.table(final_dem_df$sub, paste0(sample_selection_dir, "NKI_final_subjectlist.txt"), row.names = F, col.names=F)
+ 
+```
+  

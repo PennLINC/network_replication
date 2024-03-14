@@ -1,0 +1,128 @@
+---
+title: "HCPD Covbat"
+author: "Audrey Luo"
+output: html_document
+---
+
+ 
+
+# Perform CovBat Harmonization on Connectivity Metrics (GBC, BNC, WNC)
+Covbat for GBC, BNC, and WNC can be performed locally using this Rmd file.
+```{r setup_covbat, include=FALSE}
+
+library(ComBatFamily)
+library(dplyr)
+library(mgcv)
+
+atlases_GBC <- c("schaefer200") # only doing schaefer200 for manuscript
+atlases <- c("schaefer200x7")
+dataset <- "HCPD"
+  
+```
+
+
+```{r load_subxparcel}
+participants <- read.csv("/cbica/projects/network_replication/input/HCPD/sample_selection/HCPD_demographics_finalsample.csv")
+ 
+ 
+#GBC  
+metric = "GBC"
+for(i in c(1:length(atlases_GBC))){
+  df_name <- paste0(metric, "_", "subxparcel_", atlases_GBC[i])
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/manuscript/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases_GBC[i])))
+  assign(df_name, data.frame(get(df_name)[,-1])) # remove subject column
+  print(df_name)
+} 
+   
+row.names(GBC_subxparcel_schaefer200) <- participants$sub
+ 
+ 
+#BNC 
+metric = "BNC"
+for(i in c(1:length(atlases))){
+  df_name <- paste0(metric, "_", "subxparcel_", atlases[i])
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/manuscript/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases[i])))
+  assign(df_name, data.frame(get(df_name)[,-1])) # remove subject column
+  print(df_name)
+} 
+  
+row.names(BNC_subxparcel_schaefer200x7) <- participants$sub
+ 
+ 
+#WNC  
+metric = "WNC"
+for(i in c(1:length(atlases))){
+  df_name <- paste0(metric, "_", "subxparcel_", atlases[i])
+  assign(df_name, read.csv(sprintf("/cbica/projects/network_replication/manuscript/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, atlases[i])))
+  assign(df_name, data.frame(get(df_name)[,-1])) # remove subject column
+  print(df_name)
+} 
+  
+ 
+row.names(WNC_subxparcel_schaefer200x7) <- participants$sub
+ 
+```
+
+
+```{r run_covbat}
+
+age_vec <- participants$interview_age/12
+sex_vec <- as.factor(participants$sex)
+meanFD_avgSes_vec <- participants$meanFD_avgSes
+
+covar_df <- bind_cols(participants$sub, as.numeric(age_vec), as.factor(sex_vec), as.numeric(meanFD_avgSes_vec))
+covar_df <- dplyr::rename(covar_df, sub=...1,
+                          age = ...2,
+                          sex = ...3,
+                          meanFD_avgSes = ...4)
+batch <- participants$site 
+ 
+# Harmonize GBC
+data.harmonized_GBC <- lapply(list(GBC_subxparcel_schaefer200), covfam, bat = as.factor(participants$site), covar = covar_df, gam, y ~ s(age, k=3, fx=T) + as.factor(sex) + meanFD_avgSes)
+names(data.harmonized_GBC) <- atlases_GBC
+
+# Harmonize BNC
+data.harmonized_BNC <- lapply(list(BNC_subxparcel_schaefer200x7), covfam, bat = as.factor(participants$site), covar = covar_df, gam, y ~ s(age, k=3, fx=T) + as.factor(sex) + meanFD_avgSes)
+names(data.harmonized_BNC) <- atlases 
+ 
+# Harmonize WNC
+data.harmonized_WNC <- lapply(list(WNC_subxparcel_schaefer200x7), covfam, bat = as.factor(participants$site), covar = covar_df, gam, y ~ s(age, k=3, fx=T) + as.factor(sex) + meanFD_avgSes)
+names(data.harmonized_WNC) <- atlases 
+
+
+```
+
+
+```{r save_out}
+
+
+#GBC - save out covbat harmonized connectivity metrics 
+metric = "GBC"
+GBC_subxparcel_schaefer200_covbat <- data.frame(data.harmonized_GBC$schaefer200$dat.covbat)
+GBC_subxparcel_schaefer200_covbat$subject <- rownames(GBC_subxparcel_schaefer200_covbat)
+GBC_subxparcel_schaefer200_covbat <- GBC_subxparcel_schaefer200_covbat %>% relocate(subject)
+rownames(GBC_subxparcel_schaefer200_covbat) <- NULL
+write.csv(GBC_subxparcel_schaefer200_covbat, sprintf("/cbica/projects/network_replication/manuscript/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, "schaefer200"), row.names = F)
+
+
+#BNC - save out covbat harmonized connectivity metrics 
+metric = "BNC"
+BNC_subxparcel_schaefer200x7_covbat <- data.frame(data.harmonized_BNC$schaefer200x7$dat.covbat)
+BNC_subxparcel_schaefer200x7_covbat$subject <- rownames(BNC_subxparcel_schaefer200x7_covbat)
+BNC_subxparcel_schaefer200x7_covbat <- BNC_subxparcel_schaefer200x7_covbat %>% relocate(subject)
+rownames(BNC_subxparcel_schaefer200x7_covbat) <- NULL
+write.csv(BNC_subxparcel_schaefer200x7_covbat, sprintf("/cbica/projects/network_replication/manuscript/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, "schaefer200x7"), row.names = F)
+
+
+#WNC - save out covbat harmonized connectivity metrics 
+metric = "WNC"
+WNC_subxparcel_schaefer200x7_covbat <- data.frame(data.harmonized_WNC$schaefer200x7$dat.covbat)
+WNC_subxparcel_schaefer200x7_covbat$subject <- rownames(WNC_subxparcel_schaefer200x7_covbat)
+WNC_subxparcel_schaefer200x7_covbat <- WNC_subxparcel_schaefer200x7_covbat %>% relocate(subject)
+rownames(WNC_subxparcel_schaefer200x7_covbat) <- NULL
+write.csv(WNC_subxparcel_schaefer200x7_covbat, sprintf("/cbica/projects/network_replication/manuscript/output/%1$s/%2$s/%2$s_subxparcel_matrix_%3$s.csv", dataset, metric, "schaefer200x7"),row.names = F)
+
+```
+
+ 
+

@@ -1,0 +1,971 @@
+---
+title: "FC Development Main Figures"
+author: "Audrey Luo"
+output: 
+  html_document:
+    highlight: haddock
+    code_folding: hide
+    number_sections: no
+    theme: lumen
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+  pdf_document:
+    number_sections: no
+    toc: yes
+    toc_depth: '4'
+  word_document:
+    toc: yes
+    toc_depth: '4'
+urlcolor: blue
+editor_options: 
+  chunk_output_type: inline
+---
+```{r setup, include=FALSE}
+library(dplyr)
+library(ggcorrplot)
+require(ggplot2)
+library(cowplot)
+library(cifti)
+library(ggseg)
+library(ggsegSchaefer)
+library(ggcorrplot)
+library(gratia)
+library(grid)
+library(gridExtra)
+library(mgcv)
+library(viridis)
+library(scales)
+library(stringr)
+library(tidyr)
+library(ggpubr)
+library(purrr)
+library(pammtools) 
+source("/cbica/projects/network_replication/software/perm.sphere.p.R")
+
+
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, include = TRUE) 
+ 
+derivs_root <- "/cbica/projects/network_replication/manuscript/output/"
+```
+
+
+```{r load labels and SAaxis}
+schaefer200.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_regionlist_final.csv")
+
+schaefer200_SAaxis <- read.csv("/cbica/projects/network_replication/SAaxis/schaefer200x7_SAaxis.csv")
+schaefer200_SAaxis <- schaefer200_SAaxis %>% rename(region=label)
+```
+
+
+# Figure 1
+```{r figure 1 functions}
+# Function for combining final GAM output dfs for figures
+# @param metric A character string of connectivity metric (i.e. "GBC")
+# @param atlas A character string of atlas name
+combineGAMdfs <- function(metric, dataset){
+  # Combine into Final Dfs
+  gam_output <- get(paste0("gam.", metric, ".age.", dataset))
+  SAaxis <- schaefer200_SAaxis
+  df.list <- list(SAaxis, gam_output)
+  axis <- Reduce(function(x,y) merge(x,y, all=TRUE, sort=F), df.list) 
+  axis$SA.axis_rank <- as.numeric(axis$SA.axis_rank)
+  return(axis)
+}
+
+# Function for calculating number of significant parcels (FDR corrected)
+# @param axis A dataframe with SA-axis rank and GAM results
+sig_parcels <- function(axis) {
+  axis$Anova.age.pvalue.fdr <- p.adjust(axis$Anova.age.pvalue, method=c("fdr"))
+  #cat(sprintf("There are %s/%s significant parcels", sum(axis$Anova.age.pvalue.fdr < 0.05, na.rm=TRUE), nrow(axis)))
+  
+  axis$significant.fdr <- axis$Anova.age.pvalue.fdr < 0.05
+  axis$significant.fdr[axis$significant.fdr == TRUE] <- 1
+  axis$significant.fdr[axis$significant.fdr == FALSE] <- 0
+  return(axis)
+}
+```
+
+```{r figure 1 setup}
+gam.GBC.age.PNC <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMresults.%3$s.age.%4$s.csv", derivs_root, "PNC", "GBC", "schaefer200"))
+gam.GBC.age.PNC$label <- gsub("Network", "7Network", gam.GBC.age.PNC$label)
+gam.GBC.age.PNC <- gam.GBC.age.PNC %>% rename(region=label)
+
+gam.GBC.age.NKI <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMresults.%3$s.age.%4$s.csv", derivs_root, "NKI", "GBC", "schaefer200"))
+gam.GBC.age.NKI$label <- gsub("Network", "7Network", gam.GBC.age.NKI$label)
+gam.GBC.age.NKI <- gam.GBC.age.NKI %>% rename(region=label)
+
+gam.GBC.age.HCPD <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMresults.%3$s.age.%4$s.csv", derivs_root, "HCPD", "GBC", "schaefer200"))
+gam.GBC.age.HCPD$label <- gsub("Network", "7Network", gam.GBC.age.HCPD$label)
+gam.GBC.age.HCPD <- gam.GBC.age.HCPD %>% rename(region=label)
+
+gam.GBC.age.HBN <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMresults.%3$s.age.%4$s.csv", derivs_root, "HBN", "GBC", "schaefer200"))
+gam.GBC.age.HBN$label <- gsub("Network", "7Network", gam.GBC.age.HBN$label)
+gam.GBC.age.HBN <- gam.GBC.age.HBN %>% rename(region=label)
+ 
+GBC.axis.PNC <- combineGAMdfs("GBC", "PNC") %>% sig_parcels
+GBC.axis.NKI <- combineGAMdfs("GBC", "NKI") %>% sig_parcels
+GBC.axis.HCPD <- combineGAMdfs("GBC", "HCPD") %>% sig_parcels
+GBC.axis.HBN <- combineGAMdfs("GBC", "HBN") %>% sig_parcels
+```
+
+
+## Figure 1a
+```{r figure1a spin tests and correlations, eval=FALSE}
+# spin test
+perm.id.full_schaefer200 <- readRDS("/cbica/projects/network_replication/software/rotate_parcellation/schaefer200x7.coords_sphericalrotations_N10k_seed10.rds")
+ 
+# GBC - make df.dev.spin_GBC_schaefer200 
+parcel.labels <- schaefer200.parcel.labels$label
+df.dev.spin_GBC.axis.PNC <- rbind(GBC.axis.PNC[1:c(length(parcel.labels)/2),], GBC.axis.PNC[c(length(parcel.labels)/2+1):length(parcel.labels),]) 
+df.dev.spin_GBC.axis.NKI <- rbind(GBC.axis.NKI[1:c(length(parcel.labels)/2),], GBC.axis.NKI[c(length(parcel.labels)/2+1):length(parcel.labels),])
+df.dev.spin_GBC.axis.HCPD <- rbind(GBC.axis.HCPD[1:c(length(parcel.labels)/2),], GBC.axis.HCPD[c(length(parcel.labels)/2+1):length(parcel.labels),])
+df.dev.spin_GBC.axis.HBN <- rbind(GBC.axis.HBN[1:c(length(parcel.labels)/2),], GBC.axis.HBN[c(length(parcel.labels)/2+1):length(parcel.labels),])
+
+# spatial correlation of GAM adjusted age Rsq between all pairs of datasets
+corr.GBC.axis.PNC_GBC.axis.NKI <- cor.test(GBC.axis.PNC$GAM.age.AdjRsq, GBC.axis.NKI$GAM.age.AdjRsq, method=c("pearson"), exact=F)$estimate # r = 0.8804216 
+corr.GBC.axis.PNC_GBC.axis.HCPD <- cor.test(GBC.axis.PNC$GAM.age.AdjRsq, GBC.axis.HCPD$GAM.age.AdjRsq, method=c("pearson"), exact=F)$estimate # r = 0.8279745
+corr.GBC.axis.PNC_GBC.axis.HBN <- cor.test(GBC.axis.PNC$GAM.age.AdjRsq, GBC.axis.HBN$GAM.age.AdjRsq, method=c("pearson"), exact=F)$estimate # r = 0.629025  
+corr.GBC.axis.NKI_GBC.axis.HCPD <- cor.test(GBC.axis.HCPD$GAM.age.AdjRsq, GBC.axis.NKI$GAM.age.AdjRsq, method=c("pearson"), exact=F)$estimate # r = 0.6926665 
+corr.GBC.axis.NKI_GBC.axis.HBN <- cor.test(GBC.axis.HBN$GAM.age.AdjRsq, GBC.axis.NKI$GAM.age.AdjRsq, method=c("pearson"), exact=F)$estimate # r = 0.4665967
+corr.GBC.axis.HBN_GBC.axis.HCPD <- cor.test(GBC.axis.HBN$GAM.age.AdjRsq, GBC.axis.HCPD$GAM.age.AdjRsq, method=c("pearson"), exact=F)$estimate # r = 0.7534226 
+ 
+# do spin test for each pair of datasets' spatial correlation 
+p_spin_GBC.axis.PNC_GBC.axis.NKI  <- perm.sphere.p(GBC.axis.PNC$GAM.age.AdjRsq, GBC.axis.NKI$GAM.age.AdjRsq, perm.id.full_schaefer200, corr.type='pearson')  
+p_spin_GBC.axis.PNC_GBC.axis.HCPD <- perm.sphere.p(GBC.axis.PNC$GAM.age.AdjRsq, GBC.axis.HCPD$GAM.age.AdjRsq, perm.id.full_schaefer200, corr.type='pearson')  
+p_spin_GBC.axis.PNC_GBC.axis.HBN  <- perm.sphere.p(GBC.axis.PNC$GAM.age.AdjRsq, GBC.axis.HBN$GAM.age.AdjRsq, perm.id.full_schaefer200, corr.type='pearson')  
+p_spin_GBC.axis.NKI_GBC.axis.HCPD  <- perm.sphere.p(GBC.axis.HCPD$GAM.age.AdjRsq, GBC.axis.NKI$GAM.age.AdjRsq, perm.id.full_schaefer200, corr.type='pearson')  
+p_spin_GBC.axis.NKI_GBC.axis.HBN  <- perm.sphere.p(GBC.axis.HBN$GAM.age.AdjRsq, GBC.axis.NKI$GAM.age.AdjRsq, perm.id.full_schaefer200, corr.type='pearson')  
+p_spin_GBC.axis.HBN_GBC.axis.HCPD  <- perm.sphere.p(GBC.axis.HBN$GAM.age.AdjRsq, GBC.axis.HCPD$GAM.age.AdjRsq, perm.id.full_schaefer200, corr.type='pearson')  
+```
+
+```{r figure1a, fig.height=5.5, fig.width=5}
+# make correlation matrix
+dat2 <- bind_cols(GBC.axis.PNC$region, as.numeric(GBC.axis.PNC$GAM.age.AdjRsq), GBC.axis.NKI$GAM.age.AdjRsq, GBC.axis.HCPD$GAM.age.AdjRsq, GBC.axis.HBN$GAM.age.AdjRsq)
+names(dat2) <- c("label", "PNC", "NKI", "HCP-D", "HBN")
+corr <- round(cor(dat2[,-1], use = "complete.obs"), 5)
+  
+# compute matrix of correlation p-values
+p.mat <- cor_pmat(dat2[,-1])
+
+ 
+# Visualize the correlation matrix
+correlation_matrix <- ggcorrplot(corr,  
+   lab = TRUE, lab_col = "white", type = "lower",
+   outline.col = "white",
+   ggtheme = ggplot2::theme_void, lab_size = 8, 
+   hc.order = FALSE, insig = "blank", p.mat=p.mat)  +
+   scale_fill_gradient2(low = "white",
+  mid = "#E5B9ADFF",
+  high = "#A50026FF", midpoint=0.5,limit= c(0, 1)) + 
+ theme(legend.text = element_text(size = 18), 
+       legend.title = element_blank(), 
+       legend.key.height = unit(1, 'cm'),
+       legend.key.width = unit(2, 'cm'),
+       legend.position = "bottom",
+       legend.margin=margin(10,0,0,0),
+       axis.text=element_text(size=22, color = "black"),
+       axis.text.y = element_text(hjust = 0, size = 22),
+       axis.text.x = element_text(hjust = 0.5, angle=0, size = 22),
+       plot.margin = margin(1, 1, 1, 1, "cm"))
+
+
+ 
+
+# plot figure 1a
+grid.arrange(arrangeGrob(correlation_matrix, bottom = textGrob("Correlation", 
+                                                     gp=gpar(col="black", fontsize=22), x = 0.6, y = 1.5)))
+  
+write.csv(corr, "/cbica/projects/network_replication/manuscript/figure_data/figure1a_corrplot.csv")
+```
+
+## Figure 1b
+```{r figure1b, fig.height=5.5, fig.width=5}
+
+figure1b <- ggplot() + geom_brain(data=schaefer200_SAaxis, 
+                        atlas=schaefer7_200, 
+                        mapping=aes(fill=SA.axis_rank),
+                        show.legend=TRUE, 
+                        position = position_brain(c('right lateral', 'right medial'))) +
+  paletteer::scale_fill_paletteer_c("grDevices::RdYlBu", direction=-1) +
+  theme_void() +
+  theme(legend.text = element_text(size = 18), 
+       legend.title = element_blank(), 
+       legend.key.height = unit(1, 'cm'),
+       legend.key.width = unit(2.3, 'cm'),
+       legend.position = "bottom",
+       legend.margin=margin(10,0,0,0),
+       plot.margin = margin(0, 0, 0, 0, "cm"))
+  
+
+
+# plot figure 1b
+grid.arrange(arrangeGrob(figure1b, bottom = textGrob("Sensorimotor-Association Axis Rank", 
+                                                     gp=gpar(col="black", fontsize=20), x = 0.5, y = 4.6)))
+
+write.csv(schaefer200_SAaxis, "/cbica/projects/network_replication/manuscript/figure_data/figure1b_SAaxis.csv")
+```
+
+## Figure 1c
+```{r brain_surface, fig.height = 10, fig.width=10}
+PNC <- GBC.axis.PNC
+NKI <- GBC.axis.NKI
+HCPD <- GBC.axis.HCPD
+HBN <- GBC.axis.HBN
+
+PNC <- PNC %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+PNC <- bind_cols(PNC$region, PNC$GAM.age.AdjRsq, PNC$significant.fdr)
+names(PNC) <- c("region", "GAM.age.AdjRsq", "significant.fdr")
+PNC$significant.fdr <- gsub("0", "Non_Sig", PNC$significant.fdr)
+PNC$significant.fdr <- gsub("1", "Sig", PNC$significant.fdr)
+ 
+  
+ 
+NKI <- NKI %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+NKI <- bind_cols(NKI$region, NKI$GAM.age.AdjRsq, NKI$significant.fdr)
+names(NKI) <- c("region", "GAM.age.AdjRsq", "significant.fdr")
+NKI$significant.fdr <- gsub("0", "Non_Sig", NKI$significant.fdr)
+NKI$significant.fdr <- gsub("1", "Sig", NKI$significant.fdr)
+
+ 
+
+
+HCPD <- HCPD %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+HCPD <- bind_cols(HCPD$region, HCPD$GAM.age.AdjRsq, HCPD$significant.fdr)
+names(HCPD) <- c("region", "GAM.age.AdjRsq", "significant.fdr")
+HCPD$significant.fdr <- gsub("0", "Non_Sig", HCPD$significant.fdr)
+HCPD$significant.fdr <- gsub("1", "Sig", HCPD$significant.fdr)
+
+HBN <- HBN %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+HBN <- bind_cols(HBN$region, HBN$GAM.age.AdjRsq, HBN$significant.fdr)
+names(HBN) <- c("region", "GAM.age.AdjRsq", "significant.fdr")
+HBN$significant.fdr <- gsub("0", "Non_Sig", HBN$significant.fdr)
+HBN$significant.fdr <- gsub("1", "Sig", HBN$significant.fdr)
+ 
+ 
+
+ageEffect_surf.fig <- function(dataset_name, title){
+  surf.fig <- ggplot() + geom_brain(data=get(dataset_name), 
+                        atlas=schaefer7_200, 
+                        mapping=aes(fill=GAM.age.AdjRsq, colour=significant.fdr, size=I(0.3)),
+                        show.legend=TRUE, 
+                        position = position_brain(hemi~side)) + scale_colour_manual(values = c(Sig = "black", Non_Sig = "grey84")) + 
+      scale_fill_gradientn(colors= c("#8a0f63", "#FFFFFF","#f4b100"), limits = c(-0.05,0.15),  oob=squish,
+                           values=rescale(c(-0.05,0,0.15))) +  theme_void() + 
+    labs(title=title) + 
+    guides(color=FALSE) + 
+    theme(legend.position = "bottom",
+        legend.key.height = unit(1, 'cm'),
+        legend.key.width = unit(2.3, 'cm'),
+        legend.margin=margin(10,0,0,0),
+        legend.text = element_text(size=24),
+        legend.title = element_blank(),
+        plot.title = element_text(size=20, hjust = 0.5)) 
+     
+  return(surf.fig)
+}
+  
+ 
+
+ageEffect_surf_PNC <- ageEffect_surf.fig("PNC", "PNC (N = 1207)")
+ageEffect_surf_NKI <- ageEffect_surf.fig("NKI", "NKI (N = 397)")
+ageEffect_surf_HCPD <- ageEffect_surf.fig("HCPD", "HCP-D (N = 625)")
+ageEffect_surf_HBN <- ageEffect_surf.fig("HBN", "HBN (N = 1126)")
+
+figure1c_alldatasets <- ggarrange(ageEffect_surf_PNC, ageEffect_surf_HCPD, ageEffect_surf_NKI, ageEffect_surf_HBN, common.legend=TRUE, legend = c('bottom') )
+
+x.grob <- textGrob(expression(paste("Age Effect (Delta Adj", " R"^2, ")")), 
+                   gp=gpar(col="black", fontsize=20))
+ 
+
+grid.arrange(arrangeGrob(figure1c_alldatasets, bottom = x.grob))
+
+
+
+write.csv(PNC, "/cbica/projects/network_replication/manuscript/figure_data/figure1c_PNC_age_effect.csv")
+write.csv(NKI, "/cbica/projects/network_replication/manuscript/figure_data/figure1c_NKI_age_effect.csv")
+write.csv(HCPD, "/cbica/projects/network_replication/manuscript/figure_data/figure1c_HCPD_age_effect.csv")
+write.csv(HBN, "/cbica/projects/network_replication/manuscript/figure_data/figure1c_HBN_age_effect.csv")
+  
+```
+
+# Figure 2
+```{r figure 2 functions}
+
+## FIGURE: developmental trajectories, centered on zero
+# @param atlas A character string of atlas name 
+# @param metric A character string of connectivity metric (i.e. "GBC")
+make_smooths_fig_centered <- function(dataset){
+  smooth_fits <- get(paste0(dataset, "_smooths"))
+  smooths_fig_centered <- ggplot(smooth_fits,aes(age,est,group=SA.axis_rank)) + 
+    geom_line(data = smooth_fits, size=.7, alpha = .6, aes(color=SA.axis_rank)) + 
+    ylim(-0.042, 0.053) + xlim(5, 23) +
+    paletteer::scale_color_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(smooth_fits$SA.axis_rank), max(smooth_fits$SA.axis_rank)), oob = squish) + 
+    theme(
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      axis.line = element_line(color = "black"),
+      axis.text=element_text(size=28, color = "black"),
+      panel.background=element_blank(),  
+      legend.position = "none", 
+      plot.margin = margin(t = 1, r = 0, b = , l = 1, unit = "cm")) 
+  return(smooths_fig_centered)
+}
+
+# subsets gam.smooths (long_df) to extract specific parcels and creates a new dataframe (to make dev trajectory figures)
+# @param SA_parcelnames, A character string indicating which parcels to plot (i.e "SM", "default", etc.; may be different for different atlases)
+smooths_repParcels <- function(SA_ranks, dataset){
+  gam.smooths.centered <- get(paste0(dataset, "_smooths"))
+  gam.smooths.ordered <- gam.smooths.centered[order(gam.smooths.centered$SA.axis_rank),]
+  parcel_rows <- which(gam.smooths.ordered$SA.axis_rank %in% SA_ranks) # trying to extract all rows that match SA_ranks
+  repParcels <- gam.smooths.ordered[parcel_rows,]
+  return(repParcels)
+}
+
+## FIGURE: developmental trajectories for representative parcels
+# @param dataset A character string for dataset
+# @param parcels A character string of parcel(s) whose trajectory you want to plot (i.e. "SomMot", "visual")
+# @param color_hexcode A character string for color of geom_line
+make_repParcel.fig <- function(dataset, parcels, color_hexcode) {
+  df <- get(paste0("repParcels_", dataset))
+  smooth_fits <- df[[parcels]]
+  main.plot <- ggplot(smooth_fits,aes(age,est,group=SA.axis_rank)) + 
+    geom_line(data = smooth_fits, size=1.5, alpha = .6,  colour=color_hexcode) + ylim(-0.042, 0.053) + xlim(5, 23) +
+    theme(
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      axis.line = element_line(color = "black"),
+      axis.text=element_text(size=28, color = "black"),
+      panel.background=element_blank(),  
+      legend.position = "none", plot.margin = margin(t = 1, r = 0, b = , l = 1, unit = "cm"))  
+  return(main.plot)
+}
+```
+
+```{r figure 2 setup}
+PNC_smooths <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMsmoothfits.%3$s.age.%4$s_centered.csv", derivs_root, "PNC", "GBC", "schaefer200"))
+NKI_smooths <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMsmoothfits.%3$s.age.%4$s_centered.csv", derivs_root, "NKI", "GBC", "schaefer200"))
+HCPD_smooths <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMsmoothfits.%3$s.age.%4$s_centered.csv", derivs_root, "HCPD", "GBC", "schaefer200"))
+HBN_smooths <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMsmoothfits.%3$s.age.%4$s_centered.csv", derivs_root, "HBN", "GBC", "schaefer200"))
+```
+
+```{r figure2 all trajectories}
+devTraj.centered.PNC <- make_smooths_fig_centered("PNC")
+devTraj.centered.NKI <- make_smooths_fig_centered("NKI")
+devTraj.centered.HCPD <- make_smooths_fig_centered("HCPD")
+devTraj.centered.HBN <- make_smooths_fig_centered("HBN")
+```
+
+
+```{r figure2 representative parcels}
+SomMot <- which(str_detect(schaefer200_SAaxis$region, "SomMot")) # mean SA rank = 40
+SomMot_ranks <- schaefer200_SAaxis$SA.axis_rank[SomMot]  
+
+attention <- which(str_detect(schaefer200_SAaxis$region, "SalVentAttn")) # mean SA rank = 113
+attention_ranks <- schaefer200_SAaxis$SA.axis_rank[attention]  
+ 
+default <- which(str_detect(schaefer200_SAaxis$region, "Default")) # mean SA rank = 155
+default_ranks <- schaefer200_SAaxis$SA.axis_rank[default]  
+ 
+
+schaefer200_parcelRanks <- list(SomMot_ranks, attention_ranks, default_ranks)
+repParcels_PNC <- lapply(schaefer200_parcelRanks, smooths_repParcels, dataset="PNC") 
+names(repParcels_PNC) <- c("SomMot", "attention", "default")
+
+repParcels_NKI <- lapply(schaefer200_parcelRanks, smooths_repParcels, dataset="NKI")  
+names(repParcels_NKI) <- c("SomMot", "attention", "default")
+
+repParcels_HCPD <- lapply(schaefer200_parcelRanks, smooths_repParcels, dataset="HCPD")  
+names(repParcels_HCPD) <- c("SomMot", "attention", "default")
+
+repParcels_HBN <- lapply(schaefer200_parcelRanks, smooths_repParcels, dataset="HBN")  
+names(repParcels_HBN) <- c("SomMot", "attention", "default")
+  
+## set up dataframe for making figures
+SAaxis_repParcels_schaefer200 <- schaefer200_SAaxis
+SAaxis_repParcels_schaefer200$SA.axis_rank <- as.numeric(SAaxis_repParcels_schaefer200$SA.axis_rank)
+names(SAaxis_repParcels_schaefer200)[3] <- "region"
+schaefer200_SAaxis_fig.df <- SAaxis_repParcels_schaefer200 %>% mutate(SomMot = ifelse(SA.axis_rank %in% SomMot_ranks, 1, 0)) %>% 
+  mutate(default = ifelse(SA.axis_rank %in% default_ranks, 1, 0))  %>%  
+  mutate(attention = ifelse(SA.axis_rank %in% attention_ranks, 1, 0)) 
+
+PNC_sensorimotor_figs <- make_repParcel.fig("SomMot", dataset="PNC", color_hexcode="#24A6A8FF")
+PNC_midaxis_figs <- make_repParcel.fig("attention", dataset="PNC", color_hexcode="#EEAC32FF")
+PNC_assoc_figs <- make_repParcel.fig("default", dataset="PNC", color_hexcode="#C73000FF")
+
+NKI_sensorimotor_figs <- make_repParcel.fig("SomMot", dataset="NKI", color_hexcode="#24A6A8FF")
+NKI_midaxis_figs <- make_repParcel.fig("attention", dataset="NKI", color_hexcode="#EEAC32FF")
+NKI_assoc_figs <- make_repParcel.fig("default", dataset="NKI", color_hexcode="#C73000FF")
+
+HCPD_sensorimotor_figs <- make_repParcel.fig("SomMot", dataset="HCPD", color_hexcode="#24A6A8FF")
+HCPD_midaxis_figs <- make_repParcel.fig("attention", dataset="HCPD", color_hexcode="#EEAC32FF")
+HCPD_assoc_figs <- make_repParcel.fig("default", dataset="HCPD", color_hexcode="#C73000FF")
+
+HBN_sensorimotor_figs <- make_repParcel.fig("SomMot", dataset="HBN", color_hexcode="#24A6A8FF")
+HBN_midaxis_figs <- make_repParcel.fig("attention", dataset="HBN", color_hexcode="#EEAC32FF")
+HBN_assoc_figs <- make_repParcel.fig("default", dataset="HBN", color_hexcode="#C73000FF")
+
+ 
+```
+
+
+
+```{r figure2, fig.height=16, fig.width=20}
+figure2_alldatasets <- plot_grid(devTraj.centered.PNC, 
+                               PNC_sensorimotor_figs + labs(title = "Somatomotor") + 
+                                 theme(plot.title=element_text(size=28, face="bold", hjust=0.5, vjust=5)), 
+                               PNC_midaxis_figs + labs(title = "Attention") + 
+                                 theme(plot.title=element_text(size=28, face="bold", hjust=0.5, vjust=5)), 
+                               PNC_assoc_figs + labs(title = "Default") + 
+                                 theme(plot.title=element_text(size=28, face="bold", hjust=0.5, vjust=5)), 
+          devTraj.centered.NKI, NKI_sensorimotor_figs,  NKI_midaxis_figs, NKI_assoc_figs,
+          devTraj.centered.HCPD, HCPD_sensorimotor_figs, HCPD_midaxis_figs, HCPD_assoc_figs, 
+          devTraj.centered.HBN, HBN_sensorimotor_figs, HBN_midaxis_figs, HBN_assoc_figs, ncol=4, 
+          labels=c("a", "e", "i", "m", "b", "f", "j", "n","c", "g", "k", "o", "d", "h", "l", "p"), 
+          label_size=28, label_fontface = 'bold', label_y=rep(1,32), label_x = 0.01, byrow=TRUE)
+
+
+
+x.grob <- textGrob("Age (years)", 
+                   gp=gpar(fontface="bold", col="black", fontsize=28))
+y.grob <- textGrob("Functional Connectivity Strength (Zero-Centered)", 
+                   gp=gpar(fontface="bold", col="black", fontsize=28), rot=90)
+
+grid.arrange(arrangeGrob(figure2_alldatasets, left = y.grob, bottom = x.grob))
+# row 1 = PNC
+# row 2 = NKI
+# row 3 = HCP-D
+# row 4 = HBN
+
+
+write.csv(PNC_smooths, "/cbica/projects/network_replication/manuscript/figure_data/figure2aeim_PNC_devtrajectories.csv")
+write.csv(NKI_smooths, "/cbica/projects/network_replication/manuscript/figure_data/figure2bfjn_NKI_devtrajectories.csv")
+write.csv(HCPD_smooths, "/cbica/projects/network_replication/manuscript/figure_data/figure2cgko_HCPD_devtrajectories.csv")
+write.csv(HBN_smooths, "/cbica/projects/network_replication/manuscript/figure_data/figure2dhlp_HBN_devtrajectories.csv")
+```
+
+
+# Figure 3
+
+```{r figure 3 functions}
+# function for creating the final df.dev.spin dataframe for permutation testing
+prepDfSpin <- function(atlas, dataset, metric) {
+  parcel.labels <- get(paste0(atlas, ".parcel.labels"))
+  parcel.labels <- parcel.labels$label
+  axis.df <- get(paste0(metric, ".axis.", dataset))
+  figureDF <- axis.df
+  if(atlas=="gordon"){
+    df.dev.spin <- rbind(figureDF[1:161,], figureDF[162:333,]) #format df as left hemisphere -> right hemisphere for spin tests
+  } else if(str_detect(atlas, "schaefer") | str_detect(atlas, "glasser")) {
+    df.dev.spin <- rbind(figureDF[1:c(length(parcel.labels)/2),], figureDF[c(length(parcel.labels)/2+1):length(parcel.labels),]) #format df as left hemisphere -> right hemisphere for spin tests
+  }  
+  return(df.dev.spin)
+}
+
+```
+
+```{r figure 3 prep df}
+
+# make df.dev.spin.<dataset> (formatted df's for applying spin test)
+df.dev.spin.PNC <- prepDfSpin("schaefer200","PNC", "GBC")
+df.dev.spin.NKI <- prepDfSpin("schaefer200","NKI", "GBC")
+df.dev.spin.HCPD <- prepDfSpin("schaefer200","HCPD", "GBC")
+df.dev.spin.HBN <- prepDfSpin("schaefer200","HBN", "GBC")
+
+ 
+```
+  
+```{r figure 3 corrs and spin test, eval=FALSE}
+# compute spatial correlation between age effect and S-A axis rank
+PNC_corr <- round(cor.test(GBC.axis.PNC$GAM.age.AdjRsq, as.numeric(GBC.axis.PNC$SA.axis_rank), method=c("spearman"), exact=F)$estimate, 2)
+NKI_corr <- round(cor.test(GBC.axis.NKI$GAM.age.AdjRsq, as.numeric(GBC.axis.NKI$SA.axis_rank), method=c("spearman"), exact=F)$estimate, 2)
+HCPD_corr <- round(cor.test(GBC.axis.HCPD$GAM.age.AdjRsq, as.numeric(GBC.axis.HCPD$SA.axis_rank), method=c("spearman"), exact=F)$estimate, 2)
+HBN_corr <- round(cor.test(GBC.axis.HBN$GAM.age.AdjRsq, as.numeric(GBC.axis.HBN$SA.axis_rank), method=c("spearman"), exact=F)$estimate, 2)
+
+#Load Spin Test Parcel Rotation Matrix
+perm.id.full_schaefer200 <- readRDS("/cbica/projects/network_replication/software/rotate_parcellation/schaefer200x7.coords_sphericalrotations_N10k.rds")
+
+
+
+# spin permutation tests:
+PNC_pspin <- perm.sphere.p(as.numeric(df.dev.spin.PNC$GAM.age.AdjRsq), as.numeric(df.dev.spin.PNC$SA.axis_rank),
+                            perm.id.full_schaefer200, corr.type='spearman')  
+
+NKI_pspin <- perm.sphere.p(as.numeric(df.dev.spin.NKI$GAM.age.AdjRsq), as.numeric(df.dev.spin.NKI$SA.axis_rank),
+                            perm.id.full_schaefer200, corr.type='spearman')  
+
+HCPD_pspin <- perm.sphere.p(as.numeric(df.dev.spin.HCPD$GAM.age.AdjRsq), as.numeric(df.dev.spin.HCPD$SA.axis_rank),
+                            perm.id.full_schaefer200, corr.type='spearman') 
+
+HBN_pspin <- perm.sphere.p(as.numeric(df.dev.spin.HBN$GAM.age.AdjRsq), as.numeric(df.dev.spin.HBN$SA.axis_rank),
+                            perm.id.full_schaefer200, corr.type='spearman') 
+
+corr_pspin <- data.frame(cbind(c(PNC_corr, NKI_corr, HCPD_corr, HBN_corr), c(PNC_pspin, NKI_pspin, HCPD_pspin, HBN_pspin))) %>% setNames(c("rho", "pspin"))
+ 
+rownames(corr_pspin) <- c("PNC", "NKI", "HCPD", "HBN")
+```
+
+
+
+```{r figure 3, fig.height= 13, fig.width= 13}
+gam_figure3_outliers <- function(dataset, axis, metric, atlas, r_text, x_pos, y_pos, ylim_lower, ylim_upper){
+  axis <- axis %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+  AgeEffect_figure <- ggplot(axis, aes(x=SA.axis_rank, y=GAM.age.AdjRsq, fill = SA.axis_rank_signif)) + 
+    geom_point(color = "gray", shape = 21, size=3.5) + 
+    paletteer::scale_fill_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(axis$SA.axis_rank), max(axis$SA.axis_rank)), oob = squish) +
+    paletteer::scale_color_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(axis$SA.axis_rank), max(axis$SA.axis_rank)), oob = squish) +
+      labs(fill = "SA Axis Rank", x="\nSensorimotor-Association Axis Rank\n", y=expression(paste("Age Effect (Delta Adj", " R"^2, ")"))) +
+      geom_smooth(data = axis, method='lm', se=TRUE, fill=alpha(c("gray70"),.9), col="black") +
+      theme(
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.line = element_line(color = "black"),
+        axis.text=element_text(size=24, color = "black"),
+        panel.background=element_blank(),  
+        legend.position = "bottom",
+        legend.key.height = unit(1, 'cm'),
+        legend.key.width = unit(2.3, 'cm'),
+        legend.margin=margin(10,0,0,0),
+        legend.text = element_text(size=24),
+        legend.title = element_blank(),
+        plot.title=element_text(hjust=0.5, size=24),
+        plot.margin = margin(1, 1, 1, 1, "cm")) + scale_y_continuous(breaks = c(-0.05, 0, 0.05, 0.1, 0.15, 0.2), limits=c(ylim_lower, ylim_upper)) +     
+     annotate(geom="text", x=x_pos, y=y_pos, label=r_text, color="black", size=7) + ggtitle(dataset)
+  return(AgeEffect_figure)
+}
+ 
+
+ 
+r_text_GBC.schaefer200 <- expression(paste(italic("r"), " = -0.71, ",  , italic(p[spin]), "< 0.0001"))
+GBC_schaefer200_PNC <- gam_figure3_outliers("PNC", GBC.axis.PNC, "GBC", "Schaefer200", r_text_GBC.schaefer200, 
+                                      x_pos= 140, y_pos=0.15, ylim_lower=-0.09, ylim_upper=0.18)
+
+
+r_text_GBC.schaefer200 <- expression(paste(italic("r"), " = -0.56, ",  , italic(p[spin]), "< 0.0001"))
+GBC_schaefer200_NKI <- gam_figure3_outliers("NKI", GBC.axis.NKI, "GBC", "Schaefer200", r_text_GBC.schaefer200, 
+                                      x_pos= 140, y_pos=0.15, ylim_lower=-0.09, ylim_upper=0.18)
+
+
+r_text_GBC.schaefer200 <- expression(paste(italic("r"), " = -0.62, ",  , italic(p[spin]), "< 0.0001"))
+GBC_schaefer200_HCPD <- gam_figure3_outliers("HCP-D", GBC.axis.HCPD, "GBC", "Schaefer200", r_text_GBC.schaefer200, 
+                                  x_pos= 140, y_pos=0.15, ylim_lower=-0.09, ylim_upper=0.18)
+
+
+r_text_GBC.schaefer200 <- expression(paste(italic("r"), " = -0.72 ",  , italic(p[spin]), "< 0.0001"))
+GBC_schaefer200_HBN <- gam_figure3_outliers("HBN", GBC.axis.HBN, "GBC", "Schaefer200", r_text_GBC.schaefer200, 
+                                  x_pos= 140, y_pos=0.15, ylim_lower=-0.09, ylim_upper=0.18)
+
+ 
+figure3_alldataset <- ggarrange(GBC_schaefer200_PNC, GBC_schaefer200_HCPD, GBC_schaefer200_NKI, GBC_schaefer200_HBN, common.legend = TRUE, legend="bottom", nrow=2, ncol=2, labels=c("a", "c", "b", "d"), font.label = list(size = 24))
+
+x.grob <- textGrob("S-A Axis Rank", 
+                   gp=gpar(col="black", fontsize=28))
+y.grob <- textGrob(expression(paste("Age Effect (Delta Adj", " R"^2, ")")), 
+                   gp=gpar(col="black", fontsize=28), rot=90)
+
+grid.arrange(arrangeGrob(figure3_alldataset, left = y.grob, bottom = x.grob))
+
+fig3 <-arrangeGrob(figure3_alldataset, left = y.grob, bottom = x.grob)
+ggsave("/Users/audluo/Library/CloudStorage/Box-Box/Box_PhD_Land/PennLINC/network_replication/Writing/Manuscript/FinalManuscript/FinalFigures/InDesign/Fig3.pdf", fig3, width=13, height=13, units="in")
+write.csv(GBC.axis.PNC, "/cbica/projects/network_replication/manuscript/figure_data/figure3a_PNC_GBC_age_effect.csv")
+write.csv(GBC.axis.NKI, "/cbica/projects/network_replication/manuscript/figure_data/figure3b_NKI_GBC_age_effect.csv")
+write.csv(GBC.axis.HCPD, "/cbica/projects/network_replication/manuscript/figure_data/figure3c_HCPD_GBC_age_effect.csv")
+write.csv(GBC.axis.HBN, "/cbica/projects/network_replication/manuscript/figure_data/figure3d_HBN_GBC_age_effect.csv")
+```
+ 
+  
+# Figure 4
+
+```{r figure 4 load_gam.fitted, cache=TRUE}
+gam.GBC.fitted.PNC <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/%2$s_%4$s.csv", derivs_root, "PNC", "GBC", "gam.GBC.fitted.schaefer200"))
+gam.GBC.fitted.NKI <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/%2$s_%4$s.csv", derivs_root, "NKI", "GBC", "gam.GBC.fitted.schaefer200"))
+gam.GBC.fitted.HCPD <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/%2$s_%4$s.csv", derivs_root, "HCPD", "GBC", "gam.GBC.fitted.schaefer200"))
+gam.GBC.fitted.HBN <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/%2$s_%4$s.csv", derivs_root, "HBN", "GBC", "gam.GBC.fitted.schaefer200"))
+
+```
+ 
+```{r figure 4 load fits.SAaxis.posteriorcorrs}
+
+# load posterior fitted GBC correlations to SA-axis 
+fits.SAaxis.posteriorcorrs.PNC <- readRDS(sprintf("%1$s%2$s/%3$s/GAM/%2$s_SAaxis_posteriorfits_correlation_byage_%4$s.RData", derivs_root, "PNC", "GBC", "schaefer200"))
+colnames(fits.SAaxis.posteriorcorrs.PNC) <- sprintf("draw%s",seq(from = 1, to = ncol(fits.SAaxis.posteriorcorrs.PNC)))
+fits.SAaxis.posteriorcorrs.PNC <- cbind(fits.SAaxis.posteriorcorrs.PNC, (gam.GBC.fitted.PNC %>% group_by(age) %>% group_keys()))
+ 
+fits.SAaxis.posteriorcorrs.NKI <- readRDS(sprintf("%1$s%2$s/%3$s/GAM/%2$s_SAaxis_posteriorfits_correlation_byage_%4$s.RData", derivs_root, "NKI", "GBC", "schaefer200"))
+colnames(fits.SAaxis.posteriorcorrs.NKI) <- sprintf("draw%s",seq(from = 1, to = ncol(fits.SAaxis.posteriorcorrs.NKI)))
+fits.SAaxis.posteriorcorrs.NKI <- cbind(fits.SAaxis.posteriorcorrs.NKI, (gam.GBC.fitted.NKI %>% group_by(age) %>% group_keys()))
+ 
+    
+fits.SAaxis.posteriorcorrs.HCPD <- readRDS(sprintf("%1$s%2$s/%3$s/GAM/%2$s_SAaxis_posteriorfits_correlation_byage_%4$s.RData", derivs_root, "HCPD", "GBC", "schaefer200"))
+colnames(fits.SAaxis.posteriorcorrs.HCPD) <- sprintf("draw%s",seq(from = 1, to = ncol(fits.SAaxis.posteriorcorrs.HCPD)))
+fits.SAaxis.posteriorcorrs.HCPD <- cbind(fits.SAaxis.posteriorcorrs.HCPD, (gam.GBC.fitted.HCPD %>% group_by(age) %>% group_keys()))
+ 
+
+fits.SAaxis.posteriorcorrs.HBN <- readRDS(sprintf("%1$s%2$s/%3$s/GAM/%2$s_SAaxis_posteriorfits_correlation_byage_%4$s.RData", derivs_root, "HBN", "GBC", "schaefer200"))
+colnames(fits.SAaxis.posteriorcorrs.HBN) <- sprintf("draw%s",seq(from = 1, to = ncol(fits.SAaxis.posteriorcorrs.HBN)))
+fits.SAaxis.posteriorcorrs.HBN <- cbind(fits.SAaxis.posteriorcorrs.HBN, (gam.GBC.fitted.HBN %>% group_by(age) %>% group_keys()))
+ 
+     
+```
+
+
+```{r figure 4 cor.credible.intervals}
+compute_credible_intervals <- function(dataset) {
+  fits.SAaxis.posteriorcorrs_GBC <- get(paste0("fits.SAaxis.posteriorcorrs.", dataset))
+  gam.GBC.fitted.schaefer200 <- get(paste0("gam.GBC.fitted.", dataset))
+  fits.SAaxis.posteriorcorrs <- fits.SAaxis.posteriorcorrs_GBC %>% select(contains("draw"))
+  fits.SAaxis.mediancorr <- apply(fits.SAaxis.posteriorcorrs, 1, function(x){median(x)})
+  cor.credible.intervals <- apply(fits.SAaxis.posteriorcorrs, 1, function(x){quantile(x, probs = c(0.025, 0.975))}) #compute the credible interval for the correlation value at each age based on all draws 
+  cor.credible.intervals <- as.data.frame(t(cor.credible.intervals))
+    
+  cor.credible.intervals <- cbind(cor.credible.intervals, (gam.GBC.fitted.schaefer200 %>% group_by(age) %>% group_keys()))
+  cor.credible.intervals <- cbind(cor.credible.intervals, fits.SAaxis.mediancorr)
+  colnames(cor.credible.intervals) <- c("lower","upper","age","SA.correlation")
+      
+  return(cor.credible.intervals)
+}
+
+cor.credible.intervals.PNC <- compute_credible_intervals("PNC")
+cor.credible.intervals.NKI <- compute_credible_intervals("NKI")
+cor.credible.intervals.HCPD <- compute_credible_intervals("HCPD")
+cor.credible.intervals.HBN <- compute_credible_intervals("HBN")
+
+```
+ 
+
+```{r figure 4, fig.height=13, fig.width=13}
+
+plot_credible_intervals <- function(dataset) {
+  cor.credible.intervals <- get(paste0("cor.credible.intervals.", dataset))
+  ggplot(cor.credible.intervals, aes(x = age, y = abs(SA.correlation), ymin = abs(lower), ymax = abs(upper))) + 
+    geom_line(size = .5) +
+    geom_ribbon(alpha = .2, fill = c("grey60")) + geom_hline(yintercept=0.6,linetype=2) + 
+    labs(x="Age", y="Spatial Alignment of GBC to S-A Axis (r)", title=dataset) + 
+    theme_classic() + ylim(0, 0.62) + xlim(5, 23) + 
+    theme(axis.text = element_text(size = 24, 
+                                   color = c("black")), 
+          axis.title.x=element_blank(),
+          axis.title.y=element_blank(),
+          axis.line = element_line(size =.22), 
+          axis.ticks = element_line(size = .22), 
+          plot.title = element_text(size=24, hjust=0.5))  
+ 
+}
+ 
+PNC_ci_plot <- plot_credible_intervals("PNC") 
+NKI_ci_plot <- plot_credible_intervals("NKI") 
+HCPD_ci_plot <- plot_credible_intervals("HCPD") 
+HBN_ci_plot <- plot_credible_intervals("HBN")
+ 
+figure4_alldataset <- ggarrange(PNC_ci_plot, HCPD_ci_plot, NKI_ci_plot, HBN_ci_plot, labels='auto', font.label=list(size=20))
+
+x.grob <- textGrob("Age (years)", 
+                   gp=gpar(fontface="bold", col="black", fontsize=28))
+y.grob <- textGrob("Absolute Spatial Alignment of FC Strength with S-A axis (r)", 
+                   gp=gpar(fontface="bold", col="black", fontsize=28), rot=90)
+
+grid.arrange(arrangeGrob(figure4_alldataset, left = y.grob, bottom = x.grob))
+
+
+write.csv(cor.credible.intervals.PNC, "/cbica/projects/network_replication/manuscript/figure_data/figure4a_PNC_cor.credible.intervals_GBC_fitted.csv")
+write.csv(cor.credible.intervals.NKI, "/cbica/projects/network_replication/manuscript/figure_data/figure4b_NKI_cor.credible.intervals_GBC_fitted.csv")
+write.csv(cor.credible.intervals.HCPD, "/cbica/projects/network_replication/manuscript/figure_data/figure4c_HCPD_cor.credible.intervals_GBC_fitted.csv")
+write.csv(cor.credible.intervals.HBN, "/cbica/projects/network_replication/manuscript/figure_data/figure4d_HBN_cor.credible.intervals_GBC_fitted.csv")
+```
+
+
+# Figure 5
+```{r figure 5 functions}
+## FIGURE: SA axis average rank vs. age effect - with spin test
+# included all datapoints
+# @param axis A dataframe with SA-axis rank and GAM results
+# @param metric A character string of connectivity metric (i.e. "GBC")
+# @param atlas A character string of atlas name
+# @param r_text An expression including info on p_spin and r
+# @param x_pos A numeric for horizontal position of r_text
+# @param y_pos A numeric for vertical position of r_text
+gam_figure_p.spin <- function(axis, metric, atlas, r_text, x_pos, y_pos, ylim_lower, ylim_upper){
+  axis <- axis %>% mutate(SA.axis_rank_signif = ifelse(significant.fdr == 1, SA.axis_rank, NA))
+  AgeEffect_figure <- ggplot(axis, aes(x=SA.axis_rank, y=GAM.age.AdjRsq, fill = SA.axis_rank_signif)) + 
+    geom_point(color = "gray", shape = 21, size=3.5) + 
+    paletteer::scale_fill_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(axis$SA.axis_rank), max(axis$SA.axis_rank)), oob = squish) +
+    paletteer::scale_color_paletteer_c("grDevices::RdYlBu", direction = -1, limits = c(min(axis$SA.axis_rank), max(axis$SA.axis_rank)), oob = squish) +
+    ylim(ylim_lower, ylim_upper) +  # ylim(-0.065, 0.15) for GBC;  ylim(-0.07, 0.10) for BNC;  ylim(-0.055, 0.17) for WNC; 
+      geom_smooth(data = axis, method='lm', se=TRUE, fill=alpha(c("gray70"),.9), col="black") +
+      theme(
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.line = element_line(color = "black"),
+        axis.text=element_text(size=24, color = "black"),
+        panel.background=element_blank(),  
+        legend.position = "none",
+        plot.margin = margin(1, 1, 1, 1, "cm")) +
+     annotate(geom="text", x=x_pos, y=y_pos, label=r_text, color="black", size=7)
+  return(AgeEffect_figure)
+}
+ 
+```
+
+```{r figure 5 setup, include=FALSE}
+
+schaefer200_SAaxis$region <- gsub("7Network", "Network", schaefer200_SAaxis$region)
+gam.BNC.age.PNC <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMresults.%3$s.age.%4$s.csv", derivs_root, "PNC", "BNC", "schaefer200x7")) 
+gam.BNC.age.PNC <- gam.BNC.age.PNC %>% rename(region=label)
+gam.BNC.age.NKI <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMresults.%3$s.age.%4$s.csv", derivs_root, "NKI", "BNC", "schaefer200x7"))
+gam.BNC.age.NKI <- gam.BNC.age.NKI %>% rename(region=label)
+gam.BNC.age.HCPD <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMresults.%3$s.age.%4$s.csv", derivs_root, "HCPD", "BNC", "schaefer200x7"))
+gam.BNC.age.HCPD <- gam.BNC.age.HCPD %>% rename(region=label)
+gam.BNC.age.HBN <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMresults.%3$s.age.%4$s.csv", derivs_root, "HBN", "BNC", "schaefer200x7"))
+gam.BNC.age.HBN <- gam.BNC.age.HBN %>% rename(region=label)
+ 
+BNC.axis.PNC <- combineGAMdfs("BNC", "PNC") %>% sig_parcels
+BNC.axis.NKI <- combineGAMdfs("BNC", "NKI") %>% sig_parcels
+BNC.axis.HCPD <- combineGAMdfs("BNC", "HCPD") %>% sig_parcels
+BNC.axis.HBN <- combineGAMdfs("BNC", "HBN") %>% sig_parcels
+
+gam.WNC.age.PNC <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMresults.%3$s.age.%4$s.csv", derivs_root, "PNC", "WNC", "schaefer200x7"))
+gam.WNC.age.PNC <- gam.WNC.age.PNC %>% rename(region=label)
+gam.WNC.age.NKI <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMresults.%3$s.age.%4$s.csv", derivs_root, "NKI", "WNC", "schaefer200x7"))
+gam.WNC.age.NKI <- gam.WNC.age.NKI %>% rename(region=label)
+gam.WNC.age.HCPD <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMresults.%3$s.age.%4$s.csv", derivs_root, "HCPD", "WNC", "schaefer200x7"))
+gam.WNC.age.HCPD <- gam.WNC.age.HCPD %>% rename(region=label)
+gam.WNC.age.HBN <- read.csv(sprintf("%1$s%2$s/%3$s/GAM/GAMresults.%3$s.age.%4$s.csv", derivs_root, "HBN", "WNC", "schaefer200x7"))
+gam.WNC.age.HBN <- gam.WNC.age.HBN %>% rename(region=label)
+ 
+WNC.axis.PNC <- combineGAMdfs("WNC", "PNC") %>% sig_parcels
+WNC.axis.NKI <- combineGAMdfs("WNC", "NKI") %>% sig_parcels
+WNC.axis.HCPD <- combineGAMdfs("WNC", "HCPD") %>% sig_parcels
+WNC.axis.HBN <- combineGAMdfs("WNC", "HBN") %>% sig_parcels
+```
+
+
+```{r figure 5 prep df}
+
+# make df.dev.spin.BNC.<dataset> (formatted df's for applying spin test)
+df.dev.spin.BNC.PNC <- prepDfSpin("schaefer200","PNC", "BNC")
+df.dev.spin.BNC.NKI <- prepDfSpin("schaefer200","NKI", "BNC")
+df.dev.spin.BNC.HCPD <- prepDfSpin("schaefer200","HCPD", "BNC")
+df.dev.spin.BNC.HBN <- prepDfSpin("schaefer200","HBN", "BNC")
+
+
+# make df.dev.spin.WNC.<dataset> (formatted df's for applying spin test)
+df.dev.spin.WNC.PNC <- prepDfSpin("schaefer200","PNC", "WNC")
+df.dev.spin.WNC.NKI <- prepDfSpin("schaefer200","NKI", "WNC")
+df.dev.spin.WNC.HCPD <- prepDfSpin("schaefer200","HCPD", "WNC")
+df.dev.spin.WNC.HBN <- prepDfSpin("schaefer200","HBN", "WNC")
+
+```
+  
+```{r figure 5 corrs and spin test, eval=FALSE}
+# compute spatial correlation between age effect and S-A axis rank
+PNC_corr_BNC <- round(cor.test(BNC.axis.PNC$GAM.age.AdjRsq, as.numeric(BNC.axis.PNC$SA.axis_rank), method=c("spearman"), exact=F)$estimate, 2)
+NKI_corr_BNC <- round(cor.test(BNC.axis.NKI$GAM.age.AdjRsq, as.numeric(BNC.axis.NKI$SA.axis_rank), method=c("spearman"), exact=F)$estimate, 2)
+HCPD_corr_BNC <- round(cor.test(BNC.axis.HCPD$GAM.age.AdjRsq, as.numeric(BNC.axis.HCPD$SA.axis_rank), method=c("spearman"), exact=F)$estimate, 2)
+HBN_corr_BNC <- round(cor.test(BNC.axis.HBN$GAM.age.AdjRsq, as.numeric(BNC.axis.HBN$SA.axis_rank), method=c("spearman"), exact=F)$estimate, 2)
+
+PNC_corr_WNC <- round(cor.test(WNC.axis.PNC$GAM.age.AdjRsq, as.numeric(WNC.axis.PNC$SA.axis_rank), method=c("spearman"), exact=F)$estimate, 2)
+NKI_corr_WNC <- round(cor.test(WNC.axis.NKI$GAM.age.AdjRsq, as.numeric(WNC.axis.NKI$SA.axis_rank), method=c("spearman"), exact=F)$estimate, 2)
+HCPD_corr_WNC <- round(cor.test(WNC.axis.HCPD$GAM.age.AdjRsq, as.numeric(WNC.axis.HCPD$SA.axis_rank), method=c("spearman"), exact=F)$estimate, 2)
+HBN_corr_WNC <- round(cor.test(WNC.axis.HBN$GAM.age.AdjRsq, as.numeric(WNC.axis.HBN$SA.axis_rank), method=c("spearman"), exact=F)$estimate, 2)
+
+
+perm.id.full_schaefer200 <- readRDS("/cbica/projects/network_replication/software/rotate_parcellation/schaefer200x7.coords_sphericalrotations_N10k_seed10.rds")
+ 
+# spin permutation tests:
+PNC_pspin_BNC <- perm.sphere.p(as.numeric(df.dev.spin.BNC.PNC$GAM.age.AdjRsq), as.numeric(df.dev.spin.BNC.PNC$SA.axis_rank),
+                            perm.id.full_schaefer200, corr.type='spearman')  
+
+NKI_pspin_BNC <- perm.sphere.p(as.numeric(df.dev.spin.BNC.NKI$GAM.age.AdjRsq), as.numeric(df.dev.spin.BNC.NKI$SA.axis_rank),
+                            perm.id.full_schaefer200, corr.type='spearman')  
+
+HCPD_pspin_BNC <- perm.sphere.p(as.numeric(df.dev.spin.BNC.HCPD$GAM.age.AdjRsq), as.numeric(df.dev.spin.BNC.HCPD$SA.axis_rank),
+                            perm.id.full_schaefer200, corr.type='spearman')  
+
+HBN_pspin_BNC <- perm.sphere.p(as.numeric(df.dev.spin.BNC.HBN$GAM.age.AdjRsq), as.numeric(df.dev.spin.BNC.HBN$SA.axis_rank),
+                            perm.id.full_schaefer200, corr.type='spearman')  
+
+corr_BNC_pspin <- data.frame(cbind(c(PNC_corr_BNC, NKI_corr_BNC, HCPD_corr_BNC, HBN_corr_BNC), c(PNC_pspin_BNC, NKI_pspin_BNC, HCPD_pspin_BNC, HBN_pspin_BNC)))  
+corr_BNC_pspin <- cbind(c("PNC_BNC", "NKI_BNC", "HCPD_BNC", "HBN_BNC"), corr_BNC_pspin) %>% setNames(c("dataset_metric","rho", "pspin"))
+rownames(corr_BNC_pspin) <- NULL
+
+PNC_pspin_WNC <- perm.sphere.p(as.numeric(df.dev.spin.WNC.PNC$GAM.age.AdjRsq), as.numeric(df.dev.spin.WNC.PNC$SA.axis_rank),
+                            perm.id.full_schaefer200, corr.type='spearman')  
+
+NKI_pspin_WNC <- perm.sphere.p(as.numeric(df.dev.spin.WNC.NKI$GAM.age.AdjRsq), as.numeric(df.dev.spin.WNC.NKI$SA.axis_rank),
+                            perm.id.full_schaefer200, corr.type='spearman')
+  
+HCPD_pspin_WNC <- perm.sphere.p(as.numeric(df.dev.spin.WNC.HCPD$GAM.age.AdjRsq), as.numeric(df.dev.spin.WNC.HCPD$SA.axis_rank),
+                            perm.id.full_schaefer200, corr.type='spearman')
+
+HBN_pspin_WNC <- perm.sphere.p(as.numeric(df.dev.spin.WNC.HBN$GAM.age.AdjRsq), as.numeric(df.dev.spin.WNC.HBN$SA.axis_rank),
+                            perm.id.full_schaefer200, corr.type='spearman')  
+
+corr_WNC_pspin <- data.frame(cbind(c(PNC_corr_WNC, NKI_corr_WNC, HCPD_corr_WNC, HBN_corr_WNC), c(PNC_pspin_WNC, NKI_pspin_WNC, HCPD_pspin_WNC, HBN_pspin_WNC)))  
+corr_WNC_pspin <- cbind(c("PNC_WNC", "NKI_WNC", "HCPD_WNC", "HBN_WNC"), corr_WNC_pspin) %>% setNames(c("dataset_metric","rho", "pspin"))
+rownames(corr_WNC_pspin) <- NULL
+ 
+corr_pspin <- rbind(corr_BNC_pspin, corr_WNC_pspin)
+
+write.csv(BNC.axis.PNC, "/cbica/projects/network_replication/manuscript/figure_data/figure5a_PNC_BNC.csv")
+write.csv(WNC.axis.PNC, "/cbica/projects/network_replication/manuscript/figure_data/figure5e_PNC_WNC.csv")
+
+write.csv(BNC.axis.NKI, "/cbica/projects/network_replication/manuscript/figure_data/figure5b_NKI_BNC.csv")
+write.csv(WNC.axis.NKI, "/cbica/projects/network_replication/manuscript/figure_data/figure5f_NKI_WNC.csv")
+
+write.csv(BNC.axis.HCPD, "/cbica/projects/network_replication/manuscript/figure_data/figure5c_HCPD_BNC.csv")
+write.csv(WNC.axis.HCPD, "/cbica/projects/network_replication/manuscript/figure_data/figure5g_HCPD_WNC.csv")
+
+write.csv(BNC.axis.HBN, "/cbica/projects/network_replication/manuscript/figure_data/figure5d_HBN_BNC.csv")
+write.csv(WNC.axis.HBN, "/cbica/projects/network_replication/manuscript/figure_data/figure5h_HBN_WNC.csv")
+```
+
+```{r figure 5, fig.height=20, fig.width=10}
+ 
+r_text_BNC.PNC <- expression(paste(italic("r"), "= -0.66, ",  , italic(p[spin]), "< 0.0001"))
+BNC_schaefer200_PNC <- gam_figure_p.spin(BNC.axis.PNC, "BNC", "schaefer200x7", r_text_BNC.PNC, 
+                                        x_pos= 100, y_pos=0.1, ylim_lower=-0.07, ylim_upper=0.10)
+
+r_text_WNC.PNC <- expression(paste(italic("r"), "= -0.49, ",  , italic(p[spin]), "< 0.001"))
+WNC_schaefer200_PNC <- gam_figure_p.spin(WNC.axis.PNC, "WNC", "schaefer200x7", r_text_WNC.PNC, 
+                                        x_pos= 100, y_pos=0.15, ylim_lower=-0.055, ylim_upper=0.17)
+
+r_text_BNC.NKI <- expression(paste(italic("r"), "= -0.50, ",  , italic(p[spin]), "< 0.001"))
+BNC_schaefer200_NKI <- gam_figure_p.spin(BNC.axis.NKI, "BNC", "schaefer200x7", r_text_BNC.NKI, 
+                                        x_pos= 100, y_pos=0.1, ylim_lower=-0.07, ylim_upper=0.10)
+
+r_text_WNC.NKI <- expression(paste(italic("r"), "= -0.31, ",  , italic(p[spin]), "< 0.05"))
+WNC_schaefer200_NKI <- gam_figure_p.spin(WNC.axis.NKI, "WNC", "schaefer200x7", r_text_WNC.NKI, 
+                                        x_pos= 100, y_pos=0.16, ylim_lower=-0.055, ylim_upper=0.17)
+
+
+r_text_BNC.HCPD <- expression(paste(italic("r"), "= -0.55, ",  , italic(p[spin]), "< 0.0001"))
+BNC_schaefer200_HCPD <- gam_figure_p.spin(BNC.axis.HCPD, "BNC", "schaefer200x7", r_text_BNC.HCPD, 
+                                        x_pos= 100, y_pos=0.1, ylim_lower=-0.07, ylim_upper=0.10)
+
+r_text_WNC.HCPD <- expression(paste(italic("r"), "= -0.31, ",  , italic(p[spin]), "< 0.05"))
+WNC_schaefer200_HCPD <- gam_figure_p.spin(WNC.axis.HCPD, "WNC", "schaefer200x7", r_text_WNC.HCPD, 
+                                        x_pos= 100, y_pos=0.16, ylim_lower=-0.055, ylim_upper=0.17)
+
+
+r_text_BNC.HBN <- expression(paste(italic("r"), "= -0.70, ",  , italic(p[spin]), "< 0.0001"))
+BNC_schaefer200_HBN <- gam_figure_p.spin(BNC.axis.HBN, "BNC", "schaefer200x7", r_text_BNC.HBN, 
+                                        x_pos= 100, y_pos=0.1, ylim_lower=-0.07, ylim_upper=0.10)
+
+r_text_WNC.HBN <- expression(paste(italic("r"), "= -0.38, ",  , italic(p[spin]), "< 0.001"))
+WNC_schaefer200_HBN <- gam_figure_p.spin(WNC.axis.HBN, "WNC", "schaefer200x7", r_text_WNC.HBN, 
+                                        x_pos= 100, y_pos=0.15, ylim_lower=-0.055, ylim_upper=0.17)
+
+
+figure5_alldatasets <- ggarrange(BNC_schaefer200_PNC + labs(title = "Between-Network Connectivity") + 
+                                 theme(plot.title=element_text(size=20, hjust=0.5, vjust=5)), 
+          WNC_schaefer200_PNC + labs(title = "Within-Network Connectivity") + 
+                                 theme(plot.title=element_text(size=20, hjust=0.5, vjust=5)), 
+          BNC_schaefer200_NKI, WNC_schaefer200_NKI, 
+          BNC_schaefer200_HCPD, WNC_schaefer200_HCPD, 
+          BNC_schaefer200_HBN, WNC_schaefer200_HBN, ncol=2, nrow=4, labels=c("a", "e", "b", "f", "c", "g", "d", "h"))
+
+x.grob <- textGrob("S-A Axis Rank", 
+                   gp=gpar(col="black", fontsize=28))
+y.grob <- textGrob(expression(paste("Age Effect (Delta Adj", " R"^2, ")")), 
+                   gp=gpar(col="black", fontsize=28), rot=90)
+
+grid.arrange(arrangeGrob(figure5_alldatasets, left = y.grob, bottom = x.grob))
+
+# row 1 = PNC
+# row 2 = NKI
+# row 3 = HCP-D
+# row 4 = HBN
+
+
+
+```
+
+
+
+# Figure 6
+```{r figure 6 setup, include=FALSE}
+
+SA.diff <- read.csv("/cbica/projects/network_replication/atlases/edge/SA.diff_schaefer200x7.csv")
+make_double_age_df <- function(dataset) {
+  gam.edge.age <- readRDS(sprintf("%1$s%2$s/%3$s/GAM/GAMresults.%3$s.age.schaefer200x7.RData", derivs_root, dataset, "edge"))
+  
+   
+  age_SA.diff <- cbind(gam.edge.age, SA.diff)
+  age_SA.diff <- sig_parcels(age_SA.diff) 
+
+  # make a double df for symmetry - parcel1 and parcel2.SA.vec repeated in opposite ordering (see lines 500-510 in Adam's Edge-level-Age.md)
+  age_SA.diff2 <- age_SA.diff 
+  age_SA.diff2$parcel1.SA.vec <- age_SA.diff$parcel2.SA.vec
+  age_SA.diff2$parcel2.SA.vec <- age_SA.diff$parcel1.SA.vec
+  
+  # "stacked" df
+  double_age_SA.diff <- rbind(age_SA.diff2,age_SA.diff)
+  print(paste0("double_age_SA.diff for ", dataset, " finished"))
+   
+  return(double_age_SA.diff)
+}
+  
+ 
+double_age_SA.diff_PNC <- make_double_age_df("PNC")
+double_age_SA.diff_NKI <- make_double_age_df("NKI")
+
+double_age_SA.diff_HCPD <- make_double_age_df("HCPD")
+double_age_SA.diff_HBN <- make_double_age_df("HBN")
+ 
+ 
+```
+
+ 
+```{r figure 6, fig.height = 14, fig.width = 12, warning=FALSE}
+
+# model the surface
+make_surface_plot_datasets <- function(dataset) {
+  double_age_SA.diff <- get(paste0("double_age_SA.diff_", dataset))
+  g2 <- gam(GAM.age.AdjRsq ~ te(parcel2.SA.vec,parcel1.SA.vec,k=3),data = double_age_SA.diff)
+ 
+  surface.plot.fig <- gg_tensor(g2)+theme_classic() +
+    theme(
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      axis.line = element_line(color = "black"),
+      axis.text=element_text(size=24, color = "black")) + 
+   scale_fill_gradientn(name = expression(paste("Age Effect (Delta Adj", " R"^2, ")")), colors= c("#8a0f63", "#FFFFFF","#f4b100"), 
+                        limits = c(-0.014,0.015), oob=squish, values=rescale(c(-0.014,0,0.015))) +
+    geom_vline(xintercept = mean(range(double_age_SA.diff$parcel1.SA.vec)),
+               linetype='dashed',size=1) + 
+    geom_hline(yintercept = mean(range(double_age_SA.diff$parcel1.SA.vec)),
+               linetype='dashed',size=1) + labs(title=dataset) + 
+    theme(legend.position='bottom',
+          legend.key.height = unit(1, 'cm'),
+          legend.key.width = unit(3, 'cm'),
+          legend.title = element_text(size=20),
+          legend.text = element_text(size=20),
+          strip.background = element_blank(),
+          plot.margin = margin(1, 1, 1, 1, "cm"),
+          plot.title = element_text(size=28, hjust=0.5))  
+  return(surface.plot.fig)
+}
+ 
+ 
+surfacePlot_PNC <- make_surface_plot_datasets("PNC")
+surfacePlot_NKI <- make_surface_plot_datasets("NKI")
+surfacePlot_HCPD <- make_surface_plot_datasets("HCPD")
+surfacePlot_HBN <- make_surface_plot_datasets("HBN")
+
+figure6_alldatasets<- ggarrange(surfacePlot_PNC, surfacePlot_HCPD, surfacePlot_NKI, surfacePlot_HBN, common.legend = TRUE, labels = c("a", "c", "b", "d"))
+ 
+
+x.grob <- textGrob("S-A Axis Rank", 
+                   gp=gpar(fontface="bold", col="black", fontsize=28))
+y.grob <- textGrob("S-A Axis Rank", 
+                   gp=gpar(fontface="bold", col="black", fontsize=28), rot=90)
+
+
+grid.arrange(arrangeGrob(figure6_alldatasets, left = y.grob, bottom = x.grob))
+ 
+
+write.csv(double_age_SA.diff_PNC, "/cbica/projects/network_replication/manuscript/figure_data/figure6a_PNC_edge.csv")
+write.csv(double_age_SA.diff_NKI, "/cbica/projects/network_replication/manuscript/figure_data/figure6b_NKI_edge.csv")
+write.csv(double_age_SA.diff_HCPD, "/cbica/projects/network_replication/manuscript/figure_data/figure6c_HCPD_edge.csv")
+write.csv(double_age_SA.diff_HBN, "/cbica/projects/network_replication/manuscript/figure_data/figure6d_HBN_edge.csv")
+```

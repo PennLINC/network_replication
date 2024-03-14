@@ -1,0 +1,122 @@
+---
+title: "Spin Test Parcel Rotation Matrix"
+author: "Audrey Luo"
+output: html_document
+---
+
+This Rmd file using rotate_parcellation to generate 10k rotated permutations of a parcellation, given the coordinates of left and right hemispheres of this parcellation on the sphere.
+
+The output is a vector of 1:Number_of_parcels for each permutation which tries to conserve the relative position of each parcel
+
+- Schaefer .annot files were downloaded from: https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/FreeSurfer5.3 
+- glasser_spherical_coords.csv was downloaded from 
+https://github.com/frantisekvasa/rotate_parcellation/blob/master/sphere_HCP.txt (and renamed)
+
+```{r setup}
+#library(fabisearch) # for gordon atlas coordinates
+library(freesurfer)
+library(freesurferformats)
+
+
+# rotate.parcellation.R and perm.sphere.p.R are downloaded from https://github.com/frantisekvasa/rotate_parcellation
+source("/cbica/projects/network_replication/software/rotate.parcellation.R")
+source("/cbica/projects/network_replication/software/perm.sphere.p.R")
+
+```
+
+
+# Extract parcel centroid coordinates on the fsaverage sphere from Schaefer .annot files
+```{r}
+# load freesurfer fsaverage surface
+lh <- read.fs.surface("/cbica/projects/network_replication/software/rotate_parcellation/lh.sphere") # downloaded from freesurfer/subjects/fsaverage/surf
+rh <- read.fs.surface("/cbica/projects/network_replication/software/rotate_parcellation/rh.sphere")
+
+extract_centroid_coords <- function(schaefer_atlas, network_parcellation) {
+  lh.schaefer.annot <- read_annotation(sprintf("/cbica/projects/network_replication/software/rotate_parcellation/annot/lh.Schaefer2018_%1$sParcels_%2$sNetworks_order.annot", schaefer_atlas, network_parcellation))
+  rm <- which(lh.schaefer.annot$colortable$label=="Background+FreeSurfer_Defined_Medial_Wall")
+  lhcoords <- t(sapply(c(1:length(lh.schaefer.annot$colortable$label))[-rm], function(x) colMeans(lh$vertices[which(lh.schaefer.annot$label==lh.schaefer.annot$colortable$code[x]),]) ))
+  
+  rh.schaefer.annot <- read_annotation(sprintf("/cbica/projects/network_replication/software/rotate_parcellation/annot/rh.Schaefer2018_%1$sParcels_%2$sNetworks_order.annot", schaefer_atlas, network_parcellation))
+  rm <- which(rh.schaefer.annot$colortable$label=="Background+FreeSurfer_Defined_Medial_Wall")
+  rhcoords <- t(sapply(c(1:length(rh.schaefer.annot$colortable$label))[-rm], function(x) colMeans(rh$vertices[which(rh.schaefer.annot$label==rh.schaefer.annot$colortable$code[x]),]) ))
+  
+  schaefer.fsaverage.coords <- rbind(lhcoords,rhcoords)
+  write.csv(schaefer.fsaverage.coords, sprintf("/cbica/projects/network_replication/software/rotate_parcellation/schaefer%1$sx%2$s_sphericalcoords.csv", schaefer_atlas, network_parcellation), row.names=F)
+    
+} 
+ 
+extract_centroid_coords(200, 7) # schaefer200x7
+extract_centroid_coords(400, 7) # schaefer400x7
+# not including code for 17 network since not in manuscript figures
+ 
+```
+
+```{r schaefer200x7}
+
+# label the coordinates of schaefer200x7.coords parcel centroids on the freesurfer sphere
+schaefer200x7.coords <- read.csv("/cbica/projects/network_replication/software/rotate_parcellation/schaefer200x7_sphericalcoords.csv") 
+lh.schaefer.annot <- read_annotation(sprintf("/cbica/projects/network_replication/software/rotate_parcellation/annot/lh.Schaefer2018_%1$sParcels_%2$sNetworks_order.annot", 200, 7))
+rh.schaefer.annot <- read_annotation(sprintf("/cbica/projects/network_replication/software/rotate_parcellation/annot/rh.Schaefer2018_%1$sParcels_%2$sNetworks_order.annot", 200, 7))
+label <- data.frame(c(lh.schaefer.annot$colortable[2:101,1], rh.schaefer.annot$colortable[2:101,1]))
+schaefer200x7.coords <- cbind(label, schaefer200x7.coords)
+names(schaefer200x7.coords)[1] <- "label" 
+write.csv(schaefer200x7.coords, sprintf("/cbica/projects/network_replication/software/rotate_parcellation/schaefer%1$sx%2$s_sphericalcoords.csv", 200, 7), row.names=F) # saved out with labels now
+ 
+
+# reorder spherical coordinates (7 network parcels had to be reordered to 17 network ordering because the timeseries data are 17 network)
+index_schaefer200x7to17 <- read.csv("/cbica/projects/network_replication/software/schaefer7to17_reordering/index_schaefer200x7to17.csv", header=F)
+index_schaefer200x7to17$V1 <- as.numeric(index_schaefer200x7to17$V1)
+schaefer200x7.coords_reordered <- schaefer200x7.coords[index_schaefer200x7to17$V1,]
+write.csv(schaefer200x7.coords_reordered, "/cbica/projects/network_replication/software/rotate_parcellation/schaefer200x7_sphericalcoords_reordered.csv", row.names=F)  
+# generate rotation matrix
+set.seed(10)
+perm.id.full <- rotate.parcellation(coord.l = as.matrix(schaefer200x7.coords_reordered[1:100,2:4]), coord.r = as.matrix(schaefer200x7.coords_reordered[101:200,2:4]), nrot = 10000) #rotate the schaefer200.coords parcellation 10,000 times on the freesurfer sphere to generate spatial nulls for spin-based permutation significance testing 
+saveRDS(perm.id.full, "/cbica/projects/network_replication/software/rotate_parcellation/schaefer200x7.coords_sphericalrotations_N10k_seed10.rds")
+ 
+
+```
+
+
+```{r schaefer400x7}
+# label the coordinates of schaefer400x7.coords parcel centroids on the freesurfer sphere
+schaefer400x7.coords <- read.csv("/cbica/projects/network_replication/software/rotate_parcellation/schaefer400x7_sphericalcoords.csv") 
+lh.schaefer.annot <- read_annotation(sprintf("/cbica/projects/network_replication/software/rotate_parcellation/annot/lh.Schaefer2018_%1$sParcels_%2$sNetworks_order.annot", 400, 7))
+rh.schaefer.annot <- read_annotation(sprintf("/cbica/projects/network_replication/software/rotate_parcellation/annot/rh.Schaefer2018_%1$sParcels_%2$sNetworks_order.annot", 400, 7))
+label <- data.frame(c(lh.schaefer.annot$colortable[2:201,1], rh.schaefer.annot$colortable[2:201,1]))
+schaefer400x7.coords <- cbind(label, schaefer400x7.coords)
+names(schaefer400x7.coords)[1] <- "label"  
+write.csv(schaefer400x7.coords, sprintf("/cbica/projects/network_replication/software/rotate_parcellation/schaefer%1$sx%2$s_sphericalcoords.csv", 400, 7), row.names=F)
+
+
+# reorder spherical coordinates (7 network parcels had to be reordered to 17 network ordering because the timeseries data are 17 network)
+index_schaefer400x7to17 <- read.csv("/cbica/projects/network_replication/software/schaefer7to17_reordering/index_schaefer400x7to17.csv", header=F)
+index_schaefer400x7to17$V1 <- as.numeric(index_schaefer400x7to17$V1)
+schaefer400x7.coords_reordered <-schaefer400x7.coords[index_schaefer400x7to17$V1,]
+write.csv(schaefer400x7.coords_reordered, "/cbica/projects/network_replication/software/rotate_parcellation/schaefer400x7_sphericalcoords_reordered.csv") 
+ 
+# generate rotation matrix
+perm.id.full <- rotate.parcellation(coord.l = as.matrix(schaefer400x7.coords_reordered[1:200,2:4]), coord.r = as.matrix(schaefer400x7.coords_reordered[201:400,2:4]), nrot = 10000) #rotate the schaefer400.coords parcellation 10,000 times on the freesurfer sphere to generate spatial nulls for spin-based permutation significance testing 
+saveRDS(perm.id.full, "/cbica/projects/network_replication/software/rotate_parcellation/schaefer400x7.coords_sphericalrotations_N10k.rds")
+
+```
+
+
+```{r glasser}
+# generate rotation matrix
+glasser.coords <- read.csv("/cbica/projects/network_replication/software/rotate_parcellation/glasser_spherical_coords.csv", header=F) #coordinates of glasser parcel centroids on the freesurfer sphere
+
+
+perm.id.full <- rotate.parcellation(coord.l = as.matrix(glasser.coords[181:360,]), coord.r = as.matrix(glasser.coords[1:180,]), nrot = 10000) #rotate the glasser.coords parcellation 10,000 times on the freesurfer sphere to generate spatial nulls for spin-based permutation significance testing 
+ 
+saveRDS(perm.id.full, "/cbica/projects/network_replication/software/rotate_parcellation/glasser.coords_sphericalrotations_N10k.rds")
+```
+
+```{r gordon}
+# generate rotation matrix
+gordon.coords <- gordatlas[2:4]  #coordinates of gordon.coords parcel centroids on the freesurfer sphere
+ 
+perm.id.full <- rotate.parcellation(coord.l = as.matrix(gordon.coords[1:161,]), coord.r = as.matrix(gordon.coords[162:333,]), nrot = 10000) #rotate the gordon.coords parcellation 10,000 times on the freesurfer sphere to generate spatial nulls for spin-based permutation significance testing 
+
+saveRDS(perm.id.full, "/cbica/projects/network_replication/software/rotate_parcellation/gordon.coords_sphericalrotations_N10k.rds")
+```
+

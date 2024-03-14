@@ -1,0 +1,8 @@
+{
+	"dataset": "NKI",
+	"data_root": "/cbica/projects/network_replication/manuscript/input/NKI/",
+	"outputs_root": "/cbica/projects/network_replication/manuscript/output/NKI/",
+	"qcfile_dir": "/cbica/projects/network_replication/input/NKI/nki_xcp/qc_files/",
+	"sample_selection_data_dir": "/cbica/projects/network_replication/input/NKI/sample_selection/",
+	"CUBIDS_csv_dir": "/cbica/projects/network_replication/input/NKI/CUBIDS_csvs/"
+}

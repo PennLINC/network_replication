@@ -1,0 +1,55 @@
+---
+title: "Edge labels"
+author: "Audrey Luo"
+output: html_document
+---
+ 
+ 
+# make df's for atlas-specific Edge names 
+```{r}
+
+# function for creating df of edge names: remove self-connecting edges
+# @param nrows_var A numeric var of rows in parcel_labels
+# @param atlas_edges An empty vector to be populated by edge names
+# @param parcel_labels A df of parcel labels  
+make_edges <- function(nrows_var, atlas_edges, parcel_labels) {
+    for(i in c(1:nrows_var)){
+      for(j in (c((i+1):nrows_var))) {
+      x<-paste0(parcel_labels$orig_parcelname[i], "_to_", parcel_labels$orig_parcelname[j])
+      atlas_edges <- append(atlas_edges, x) 
+      print(paste(i, j))
+      }
+    }
+  return(atlas_edges)
+}
+ 
+
+# function for removing last 2 entries in edges_df
+# @param edge_df A df of edge names
+rm_last_2 <- function(edge_df) {
+  b <- length(edge_df)
+  a <- b-1
+  edge_df <- edge_df[-c(a:b)] 
+  return(edge_df)
+}
+
+  
+
+# schaefer200x7 ---------------------------------------------------------------------------------------------------------------- 
+schaefer200x7.parcel.labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/schaefer200x7_regionlist_final.csv")
+names(schaefer200x7.parcel.labels)[1] <- "orig_parcelname"
+rows_schaefer200x7 <- nrow(schaefer200x7.parcel.labels)
+schaefer200x7_edges <- c()
+schaefer200x7_edges <- make_edges(rows_schaefer200x7, schaefer200x7_edges, schaefer200x7.parcel.labels)
+schaefer200x7_edges <- rm_last_2(schaefer200x7_edges)
+write.csv(schaefer200x7_edges, "/cbica/projects/network_replication/atlases/edge/schaefer200x7_edge.csv")
+
+  
+
+
+```
+
+
+
+ 
+ 

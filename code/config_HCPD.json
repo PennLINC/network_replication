@@ -1,0 +1,8 @@
+{
+	"dataset": "HCPD",
+	"data_root": "/cbica/projects/network_replication/manuscript/input/HCPD/",
+	"outputs_root": "/cbica/projects/network_replication/manuscript/output/HCPD/",
+	"qcfile_dir": "/cbica/projects/network_replication/input/HCPD/hcpd_xcp/qc_files/",
+	"sample_selection_data_dir": "/cbica/projects/network_replication/input/HCPD/sample_selection/",
+	"CUBIDS_csv_dir": "/cbica/projects/network_replication/input/HCPD/CUBIDS_csvs/"
+}

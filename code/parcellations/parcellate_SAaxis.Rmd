@@ -1,0 +1,219 @@
+---
+title: "Parcellate Sensorimotor-Association Axis for Glasser, Schaefer200 and 400 (7 and 17 Network), and Gordon"
+author: "Audrey Luo (adapted from Valerie Sydnor)"
+output: html_document
+---
+ 
+```{r setup}
+library(ciftiTools)
+ciftiTools.setOption('wb_path', '/Applications/workbench/')
+library(cifti)
+library(plyr)
+```
+
+**Script to parcellate the fslr/cifti Sensorimotor-Association Axis with commonly used cortical atlases**
+
+#GLASSER360 Multimodal Parcellation
+
+```{r}
+setwd("/cbica/projects/network_replication/")
+command=sprintf("-cifti-parcellate ./dropbox/S-A_ArchetypalAxis/FSLRVertex/SensorimotorAssociation_Axis.dscalar.nii ./atlases/dlabel/glasser_space-fsLR_den-32k_desc-atlas.dlabel.nii COLUMN ./SAaxis/SensorimotorAssociation_Axis_parcellated_ciftis/SensorimotorAssociation.Axis.Glasser360.pscalar.nii")
+ciftiTools::run_wb_cmd(command, intern = FALSE, ignore.stdout = NULL, ignore.stderr = NULL)
+```
+
+#SCHAEFER400 17 NETWORK Parcellation
+
+```{r}
+setwd("/cbica/projects/network_replication/")
+command=sprintf("-cifti-parcellate ./dropbox/S-A_ArchetypalAxis/FSLRVertex/SensorimotorAssociation_Axis.dscalar.nii ./atlases/dlabel/Schaefer2018_400Parcels_17Networks_order.dlabel.nii COLUMN ./SAaxis/SensorimotorAssociation_Axis_parcellated_ciftis/SensorimotorAssociation.Axis.Schaefer400.17Networks.pscalar.nii")
+ciftiTools::run_wb_cmd(command, intern = FALSE, ignore.stdout = NULL, ignore.stderr = NULL)
+```
+
+
+#SCHAEFER400 7 NETWORK Parcellation
+
+```{r}
+setwd("/cbica/projects/network_replication/")
+command=sprintf("-cifti-parcellate ./dropbox/S-A_ArchetypalAxis/FSLRVertex/SensorimotorAssociation_Axis.dscalar.nii ./atlases/dlabel/Schaefer2018_400Parcels_7Networks_order.dlabel.nii COLUMN ./SAaxis/SensorimotorAssociation_Axis_parcellated_ciftis/SensorimotorAssociation.Axis.Schaefer400.7Networks.pscalar.nii")
+ciftiTools::run_wb_cmd(command, intern = FALSE, ignore.stdout = NULL, ignore.stderr = NULL)
+```
+
+#SCHAEFER200 17 NETWORK Parcellation
+
+```{r}
+setwd("/cbica/projects/network_replication/")
+
+command=sprintf("-cifti-parcellate ./dropbox/S-A_ArchetypalAxis/FSLRVertex/SensorimotorAssociation_Axis.dscalar.nii ./atlases/dlabel/Schaefer2018_200Parcels_17Networks_order.dlabel.nii COLUMN ./SAaxis/SensorimotorAssociation_Axis_parcellated_ciftis/SensorimotorAssociation.Axis.Schaefer200.17Networks.pscalar.nii")
+ciftiTools::run_wb_cmd(command, intern = FALSE, ignore.stdout = NULL, ignore.stderr = NULL)
+```
+
+
+#SCHAEFER200 7 NETWORK Parcellation
+
+```{r}
+setwd("/cbica/projects/network_replication/")
+
+command=sprintf("-cifti-parcellate ./dropbox/S-A_ArchetypalAxis/FSLRVertex/SensorimotorAssociation_Axis.dscalar.nii ./atlases/dlabel/Schaefer2018_200Parcels_7Networks_order.dlabel.nii COLUMN ./SAaxis/SensorimotorAssociation_Axis_parcellated_ciftis/SensorimotorAssociation.Axis.Schaefer200.7Networks.pscalar.nii")
+ciftiTools::run_wb_cmd(command, intern = FALSE, ignore.stdout = NULL, ignore.stderr = NULL)
+```
+
+#GORDON333 Parcellation
+
+```{r}
+
+setwd("/cbica/projects/network_replication/")
+command=sprintf("-cifti-parcellate ./dropbox/S-A_ArchetypalAxis/FSLRVertex/SensorimotorAssociation_Axis.dscalar.nii ./atlases/dlabel/gordon_space-fsLR_den-32k_desc-atlas.dlabel.nii COLUMN ./SAaxis/SensorimotorAssociation_Axis_parcellated_ciftis/SensorimotorAssociation.Axis.Gordon333.pscalar.nii")
+ciftiTools::run_wb_cmd(command, intern = FALSE, ignore.stdout = NULL, ignore.stderr = NULL)
+```
+
+
+#Save parcellations as csv's
+```{r}
+glasser_SAaxis_cifti <- read_cifti("/cbica/projects/network_replication/SAaxis/SensorimotorAssociation_Axis_parcellated_ciftis/SensorimotorAssociation.Axis.Glasser360.pscalar.nii")  
+glasser_SAaxis <- as.data.frame(cbind(rank(glasser_SAaxis_cifti$data), names(glasser_SAaxis_cifti$Parcel)))
+colnames(glasser_SAaxis) <- c("SA.axis_rank","label")
+glasser_SAaxis$SA.axis_rank <- as.integer(glasser_SAaxis$SA.axis_rank)
+write.csv(glasser_SAaxis, "/cbica/projects/network_replication/SAaxis/glasser_SAaxis.csv")
+
+ 
+gordon_SAaxis_cifti <- read_cifti("/cbica/projects/network_replication/SAaxis/SensorimotorAssociation_Axis_parcellated_ciftis/SensorimotorAssociation.Axis.Gordon333.pscalar.nii")  
+gordon_SAaxis <- as.data.frame(cbind(rank(gordon_SAaxis_cifti$data), names(gordon_SAaxis_cifti$Parcel)))
+colnames(gordon_SAaxis) <- c("SA.axis_rank","label")
+gordon_SAaxis$SA.axis_rank <- as.integer(gordon_SAaxis$SA.axis_rank)
+
+gordon_labels <- read.csv("/cbica/projects/network_replication/atlases/parcellations/gordon_regionlist_xcp.csv", header=F)
+names(gordon_labels)[1] <- "label"
+gordon_SAaxis <- cbind(gordon_SAaxis$SA.axis_rank, gordon_labels) 
+colnames(gordon_SAaxis) <- c("SA.axis_rank","label")
+write.csv(gordon_SAaxis, "/cbica/projects/network_replication/SAaxis/gordon_SAaxis.csv")
+ 
+schaefer200x7_SAaxis_cifti <- read_cifti("/cbica/projects/network_replication/SAaxis/SensorimotorAssociation_Axis_parcellated_ciftis/SensorimotorAssociation.Axis.Schaefer200.7Networks.pscalar.nii")  
+schaefer200x7_SAaxis <- as.data.frame(cbind(rank(schaefer200x7_SAaxis_cifti$data), names(schaefer200x7_SAaxis_cifti$Parcel)))
+colnames(schaefer200x7_SAaxis) <- c("SA.axis_rank","label")
+# reorder SA axis (7 to 17)
+index_schaefer200x7to7 <- read.csv("/cbica/projects/network_replication/software/schaefer7to17_reordering/index_schaefer200x7to17.csv", header=F)
+index_schaefer200x7to7$V1 <- as.numeric(index_schaefer200x7to7$V1)
+schaefer200x7_SAaxis <-schaefer200x7_SAaxis[index_schaefer200x7to7$V1,]
+schaefer200x7_SAaxis$SA.axis_rank <- as.integer(schaefer200x7_SAaxis$SA.axis_rank)
+write.csv(schaefer200x7_SAaxis, "/cbica/projects/network_replication/SAaxis/schaefer200x7_SAaxis.csv")
+ 
+
+schaefer200x17_SAaxis_cifti <- read_cifti("/cbica/projects/network_replication/SAaxis/SensorimotorAssociation_Axis_parcellated_ciftis/SensorimotorAssociation.Axis.Schaefer200.17Networks.pscalar.nii")  
+schaefer200x17_SAaxis <- as.data.frame(cbind(rank(schaefer200x17_SAaxis_cifti$data), names(schaefer200x17_SAaxis_cifti$Parcel)))
+colnames(schaefer200x17_SAaxis) <- c("SA.axis_rank","label")
+schaefer200x17_SAaxis$SA.axis_rank <- as.integer(schaefer200x17_SAaxis$SA.axis_rank)
+write.csv(schaefer200x17_SAaxis, "/cbica/projects/network_replication/SAaxis/schaefer200x17_SAaxis.csv")
+ 
+
+schaefer400x7_SAaxis_cifti <- read_cifti("/cbica/projects/network_replication/SAaxis/SensorimotorAssociation_Axis_parcellated_ciftis/SensorimotorAssociation.Axis.Schaefer400.7Networks.pscalar.nii")  
+schaefer400x7_SAaxis <- as.data.frame(cbind(rank(schaefer400x7_SAaxis_cifti$data), names(schaefer400x7_SAaxis_cifti$Parcel)))
+colnames(schaefer400x7_SAaxis) <- c("SA.axis_rank","label")
+
+# reorder SA axis (7 to 17)
+index_schaefer400x7to7 <- read.csv("/cbica/projects/network_replication/software/schaefer7to17_reordering/index_schaefer400x7to17.csv", header=F)
+index_schaefer400x7to7$V1 <- as.numeric(index_schaefer400x7to7$V1)
+schaefer400x7_SAaxis <-schaefer400x7_SAaxis[index_schaefer400x7to7$V1,]
+schaefer400x7_SAaxis$SA.axis_rank <- as.integer(schaefer400x7_SAaxis$SA.axis_rank)
+write.csv(schaefer400x7_SAaxis, "/cbica/projects/network_replication/SAaxis/schaefer400x7_SAaxis.csv")
+ 
+
+schaefer400x17_SAaxis_cifti <- read_cifti("/cbica/projects/network_replication/SAaxis/SensorimotorAssociation_Axis_parcellated_ciftis/SensorimotorAssociation.Axis.Schaefer400.17Networks.pscalar.nii")  
+schaefer400x17_SAaxis <- as.data.frame(cbind(rank(schaefer400x17_SAaxis_cifti$data), names(schaefer400x17_SAaxis_cifti$Parcel)))
+colnames(schaefer400x17_SAaxis) <- c("SA.axis_rank","label")
+schaefer400x17_SAaxis$SA.axis_rank <- as.integer(schaefer400x17_SAaxis$SA.axis_rank)
+write.csv(schaefer400x17_SAaxis, "/cbica/projects/network_replication/SAaxis/schaefer400x17_SAaxis.csv")
+ 
+ 
+```
+
+
+#Append Communities to SA ranks  
+```{r}
+# load parcellated  S-A axis
+gordon_SAaxis <- read.csv("/cbica/projects/network_replication/SAaxis/gordon_SAaxis.csv")
+
+schaefer200x7_SAaxis <- read.csv("/cbica/projects/network_replication/SAaxis/schaefer200x7_SAaxis.csv")
+schaefer200x7_SAaxis$label <- gsub("7Network", "Network", schaefer200x7_SAaxis$label)
+ 
+schaefer200x17_SAaxis <- read.csv("/cbica/projects/network_replication/SAaxis/schaefer200x17_SAaxis.csv")
+schaefer200x17_SAaxis$label <- gsub("17Network", "Network", schaefer200x17_SAaxis$label)
+
+schaefer400x7_SAaxis <- read.csv("/cbica/projects/network_replication/SAaxis/schaefer400x7_SAaxis.csv")
+schaefer400x7_SAaxis$label <- gsub("7Network", "Network", schaefer400x7_SAaxis$label)
+
+schaefer400x17_SAaxis <- read.csv("/cbica/projects/network_replication/SAaxis/schaefer400x17_SAaxis.csv")
+schaefer400x17_SAaxis$label <- gsub("17Network", "Network", schaefer400x17_SAaxis$label)
+
+```
+
+```{r}
+# load community names
+gordonCommNames <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Gordon333_Network/gordon333CommunityNames.csv", header=F)
+gordonCommNames <- data.frame(cbind(c(1:nrow(gordonCommNames)), gordonCommNames))
+names(gordonCommNames) <- c("CommAffil", "CommNames")
+
+schaefer7CommNames <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer7CommunityNames.csv", header=F)
+schaefer7CommNames <- data.frame(cbind(c(1:nrow(schaefer7CommNames)), schaefer7CommNames))
+names(schaefer7CommNames) <- c("CommAffil", "CommNames")
+
+schaefer17CommNames <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Schaefer_17Network/schaefer17CommunityNames.csv", header=F)
+schaefer17CommNames <- data.frame(cbind(c(1:nrow(schaefer17CommNames)), schaefer17CommNames))
+names(schaefer17CommNames) <- c("CommAffil", "CommNames")
+ 
+```
+
+```{r}
+ 
+# load community affiliations
+gordonCommAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Gordon333_Network/gordon333CommunityAffiliation.1D.csv", header=F)
+schaefer200x7CommAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer200x7CommunityAffiliation.1D_reordered.csv", header=T)
+schaefer200x7CommAffil <- data.frame(schaefer200x7CommAffil[,2])
+schaefer400x7CommAffil <- read.csv("/cbica/projects/network_replication/atlases/parcellations/Schaefer_7Network/schaefer400x7CommunityAffiliation.1D_reordered.csv", header=T)
+schaefer400x7CommAffil <- data.frame(schaefer400x7CommAffil[,2])
+schaefer200x17CommAffil <-  read.csv("/cbica/projects/network_replication/atlases/parcellations/Schaefer_17Network/schaefer200x17CommunityAffiliation.1D .csv", header=F)
+schaefer400x17CommAffil <- read.csv("/Users/audluo/cbica/projects/network_replication/atlases/parcellations/Schaefer_17Network/schaefer400x17CommunityAffiliation.1D .csv", header=F)
+
+```
+
+```{r}
+#join community names and affiliations
+names(gordonCommAffil) <- "CommAffil"
+gordonCommAffil <- join(gordonCommAffil, gordonCommNames)
+
+names(schaefer200x7CommAffil) <- "CommAffil"
+schaefer200x7CommAffil <- join(schaefer200x7CommAffil, schaefer7CommNames)
+
+names(schaefer200x17CommAffil) <- "CommAffil"
+schaefer200x17CommAffil <- join(schaefer200x17CommAffil, schaefer17CommNames)
+
+names(schaefer400x7CommAffil) <- "CommAffil"
+schaefer400x7CommAffil <- join(schaefer400x7CommAffil, schaefer7CommNames)
+ 
+names(schaefer400x17CommAffil) <- "CommAffil"
+schaefer400x17CommAffil <- join(schaefer400x17CommAffil, schaefer17CommNames)
+ 
+```
+
+
+```{r}
+
+
+# append communities to SA axis
+ 
+gordon_SAaxis_CommAffil <- data.frame(cbind(gordon_SAaxis, gordonCommAffil))[,-1]
+write.csv(gordon_SAaxis_CommAffil, "/cbica/projects/network_replication/atlases/parcellations/SAaxis_CommAffil/gordon_SAaxis_CommAffil.csv", row.names = F)
+
+schaefer200x7_SAaxis_CommAffil <- data.frame(cbind(schaefer200x7_SAaxis, schaefer200x7CommAffil))[,-1]
+write.csv(schaefer200x7_SAaxis_CommAffil, "/cbica/projects/network_replication/atlases/parcellations/SAaxis_CommAffil/schaefer200x7_SAaxis_CommAffil.csv", row.names=F)
+
+schaefer200x17_SAaxis_CommAffil <- data.frame(cbind(schaefer200x17_SAaxis, schaefer200x17CommAffil))[,-1]
+write.csv(schaefer200x17_SAaxis_CommAffil, "/cbica/projects/network_replication/atlases/parcellations/SAaxis_CommAffil/schaefer200x17_SAaxis_CommAffil.csv", row.names=F)
+ 
+schaefer400x7_SAaxis_CommAffil <- data.frame(cbind(schaefer400x7_SAaxis, schaefer400x7CommAffil))[,-1]
+write.csv(schaefer400x7_SAaxis_CommAffil, "/cbica/projects/network_replication/atlases/parcellations/SAaxis_CommAffil/schaefer400x7_SAaxis_CommAffil.csv", row.names=F)
+
+schaefer400x17_SAaxis_CommAffil <- data.frame(cbind(schaefer400x17_SAaxis, schaefer400x17CommAffil))[,-1]
+write.csv(schaefer400x17_SAaxis_CommAffil, "/cbica/projects/network_replication/atlases/parcellations/SAaxis_CommAffil/schaefer400x17_SAaxis_CommAffil.csv", row.names=F)
+
+```
+

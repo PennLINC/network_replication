@@ -1,0 +1,9 @@
+
+{
+	"dataset": "PNC",
+	"data_root": "/cbica/projects/network_replication/manuscript/input/PNC/",
+	"outputs_root": "/cbica/projects/network_replication/manuscript/output/PNC/",
+	"qcfile_dir": "/cbica/projects/network_replication/input/PNC/pnc_xcp/qc_files/",
+	"sample_selection_data_dir": "/cbica/projects/network_replication/input/PNC/sample_selection/",
+	"CUBIDS_csv_dir": "/cbica/projects/network_replication/input/PNC/CUBIDS_csvs/"
+}

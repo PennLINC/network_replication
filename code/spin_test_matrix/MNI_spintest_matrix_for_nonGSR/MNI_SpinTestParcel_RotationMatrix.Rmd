@@ -1,0 +1,43 @@
+---
+title: "Spin Test Parcel Rotation Matrix"
+author: "Audrey Luo"
+date: "2023-12-01"
+output: html_document
+---
+
+This Rmd file using rotate_parcellation to generate 10k rotated permutations of a parcellation, given the coordinates of left and right hemispheres of this parcellation on the sphere.
+
+The output is a vector of 1:Number_of_parcels for each permutation which tries to conserve the relative position of each parcel
+
+- Schaefer .annot files were downloaded from: https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations 
+
+```{r setup}
+# rotate.parcellation.R and perm.sphere.p.R are downloaded from https://github.com/frantisekvasa/rotate_parcellation
+source("/cbica/projects/network_replication/software/rotate.parcellation.R")
+source("/cbica/projects/network_replication/software/perm.sphere.p.R")
+ 
+library(magrittr)
+library(dplyr)
+
+```
+
+
+```{r schaefer200x7}
+schaefer200x7.coords <- read.csv("/cbica/projects/network_replication/software/rotate_parcellation/MNI_coords/Schaefer2018_200Parcels_7Networks_order_FSLMNI152_1mm.Centroid_RAS.csv") #coordinates of schaefer200.coords parcel centroids in MNI 
+ 
+
+# reorder spherical coordinates (7 network parcels had to be reordered to 17 network ordering because the timeseries data are 17 network)
+index_schaefer200x7to17 <- read.csv("/cbica/projects/network_replication/software/schaefer7to17_reordering/index_schaefer200x7to17.csv", header=F)
+index_schaefer200x7to17$V1 <- as.numeric(index_schaefer200x7to17$V1)
+schaefer200x7.coords_reordered <- schaefer200x7.coords[index_schaefer200x7to17$V1,]
+schaefer200x7.coords_reordered <- schaefer200x7.coords_reordered %>% rename(label=ROI.Name)
+write.csv(schaefer200x7.coords_reordered, "/cbica/projects/network_replication/software/rotate_parcellation/MNI_coords/Schaefer2018_200Parcels_7Networks_order_FSLMNI152_1mm.Centroid_RAS_reordered.csv", row.names=F) 
+ 
+set.seed(10)
+perm.id.full <- rotate.parcellation(coord.l = as.matrix(schaefer200x7.coords_reordered[1:100,3:5]), coord.r = as.matrix(schaefer200x7.coords_reordered[101:200,3:5]), nrot = 10000) #rotate the schaefer200.coords parcellation 10,000 times on the freesurfer sphere to generate spatial nulls for spin-based permutation significance testing 
+  
+saveRDS(perm.id.full, "/cbica/projects/network_replication/software/rotate_parcellation/schaefer200x7.coords_sphericalrotations_N10k_MNI_seed10.rds")
+ 
+```
+ 
+
