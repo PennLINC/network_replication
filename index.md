@@ -82,7 +82,7 @@ Final sample lists for each dataset all live in `/input/<dataset>/sample_selecti
 # CODE DOCUMENTATION  
 
 All project analyses are described below along with the corresponding code on Github. The following outline describes the order of the analytic workflow:
-
+0. Get static data from PMACS
 1. Parcellating the sensorimotor-association (S-A) axis  
 2. Formatting parcel labels for different cortical parcellations
 3. Creating the spin test parcel rotation matrix for significance testing
@@ -99,6 +99,9 @@ All project analyses are described below along with the corresponding code on Gi
 
  
 <br>
+
+### 0. Get static data from PMACS 
+Scripts in [https://github.com/PennLINC/network_replication/tree/main/code/datalad](https://github.com/PennLINC/network_replication/tree/main/code/datalad) get the static data for PNC, NKI, HCP-D, and HBN used for this project from PMACS using datalad get.
 
 ### 1. Parcellating the sensorimotor-association (S-A) axis  
 We parcellated the fslr/cifti [Sensorimotor-Association Axis](https://github.com/PennLINC/S-A_ArchetypalAxis/blob/main/FSLRVertex/SensorimotorAssociation_Axis.dscalar.nii) with cortical atlases (Schaefer 200, Schaefer 400, Gordon, and HCP-MMP) using [/manuscript/code/parcellations/parcellate_SAaxis.Rmd](https://github.com/PennLINC/network_replication/blob/main/code/parcellations/parcellate_SAaxis.Rmd).
