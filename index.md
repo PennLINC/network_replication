@@ -82,6 +82,7 @@ Final sample lists for each dataset all live in `/input/<dataset>/sample_selecti
 # CODE DOCUMENTATION  
 
 All project analyses are described below along with the corresponding code on Github. The following outline describes the order of the analytic workflow:
+
 0. Get static data from PMACS
 1. Parcellating the sensorimotor-association (S-A) axis  
 2. Formatting parcel labels for different cortical parcellations
