@@ -83,19 +83,27 @@ Final sample lists for each dataset all live in `/input/<dataset>/sample_selecti
 
 All project analyses are described below along with the corresponding code on Github. The following outline describes the order of the analytic workflow:
 
-0. Get static data from PMACS
-1. Parcellating the sensorimotor-association (S-A) axis  
-2. Formatting parcel labels for different cortical parcellations
-3. Creating the spin test parcel rotation matrix for significance testing
-4. Constructing the sample for each dataset: 
+*0.* Get static data from PMACS
+
+*1.* Parcellating the sensorimotor-association (S-A) axis  
+
+*2.* Formatting parcel labels for different cortical parcellations
+*3.* Creating the spin test parcel rotation matrix for significance testing
+*4.* Constructing the sample for each dataset: 
 * *Discovery: PNC* 
 * *Replication: NKI, HCP-D, and HBN*  
-5. Constructing connectivity matrices for each dataset 
-6. Quantifying functional connectivity metrics: global brain connectivity, between- and within-network connectivity  
-7. Image harmonization: applying [covbat-gam](https://github.com/andy1764/ComBatFamily) to multi-site data (HCP-D and HBN)
-8. Fitting generalized additive models (GAMs) and doing age-resolved analysis
-9. Characterizing relationships between functional connectivity metrics, age, and the S-A axis
-10. Visualizing results!
+
+*5.* Constructing connectivity matrices for each dataset 
+
+*6.* Quantifying functional connectivity metrics: global brain connectivity, between- and within-network connectivity  
+
+*7.* Image harmonization: applying [covbat-gam](https://github.com/andy1764/ComBatFamily) to multi-site data (HCP-D and HBN)
+
+*8.* Fitting generalized additive models (GAMs) and doing age-resolved analysis
+
+*9.* Characterizing relationships between functional connectivity metrics, age, and the S-A axis
+
+*10.* Visualizing results!
  
 
  
