@@ -133,11 +133,10 @@ This Rmd file used [rotate_parcellation](https://github.com/frantisekvasa/rotate
 
 The output is a vector of 1:Number_of_parcels for each permutation which tries to conserve the relative position of each parcel.
 
-- Schaefer .annot files were downloaded from https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/FreeSurfer5.3. Centroid coordinates were extracted from .annot files. 
+- Schaefer .annot files were downloaded from [https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/FreeSurfer5.3](https://github.com/ThomasYeoLab/CBIG/tree/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/FreeSurfer5.3). Centroid coordinates were extracted from .annot files. 
 
 
-- glasser_spherical_coords.csv was downloaded from 
-https://github.com/frantisekvasa/rotate_parcellation/blob/master/sphere_HCP.txt 
+- glasser_spherical_coords.csv was downloaded from [https://github.com/frantisekvasa/rotate_parcellation/blob/master/sphere_HCP.txt](https://github.com/frantisekvasa/rotate_parcellation/blob/master/sphere_HCP.txt )
 
 ### 4. Sample selection for each dataset: PNC (discovery), NKI, HCP-D, and HBN (replication)  
 The final samples for each dataset were constructed using 
