@@ -1,8 +1,7 @@
 <br>
 <br>
 
-# Development of Functional Connectivity Aligns with the Cortical Hierarchy in Four Datasets 
-
+### Abstract
 Human cortical maturation has been posited to be organized along the sensorimotor-association axis, a hierarchical axis of brain organization that spans from unimodal sensorimotor cortices to transmodal association cortices. Here, we investigate the hypothesis that the development of functional connectivity during childhood through adolescence conforms to the cortical hierarchy defined by the sensorimotor-association axis. We tested this pre-registered hypothesis in four large-scale, independent datasets (total n = 3,355; ages 5-23 years): the Philadelphia Neurodevelopmental Cohort (n = 1,207), Nathan Kline Institute-Rockland Sample (n = 397), Human Connectome Project: Development (n = 625), and Healthy Brain Network (n = 1,126). Across datasets, the development of functional connectivity systematically varied along the sensorimotor-association axis. Connectivity in sensorimotor regions increased, whereas connectivity in association cortices declined, refining and reinforcing the cortical hierarchy. These consistent and generalizable results establish that the sensorimotor-association axis of cortical organization encodes the dominant pattern of functional connectivity development.   
 
 *Note*: Global brain connectivity (GBC) and functional connectivity (FC) strength are used interchangeably in this documentation. 
@@ -402,8 +401,6 @@ We used Spearman’s rank correlations to quantify the association between S-A a
 
 To investigate how the development of edge-level connectivity differs across sensorimotor-association axis, we examined age-related changes in connectivity across edges by fitting a bivariate smooth interaction. The effect of S-A axis rank on edge-level age effects was modeled using a tensor product smooth. This analysis can be found in [lines 885-919](https://github.com/PennLINC/network_replication/blob/main/results/main_figures.Rmd#L885-L919) from the Rmd above. 
 
-
-<br>
 
 ### 10. Visualizing the results
 Results from main analyses are visualized using this Rmd file: [/manuscript/results/main_figures.Rmd](https://github.com/PennLINC/network_replication/blob/main/results/main_figures.Rmd). The knitted Rmd file displaying main figures 1-6 can be downloaded at [/manuscript/results/main_figures.html](https://github.com/PennLINC/network_replication/blob/main/results/main_figures.html) and viewed on your browswer.
