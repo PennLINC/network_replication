@@ -1,0 +1,10 @@
+cff-version: 0.0.1
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: Luo
+  given-names: Audrey C.
+orcid: https://orcid.org/0000-0001-6798-1876
+DOI: 10.5281/zenodo.10826380
+title:PennLINC/network_replication: v0.0.1
+version: v0.0.1
+date-released: 2024-03-17
