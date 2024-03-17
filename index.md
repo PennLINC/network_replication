@@ -83,34 +83,27 @@ Final sample lists for each dataset all live in `/input/<dataset>/sample_selecti
 
 All project analyses are described below along with the corresponding code on Github. The following outline describes the order of the analytic workflow:
 
-*0.* Get static data from PMACS
-
-*1.* Parcellating the sensorimotor-association (S-A) axis  
-
-*2.* Formatting parcel labels for different cortical parcellations
-*3.* Creating the spin test parcel rotation matrix for significance testing
-*4.* Constructing the sample for each dataset: 
+*0.* Get static data from PMACS  
+*1.* Parcellating the sensorimotor-association (S-A) axis   
+*2.* Formatting parcel labels for different cortical parcellations  
+*3.* Creating the spin test parcel rotation matrix for significance testing  
+*4.* Constructing the sample for each dataset:  
 * *Discovery: PNC* 
-* *Replication: NKI, HCP-D, and HBN*  
+* *Replication: NKI, HCP-D, and HBN*    
 
-*5.* Constructing connectivity matrices for each dataset 
-
+*5.* Constructing connectivity matrices for each dataset  
 *6.* Quantifying functional connectivity metrics: global brain connectivity, between- and within-network connectivity  
-
-*7.* Image harmonization: applying [covbat-gam](https://github.com/andy1764/ComBatFamily) to multi-site data (HCP-D and HBN)
-
-*8.* Fitting generalized additive models (GAMs) and doing age-resolved analysis
-
-*9.* Characterizing relationships between functional connectivity metrics, age, and the S-A axis
-
+*7.* Image harmonization: applying [covbat-gam](https://github.com/andy1764/ComBatFamily) to multi-site data (HCP-D and HBN)  
+*8.* Fitting generalized additive models (GAMs) and doing age-resolved analysis  
+*9.* Characterizing relationships between functional connectivity metrics, age, and the S-A axis  
 *10.* Visualizing results!
  
 
  
 <br>
 
-### 0. Get static data from PMACS 
-Scripts in [https://github.com/PennLINC/network_replication/tree/main/code/datalad](https://github.com/PennLINC/network_replication/tree/main/code/datalad) get the static data for PNC, NKI, HCP-D, and HBN used for this project from PMACS using datalad get.
+### 0. Getting static data from PMACS 
+Scripts in [/manuscript/code/datalad](https://github.com/PennLINC/network_replication/tree/main/code/datalad) were used to download the static data for PNC, NKI, HCP-D, and HBN used for this project from PMACS using datalad get.
 
 ### 1. Parcellating the sensorimotor-association (S-A) axis  
 We parcellated the fslr/cifti [Sensorimotor-Association Axis](https://github.com/PennLINC/S-A_ArchetypalAxis/blob/main/FSLRVertex/SensorimotorAssociation_Axis.dscalar.nii) with cortical atlases (Schaefer 200, Schaefer 400, Gordon, and HCP-MMP) using [/manuscript/code/parcellations/parcellate_SAaxis.Rmd](https://github.com/PennLINC/network_replication/blob/main/code/parcellations/parcellate_SAaxis.Rmd).
@@ -121,7 +114,7 @@ Our primary parcellation utilized the Schaefer 200 atlas; secondary atlases incl
 
 + *Cortical parcellations*: [Schaefer 200 atlas](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_200Parcels_17Networks_order.dlabel.nii), [Schaefer 400](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/Schaefer2018_400Parcels_17Networks_order.dlabel.nii), [HCP multimodal](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/glasser_space-fsLR_den-32k_desc-atlas.dlabel.nii), [Gordon](https://github.com/PennLINC/xcp_d/blob/main/xcp_d/data/ciftiatlas/gordon_space-fsLR_den-32k_desc-atlas.dlabel.nii) (note that some of these files have changed since they were originally downloaded from the xcp-d git repo)
 
-Importantly, the timeseries data for all datasets was available in Schaefer 200x17 rather than Schaefer 200x7. While the two parcellations have the same number of parcels, the ordering is slightly different. Thus, since Schaefer 200x7 was our primary parcellation and network solution, we determined the ordering between Schaefer 200x7 and 200x17 using [this function from the Yeo group](https://github.com/ThomasYeoLab/CBIG/blob/6d1400a2d643261246f6b042e7ef5fbe417506cd/utilities/matlab/FC/CBIG_ReorderParcelIndex.m). This ordering can be found at `/software/schaefer7to17_reordering/index_schaefer200x7to17.csv`. 
+Importantly, the timeseries data for all datasets was available in Schaefer 200x17 rather than Schaefer 200x7. While the two parcellations have the same number of parcels, the ordering is slightly different. Since Schaefer 200x7 was our primary parcellation and network solution, we determined the ordering between Schaefer 200x7 and 200x17 using [this function from the Yeo group](https://github.com/ThomasYeoLab/CBIG/blob/6d1400a2d643261246f6b042e7ef5fbe417506cd/utilities/matlab/FC/CBIG_ReorderParcelIndex.m). This ordering can be found at `/software/schaefer7to17_reordering/index_schaefer200x7to17.csv`. 
  
 Parcel labels are formatted and reordered using:
 * [/manuscript/code/parcellations
@@ -273,7 +266,7 @@ This wrapper script calls a separate script that runs a singularity image contai
 
 **3b. Sensitivity analysis:** 
 
-We wanted to investigate whether our findings were driven by potentially confounding factors including use of task and rest scans and atlas used for cortical parcellation. 
+We wanted to investigate whether our findings were potentially driven by confounding factors including use of task and rest scans and atlas used for cortical parcellation. 
 
 First, sensitivity analyses were performed with only resting state data while excluding fMRI acquired during task conditions. Datasets used in this rest-only sensitivity analysis include PNC, HCP-D, and HBN. Analyses for NKI were completed with resting-state fMRI only due to absence of task scans. We included participants with at least 6 minutes of resting-state fMRI. We analyzed data from 998 participants (549 females) from PNC, 611 participants (328 females) from HCP-D, and 842 participants (1477 females) from HBN. The total scan time for fully acquired resting-state scans was 11 minutes and 12 seconds (224 volumes) for PNC, 25 minutes and 30 seconds (1912 volumes) for HCP-D, and 10 minutes and 9 seconds (750 volumes) for HBN. 
 
@@ -372,8 +365,9 @@ GAMs were fit for GBC, BNC, WNC, and edge-level connectivity for each cortical r
 The following describes the scripts used for fitting GAMs for each main analysis:
 
 * To fit GAMs for FC metrics, estimate GAM smooths, predict fitted GBC values, and compute alignment of fitted GBC values with the S-A axis across age, we used [/manuscript/code/scripts/main_analyses/fitGAMs_FCmetrics.R](https://github.com/PennLINC/network_replication/blob/main/code/scripts/main_analyses/fitGAMs_FCmetrics.R). 
-        
-        Note: the age-resolved analysis (predicting fitted GBC values and computing alignment of values with S-A axis across age) was done to examine how the spatial distribution of FC strength aligns with the S-A axis across the broad age range studied. This analysis was performed to gain insight into whether the spatial patterning of functional connectivity across the cortical mantle becomes increasingly hierarchical through development. 
+
+
+> Note: the age-resolved analysis (predicting fitted GBC values and computing alignment of values with S-A axis across age) was done to examine how the spatial distribution of FC strength aligns with the S-A axis across the broad age range studied. This analysis was performed to gain insight into whether the spatial patterning of functional connectivity across the cortical mantle becomes increasingly hierarchical through development. 
 
 * To fit GAMs for edges, we used [/manuscript/code/scripts/main_analyses/fitGAMs_edges.R](https://github.com/PennLINC/network_replication/blob/main/code/scripts/main_analyses/fitGAMs_edges.R). 
 
